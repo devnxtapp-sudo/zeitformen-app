@@ -1,12 +1,15 @@
 <script>
+  import { untrack } from "svelte";
   import Modal from "./Modal.svelte";
   import { DAY_LABELS } from "../seed.js";
   import { updateDay } from "../store.svelte.js";
 
   let { goal, dayKey, onclose } = $props();
 
-  // deep copy so edits are only committed on save
-  let draft = $state(JSON.parse(JSON.stringify(goal.days[dayKey])));
+  // deep copy so edits are only committed on save (one-time snapshot of props)
+  let draft = $state(
+    untrack(() => JSON.parse(JSON.stringify(goal.days[dayKey]))),
+  );
 
   function addBlock() {
     draft.session.blocks.push({ title: "", items: [""] });
@@ -44,8 +47,8 @@
 
   {#if !draft.isRest}
     <div class="field">
-      <label>Trainingstyp</label>
-      <select bind:value={draft.typeId}>
+      <label for="d-type">Trainingstyp</label>
+      <select id="d-type" bind:value={draft.typeId}>
         <option value={null}>— kein Typ —</option>
         {#each goal.types as t (t.id)}
           <option value={t.id}>{t.label}</option>
@@ -55,24 +58,24 @@
   {/if}
 
   <div class="field">
-    <label>Titel</label>
-    <input bind:value={draft.title} placeholder="z.B. Grundlagenausdauer" />
+    <label for="d-title">Titel</label>
+    <input id="d-title" bind:value={draft.title} placeholder="z.B. Grundlagenausdauer" />
   </div>
 
   <div class="field">
-    <label>Untertitel / Dauer</label>
-    <input bind:value={draft.meta} placeholder="z.B. 60–120 min · 60–65 % HFmax" />
+    <label for="d-meta">Untertitel / Dauer</label>
+    <input id="d-meta" bind:value={draft.meta} placeholder="z.B. 60–120 min · 60–65 % HFmax" />
   </div>
 
   {#if !draft.isRest}
     <div class="field">
-      <label>Ziel</label>
-      <textarea bind:value={draft.session.objective}></textarea>
+      <label for="d-obj">Ziel</label>
+      <textarea id="d-obj" bind:value={draft.session.objective}></textarea>
     </div>
 
     <div class="blocks">
       <div class="blocks-head">
-        <label>Blöcke</label>
+        <span class="caption">Blöcke</span>
         <button class="btn btn-sm" onclick={addBlock}>+ Block</button>
       </div>
 
@@ -99,8 +102,8 @@
     </div>
 
     <div class="field" style="margin-top:14px;">
-      <label>Bonus / Hinweis</label>
-      <textarea bind:value={draft.session.bonus}></textarea>
+      <label for="d-bonus">Bonus / Hinweis</label>
+      <textarea id="d-bonus" bind:value={draft.session.bonus}></textarea>
     </div>
   {/if}
 
@@ -126,7 +129,7 @@
     justify-content: space-between;
     margin-bottom: 8px;
   }
-  .blocks-head label {
+  .blocks-head .caption {
     font-size: 12.5px;
     font-weight: 600;
     color: var(--text-muted);

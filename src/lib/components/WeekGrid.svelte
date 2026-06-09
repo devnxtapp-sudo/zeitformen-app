@@ -1,8 +1,18 @@
 <script>
   import DayCard from "./DayCard.svelte";
   import { DAY_KEYS } from "../seed.js";
+  import { isCompleted } from "../store.svelte.js";
 
-  let { goal, selectedDay, onselect, onedit, editMode = false } = $props();
+  let {
+    goal,
+    selectedDay,
+    onselect,
+    onedit,
+    editMode = false,
+    week = {},
+    today = "",
+    ontoggle,
+  } = $props();
 </script>
 
 <div class="grid">
@@ -14,6 +24,10 @@
       {onselect}
       {onedit}
       {editMode}
+      weekDate={week[key]}
+      isToday={week[key] === today}
+      completed={isCompleted(goal, week[key])}
+      {ontoggle}
     />
   {/each}
 </div>

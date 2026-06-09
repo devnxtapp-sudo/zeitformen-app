@@ -1,11 +1,17 @@
 <script>
+  import { untrack } from "svelte";
   import Modal from "./Modal.svelte";
   import { updateNote } from "../store.svelte.js";
 
   let { goal, noteId, onclose } = $props();
 
-  let note = goal.notes.find((n) => n.id === noteId);
-  let draft = $state({ title: note.title, body: note.body });
+  // one-time snapshot of the note being edited
+  let draft = $state(
+    untrack(() => {
+      const n = goal.notes.find((x) => x.id === noteId);
+      return { title: n.title, body: n.body };
+    }),
+  );
 
   function save() {
     updateNote(goal.id, noteId, draft);
@@ -15,12 +21,12 @@
 
 <Modal title="Hinweis bearbeiten" {onclose}>
   <div class="field">
-    <label>Titel</label>
-    <input bind:value={draft.title} />
+    <label for="n-title">Titel</label>
+    <input id="n-title" bind:value={draft.title} />
   </div>
   <div class="field">
-    <label>Text</label>
-    <textarea bind:value={draft.body} rows="6"></textarea>
+    <label for="n-body">Text</label>
+    <textarea id="n-body" bind:value={draft.body} rows="6"></textarea>
   </div>
   <div class="actions">
     <button class="btn btn-ghost" onclick={() => onclose?.()}>Abbrechen</button>

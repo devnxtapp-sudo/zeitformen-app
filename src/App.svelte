@@ -7,8 +7,11 @@
     selectDay,
     toggleEdit,
     addGoal,
+    toggleCompletion,
   } from "./lib/store.svelte.js";
+  import { weekDates, todayKey } from "./lib/dateutil.js";
   import TypeLegend from "./lib/components/TypeLegend.svelte";
+  import WeekProgress from "./lib/components/WeekProgress.svelte";
   import WeekGrid from "./lib/components/WeekGrid.svelte";
   import SessionDetail from "./lib/components/SessionDetail.svelte";
   import NotesSection from "./lib/components/NotesSection.svelte";
@@ -19,6 +22,9 @@
   loadState();
 
   let goal = $derived(activeGoal());
+
+  const week = weekDates();
+  const today = todayKey();
 
   // modal state
   let editingDay = $state(null);
@@ -104,6 +110,10 @@
       </button>
     {/if}
 
+    {#if !app.editMode}
+      <WeekProgress {goal} {week} />
+    {/if}
+
     <TypeLegend types={goal.types} />
 
     <WeekGrid
@@ -112,6 +122,9 @@
       onselect={selectDay}
       onedit={(k) => (editingDay = k)}
       editMode={app.editMode}
+      {week}
+      {today}
+      ontoggle={(dateStr) => toggleCompletion(goal.id, dateStr)}
     />
 
     <SessionDetail

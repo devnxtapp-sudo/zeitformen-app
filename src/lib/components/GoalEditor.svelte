@@ -24,22 +24,24 @@
 
 <Modal title="Trainingsziel bearbeiten" {onclose}>
   <div class="field">
-    <label>Name</label>
-    <input value={goal.name} oninput={(e) => patch("name", e.target.value)} />
+    <label for="g-name">Name</label>
+    <input id="g-name" value={goal.name} oninput={(e) => patch("name", e.target.value)} />
   </div>
 
   <div class="row2">
     <div class="field">
-      <label>Sportart / Event</label>
+      <label for="g-sport">Sportart / Event</label>
       <input
+        id="g-sport"
         value={goal.sport}
         oninput={(e) => patch("sport", e.target.value)}
         placeholder="z.B. HYROX"
       />
     </div>
     <div class="field">
-      <label>Zieldatum</label>
+      <label for="g-date">Zieldatum</label>
       <input
+        id="g-date"
         type="date"
         value={goal.targetDate}
         oninput={(e) => patch("targetDate", e.target.value)}
@@ -48,16 +50,18 @@
   </div>
 
   <div class="field">
-    <label>Beschreibung</label>
+    <label for="g-desc">Beschreibung</label>
     <textarea
+      id="g-desc"
       value={goal.description}
       oninput={(e) => patch("description", e.target.value)}
     ></textarea>
   </div>
 
   <div class="field">
-    <label>Fußnote (unter dem Wochenplan)</label>
+    <label for="g-foot">Fußnote (unter dem Wochenplan)</label>
     <textarea
+      id="g-foot"
       value={goal.footerNote}
       oninput={(e) => patch("footerNote", e.target.value)}
     ></textarea>
@@ -65,7 +69,7 @@
 
   <div class="types">
     <div class="types-head">
-      <label>Trainingstypen</label>
+      <span class="caption">Trainingstypen</span>
       <button class="btn btn-sm" onclick={() => addType(goal.id)}>+ Typ</button>
     </div>
     {#each goal.types as t (t.id)}
@@ -96,7 +100,7 @@
 
 <style>
   .field label,
-  .types-head label {
+  .types-head .caption {
     text-transform: none;
     letter-spacing: 0;
   }
@@ -114,7 +118,7 @@
     justify-content: space-between;
     margin-bottom: 10px;
   }
-  .types-head label {
+  .types-head .caption {
     font-size: 12.5px;
     font-weight: 600;
     color: var(--text-muted);

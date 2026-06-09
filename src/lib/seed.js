@@ -204,6 +204,7 @@ function hyroxGoal() {
     types,
     days,
     notes,
+    log: {},
     footerNote:
       "Samstag bleibt fester Ruhetag. Sonntag Unterkörper – danach genug Zeit zur Erholung bis Dienstag.",
     createdAt: Date.now(),
@@ -242,6 +243,7 @@ export function emptyGoal(name = "Neues Trainingsziel") {
     ],
     days: emptyDays(),
     notes: [],
+    log: {},
     footerNote: "",
     createdAt: Date.now(),
   };

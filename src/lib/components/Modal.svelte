@@ -16,6 +16,7 @@
     onclick={(e) => e.stopPropagation()}
     role="dialog"
     aria-modal="true"
+    tabindex="-1"
   >
     <header>
       <h3>{title}</h3>

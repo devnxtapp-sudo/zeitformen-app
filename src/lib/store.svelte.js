@@ -35,6 +35,11 @@ export async function loadState() {
     state.goals = seedGoals();
   }
 
+  // migrate older saved goals that predate the completion log
+  for (const g of state.goals) {
+    if (!g.log) g.log = {};
+  }
+
   state.activeGoalId =
     (settings && settings.activeGoalId) || state.goals[0]?.id || null;
   // ensure activeGoalId still exists
@@ -150,6 +155,25 @@ export function deleteNote(goalId, noteId) {
   if (!g) return;
   g.notes = g.notes.filter((n) => n.id !== noteId);
   persist();
+}
+
+// ---- completion log ----
+// Completions are keyed by the real calendar date (YYYY-MM-DD), so the plan
+// template (MO–SO) accumulates a real history across weeks.
+export function toggleCompletion(goalId, dateStr) {
+  const g = state.goals.find((x) => x.id === goalId);
+  if (!g) return;
+  if (!g.log) g.log = {};
+  if (g.log[dateStr]) {
+    delete g.log[dateStr];
+  } else {
+    g.log[dateStr] = true;
+  }
+  persist();
+}
+
+export function isCompleted(goal, dateStr) {
+  return !!(goal && goal.log && goal.log[dateStr]);
 }
 
 export function persistNow() {

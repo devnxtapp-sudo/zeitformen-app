@@ -3,8 +3,18 @@
   import { DAY_LABELS } from "../seed.js";
   import { typeById } from "../store.svelte.js";
 
-  let { goal, dayKey, selected = false, onselect, onedit, editMode = false } =
-    $props();
+  let {
+    goal,
+    dayKey,
+    selected = false,
+    onselect,
+    onedit,
+    editMode = false,
+    weekDate = "",
+    isToday = false,
+    completed = false,
+    ontoggle,
+  } = $props();
 
   let day = $derived(goal.days[dayKey]);
   let type = $derived(typeById(goal, day.typeId));
@@ -14,6 +24,8 @@
   class="day"
   class:selected
   class:rest={day.isRest}
+  class:today={isToday}
+  class:done={completed && !day.isRest}
   onclick={() => onselect?.(dayKey)}
 >
   <div class="top">
@@ -34,6 +46,26 @@
           }
         }}
         aria-label="Tag bearbeiten">✎</span
+      >
+    {:else if !day.isRest}
+      <span
+        class="check"
+        class:on={completed}
+        role="button"
+        tabindex="0"
+        onclick={(e) => {
+          e.stopPropagation();
+          ontoggle?.(weekDate);
+        }}
+        onkeydown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            ontoggle?.(weekDate);
+          }
+        }}
+        aria-label={completed ? "Als nicht erledigt markieren" : "Als erledigt markieren"}
+        title={completed ? "Erledigt" : "Als erledigt markieren"}>✓</span
       >
     {/if}
   </div>
@@ -74,6 +106,40 @@
   }
   .day.rest {
     background: var(--bg-elev);
+  }
+  .day.today {
+    border-color: var(--border-strong);
+  }
+  .day.today .dow {
+    color: var(--accent);
+  }
+  .day.done {
+    border-color: rgba(95, 184, 122, 0.55);
+    background: rgba(95, 184, 122, 0.07);
+  }
+  .check {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.13s;
+    line-height: 1;
+  }
+  .check:hover {
+    border-color: var(--c-zone2);
+    color: var(--c-zone2);
+  }
+  .check.on {
+    background: var(--c-zone2);
+    border-color: var(--c-zone2);
+    color: #0a0b0d;
+    font-weight: 700;
   }
   .top {
     display: flex;

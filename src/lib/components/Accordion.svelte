@@ -1,7 +1,9 @@
 <script>
+  import { untrack } from "svelte";
+
   let { title, open = false, children, onedit, ondelete, editMode = false } =
     $props();
-  let isOpen = $state(open);
+  let isOpen = $state(untrack(() => open));
 </script>
 
 <div class="acc" class:open={isOpen}>
