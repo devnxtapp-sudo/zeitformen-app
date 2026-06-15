@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.gstack/
+
+# Local env (Google client id etc.)
+.env
+.env.*
+!.env.example
