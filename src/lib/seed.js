@@ -16,6 +16,62 @@ export function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
 
+// Suggested competition classes (e.g. HYROX). Free text is also allowed.
+export const CATEGORY_OPTIONS = [
+  "Single",
+  "Doubles",
+  "Mixed Doubles",
+  "Relay",
+  "Pro",
+];
+
+// ---- training modalities ----
+// A session's modality decides which metric fields are relevant – the same
+// training type (e.g. "Threshold") can be done running, on the rower or as
+// strength work, each with different units. `plan` = fields for prescribing an
+// interval, `log` = fields the athlete fills in afterwards.
+export const MODALITIES = [
+  { id: "run", label: "Laufen", amountUnits: ["km", "m", "min"], plan: ["amount", "rest"], log: ["time", "pace", "hr"] },
+  { id: "bike", label: "Rad", amountUnits: ["min", "km"], plan: ["amount", "rest"], log: ["time", "power", "hr"] },
+  { id: "row", label: "Rudern", amountUnits: ["m", "km", "min"], plan: ["amount", "rest"], log: ["time", "pace", "hr"] },
+  { id: "ski", label: "SkiErg", amountUnits: ["m", "km", "min"], plan: ["amount", "rest"], log: ["time", "pace", "hr"] },
+  { id: "swim", label: "Schwimmen", amountUnits: ["m", "min"], plan: ["amount", "rest"], log: ["time", "pace"] },
+  { id: "strength", label: "Kraft", amountUnits: ["Wdh"], plan: ["amount", "weight", "rest"], log: ["reps", "weight"] },
+  { id: "other", label: "Sonstiges", amountUnits: ["min"], plan: ["amount", "rest"], log: ["time"] },
+];
+
+// Metric labels/units shared by plan + log views.
+export const METRIC_META = {
+  amount: { label: "Menge" },
+  rest: { label: "Pause" },
+  weight: { label: "kg", unit: "kg" },
+  time: { label: "Zeit", placeholder: "mm:ss" },
+  pace: { label: "Pace", placeholder: "min/km" },
+  power: { label: "Watt", unit: "W" },
+  hr: { label: "Puls", unit: "bpm" },
+  reps: { label: "Wdh" },
+};
+
+export function modalityById(id) {
+  return MODALITIES.find((m) => m.id === id) || null;
+}
+
+// Human-readable prescription for one interval/exercise, e.g.
+// "4 × 2 km · 75 s Pause" or "Bankdrücken: 3 × 12 Wdh @ 60 kg".
+export function formatInterval(iv) {
+  const repeat = Number(iv.repeat) || 1;
+  const parts = [];
+  if (String(iv.amount ?? "").trim() !== "") parts.push(`${iv.amount} ${iv.amountUnit}`);
+  if (String(iv.weight ?? "").trim() !== "") parts.push(`@ ${iv.weight} kg`);
+  let main = parts.join(" ");
+  if (repeat > 1) main = main ? `${repeat} × ${main}` : `${repeat} Sätze`;
+  if (String(iv.rest ?? "").trim() !== "") main += ` · ${iv.rest} ${iv.restUnit || "s"} Pause`;
+  main = main.trim();
+  const name = String(iv.name ?? "").trim();
+  if (name) return main ? `${name}: ${main}` : name;
+  return main;
+}
+
 function hyroxGoal() {
   const types = [
     { id: "kraft", label: "Kraft", color: "#f0a830" },
@@ -36,11 +92,24 @@ function hyroxGoal() {
           "Aerobe Basis aufbauen – lange, ruhige Einheit im niedrigen Pulsbereich.",
         blocks: [
           {
+            title: "Info",
+            items: [
+              "Laufen vs. SkiErg/RowErg: Beim Laufen kommen die passiven Strukturen nicht so schnell hinterher – vor allem, wenn ich mehr und mehr Volumen ansammle = viel Belastung auf Kniegelenke, Sprunggelenke, Hüfte usw.",
+              "Deshalb die Grundlagen-Session mit SkiErg/RowErg, Bike oder Crosstrainer.",
+            ],
+          },
+          {
             title: "Inhalt",
             items: [
               "Lockerer Dauerlauf oder Rad im Zone-2-Bereich",
               "Gleichmäßiges Tempo, Nasenatmung möglich",
               "Optional als Brick mit kurzer Lauf-Abschlusseinheit",
+            ],
+          },
+          {
+            title: "Mögliche Trainingsmethoden",
+            items: [
+              "mindestens 60–120 min eine Session",
             ],
           },
         ],
@@ -58,12 +127,22 @@ function hyroxGoal() {
           "Laktatschwelle anheben – kontrolliertes, forderndes Tempo halten.",
         blocks: [
           {
-            title: "Aufbau einer Einheit",
+            title: "Info",
             items: [
-              "Einlaufen: 10–15 min locker",
-              "Hauptteil: 2–3 × 8–12 min an der Schwelle",
-              "Trabpause: 2–3 min zwischen den Blöcken",
-              "Auslaufen: 10 min locker",
+              "Threshold-Training (Runs, Bike, Ski usw.) – key performance driver: Wie gut kann ich Laktat abbauen!",
+              "Zone-3-Training, 80–85 % max. HF. In diesem Bereich wird sich der HYROX-Race abspielen.",
+              "Wichtig: Im Laufe des Trainings driftet die HF nach oben ab, weil das Herz-Kreislauf-System noch nicht so gut adaptiert/aufgebaut ist. Deswegen ist es unglaublich wichtig, den Grundlagenbereich aufzubauen, damit man die Threshold-Session möglichst gut machen kann.",
+            ],
+          },
+          {
+            title: "Trainingsmethoden",
+            items: [
+              "4×2 km Run, 75 sec Pause dazwischen",
+              "2×5 km, 2 min Pause",
+              "3×15 min, 2 min Pause",
+              "Tempodauerlauf über 40 min",
+              "Bike-Session 40 min",
+              "RowErg 40 min, SkiErg 40 min",
             ],
           },
         ],
@@ -125,11 +204,11 @@ function hyroxGoal() {
           "Maximale Sauerstoffaufnahme verbessern – kurze, sehr intensive Intervalle.",
         blocks: [
           {
-            title: "Aufbau einer Einheit",
+            title: "Trainingsmethoden",
             items: [
-              "Einlaufen: 10 min locker + Steigerungen",
-              "Hauptteil: 4–6 × 3 min hart / 2–3 min locker",
-              "Auslaufen: 8–10 min locker",
+              "6–8×1 km Run, 1 bis max. 1,5 min Pause dazwischen",
+              "6×3 min Bike, 1 bis max. 1,5 min Pause dazwischen",
+              "6–8×1 km RowErg, 1 bis max. 1,5 min Pause dazwischen",
             ],
           },
         ],
@@ -198,9 +277,11 @@ function hyroxGoal() {
     id: uid(),
     name: "HYROX Köln",
     sport: "HYROX",
+    sportId: "hyrox",
     targetDate: "2026-09-01",
-    description:
-      "Vorbereitung auf HYROX im September – Kombination aus Ausdauer, Kraft und Technik.",
+    targetGoal: "sub60",
+    category: "Doubles",
+    description: "",
     types,
     days,
     notes,
@@ -215,6 +296,23 @@ export function seedGoals() {
   return [hyroxGoal()];
 }
 
+// A fresh, empty training session (objective + blocks + bonus).
+export function emptySession() {
+  return { objective: "", blocks: [], bonus: "" };
+}
+
+// A second/third session attached to a weekday (Doppelsession). Carries its own
+// type/title/meta + session content, mirroring the primary day fields.
+export function emptyExtraSession() {
+  return {
+    id: uid(),
+    typeId: null,
+    title: "",
+    meta: "",
+    session: emptySession(),
+  };
+}
+
 // A fresh, empty week for newly created goals.
 export function emptyDays() {
   const days = {};
@@ -224,7 +322,8 @@ export function emptyDays() {
       title: "",
       meta: "",
       isRest: false,
-      session: { objective: "", blocks: [], bonus: "" },
+      session: emptySession(),
+      extraSessions: [],
     };
   }
   return days;
@@ -235,7 +334,10 @@ export function emptyGoal(name = "Neues Trainingsziel") {
     id: uid(),
     name,
     sport: "",
+    sportId: "custom",
     targetDate: "",
+    targetGoal: "",
+    category: "",
     description: "",
     types: [
       { id: "kraft", label: "Kraft", color: "#f0a830" },
@@ -247,4 +349,17 @@ export function emptyGoal(name = "Neues Trainingsziel") {
     footerNote: "",
     createdAt: Date.now(),
   };
+}
+
+// A fresh goal pre-filled from a sport preset (types + category default).
+export function goalFromSport(sport, name) {
+  const g = emptyGoal(name || sport.label);
+  g.sportId = sport.id;
+  g.sport = sport.label;
+  // default the target date to today (local), so the date field is pre-filled
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  g.targetDate = local.toISOString().slice(0, 10);
+  g.types = sport.types.map((t) => ({ id: uid(), label: t.label, color: t.color }));
+  return g;
 }

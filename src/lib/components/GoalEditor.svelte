@@ -1,5 +1,6 @@
 <script>
   import Modal from "./Modal.svelte";
+  import { SPORT_LIST, getSport } from "../sports.js";
   import {
     updateGoalMeta,
     addType,
@@ -12,6 +13,19 @@
 
   function patch(field, value) {
     updateGoalMeta(goal.id, { [field]: value });
+  }
+
+  // category suggestions follow the goal's sport
+  let categoryOptions = $derived(getSport(goal.sportId)?.categories ?? []);
+
+  function changeSport(id) {
+    const sport = getSport(id);
+    // switch the sport id and update the display label if it still matched the
+    // previous preset (don't clobber a custom name the user typed)
+    const patchObj = { sportId: id };
+    const prev = getSport(goal.sportId);
+    if (!goal.sport || goal.sport === prev?.label) patchObj.sport = sport?.label ?? "";
+    updateGoalMeta(goal.id, patchObj);
   }
 
   function confirmDelete() {
@@ -30,13 +44,16 @@
 
   <div class="row2">
     <div class="field">
-      <label for="g-sport">Sportart / Event</label>
-      <input
-        id="g-sport"
-        value={goal.sport}
-        oninput={(e) => patch("sport", e.target.value)}
-        placeholder="z.B. HYROX"
-      />
+      <label for="g-sportid">Sportart</label>
+      <select
+        id="g-sportid"
+        value={goal.sportId}
+        onchange={(e) => changeSport(e.target.value)}
+      >
+        {#each SPORT_LIST as s (s.id)}
+          <option value={s.id}>{s.label}</option>
+        {/each}
+      </select>
     </div>
     <div class="field">
       <label for="g-date">Zieldatum</label>
@@ -49,21 +66,39 @@
     </div>
   </div>
 
+  <div class="row2">
+    <div class="field">
+      <label for="g-target">Übergeordnetes Ziel</label>
+      <input
+        id="g-target"
+        value={goal.targetGoal}
+        oninput={(e) => patch("targetGoal", e.target.value)}
+        placeholder="z.B. sub60"
+      />
+    </div>
+    <div class="field">
+      <label for="g-cat">Klasse</label>
+      <input
+        id="g-cat"
+        list="cat-options"
+        value={goal.category}
+        oninput={(e) => patch("category", e.target.value)}
+        placeholder="z.B. Doubles"
+      />
+      <datalist id="cat-options">
+        {#each categoryOptions as opt (opt)}
+          <option value={opt}></option>
+        {/each}
+      </datalist>
+    </div>
+  </div>
+
   <div class="field">
     <label for="g-desc">Beschreibung</label>
     <textarea
       id="g-desc"
       value={goal.description}
       oninput={(e) => patch("description", e.target.value)}
-    ></textarea>
-  </div>
-
-  <div class="field">
-    <label for="g-foot">Fußnote (unter dem Wochenplan)</label>
-    <textarea
-      id="g-foot"
-      value={goal.footerNote}
-      oninput={(e) => patch("footerNote", e.target.value)}
     ></textarea>
   </div>
 
@@ -108,6 +143,9 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+  }
+  .field {
+    min-width: 0;
   }
   .types {
     margin-top: 6px;

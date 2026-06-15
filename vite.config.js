@@ -8,10 +8,11 @@ export default defineConfig({
     svelte(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: null,
       includeAssets: ["favicon.svg"],
       manifest: {
-        name: "TrainingHub",
-        short_name: "TrainingHub",
+        name: "rxZone",
+        short_name: "rxZone",
         description: "Trainingsplanung & Ziele verwalten",
         theme_color: "#0a0b0d",
         background_color: "#0a0b0d",

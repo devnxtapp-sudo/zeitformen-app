@@ -14,8 +14,6 @@
   );
 
   let pct = $derived(planned ? Math.round((doneThisWeek / planned) * 100) : 0);
-
-  let totalAllTime = $derived(Object.keys(goal.log ?? {}).length);
 </script>
 
 <div class="progress">
@@ -27,10 +25,6 @@
     <div class="bar">
       <div class="fill" style="width: {pct}%"></div>
     </div>
-  </div>
-  <div class="total">
-    <span class="t-num">{totalAllTime}</span>
-    <span class="t-lbl">erledigt insgesamt</span>
   </div>
 </div>
 
@@ -80,31 +74,5 @@
     background: var(--c-zone2);
     border-radius: 999px;
     transition: width 0.3s ease;
-  }
-  .total {
-    flex: 0 0 auto;
-    text-align: center;
-    padding-left: 18px;
-    border-left: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .t-num {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--accent);
-    line-height: 1;
-  }
-  .t-lbl {
-    font-size: 11px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  @media (max-width: 480px) {
-    .total {
-      padding-left: 12px;
-    }
   }
 </style>

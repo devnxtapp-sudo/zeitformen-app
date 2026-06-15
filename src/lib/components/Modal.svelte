@@ -1,15 +1,15 @@
 <script>
-  let { title = "", onclose, children } = $props();
+  let { title = "", onclose, dismissable = true, children } = $props();
 
   function onkeydown(e) {
-    if (e.key === "Escape") onclose?.();
+    if (e.key === "Escape" && dismissable) onclose?.();
   }
 </script>
 
 <svelte:window {onkeydown} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-<div class="overlay" onclick={() => onclose?.()} role="presentation">
+<div class="overlay" onclick={() => dismissable && onclose?.()} role="presentation">
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
   <div
     class="modal"
@@ -18,10 +18,14 @@
     aria-modal="true"
     tabindex="-1"
   >
-    <header>
-      <h3>{title}</h3>
-      <button class="btn-ghost close" onclick={() => onclose?.()} aria-label="Schließen">✕</button>
-    </header>
+    {#if title || dismissable}
+      <header>
+        <h3>{title}</h3>
+        {#if dismissable}
+          <button class="btn-ghost close" onclick={() => onclose?.()} aria-label="Schließen">✕</button>
+        {/if}
+      </header>
+    {/if}
     <div class="body">
       {@render children?.()}
     </div>
