@@ -1,0 +1,7 @@
+name = "training-app"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-06-01"
+
+[[kv_namespaces]]
+binding = "DATA"
+id = "e1bb336849dc415693ad874b575f27f2"
