@@ -31,6 +31,7 @@
 
 <div class="packlist">
   <div class="topbar">
+    <button class="back-btn" onclick={() => onback?.()} aria-label="Zurück">‹</button>
     <h2>Packliste</h2>
   </div>
 

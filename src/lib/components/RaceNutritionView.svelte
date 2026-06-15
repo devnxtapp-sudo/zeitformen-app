@@ -75,6 +75,7 @@
 
 <div class="race-nut">
   <div class="topbar">
+    <button class="back-btn" onclick={() => onback?.()} aria-label="Zurück">‹</button>
     <h2>Nutrition-Strategie</h2>
   </div>
 
