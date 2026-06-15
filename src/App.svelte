@@ -184,7 +184,7 @@
   {:else if app.view === "garmin"}
     <GarminView onback={() => setView("dashboard")} />
   {:else if app.view === "pace"}
-    <PaceCalc onback={() => setView("body")} />
+    <PaceCalc onback={() => setView("dashboard")} />
   {:else if app.view === "body"}
     <BodyAnalysisView onback={() => setView("dashboard")} />
   {:else if app.view === "nutrition"}
@@ -316,6 +316,7 @@
       onstats={goal ? () => setView("stats") : undefined}
       onsettings={goal ? () => (editingGoal = true) : undefined}
       onbody={() => setView("body")}
+      onpace={() => setView("pace")}
       onnutrition={() => setView("nutrition")}
       onracenutrition={() => setView("racenutrition")}
       onpacklist={() => setView("packlist")}

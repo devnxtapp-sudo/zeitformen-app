@@ -11,6 +11,7 @@
     oncalendar,
     onstats,
     onbody,
+    onpace,
     onnutrition,
     onracenutrition,
     onpacklist,
@@ -144,6 +145,12 @@
         <button class="item" onclick={() => { onbody(); onclose?.(); }}>
           <span class="ic" aria-hidden="true">◉</span>
           <span>Körperanalyse</span>
+        </button>
+      {/if}
+      {#if onpace}
+        <button class="item" onclick={() => { onpace(); onclose?.(); }}>
+          <span class="ic" aria-hidden="true">◷</span>
+          <span>Pace-Rechner</span>
         </button>
       {/if}
       {#if onnutrition}
