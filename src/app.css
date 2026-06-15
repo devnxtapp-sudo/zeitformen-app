@@ -151,6 +151,35 @@ button {
   font-size: 13px;
 }
 
+/* subpage header + canonical back button (shared across all views) */
+.subpage-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.subpage-head h2 {
+  font-size: 20px;
+}
+.back-btn {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.back-btn:hover {
+  border-color: var(--accent);
+}
+
 /* form fields */
 .field {
   display: flex;

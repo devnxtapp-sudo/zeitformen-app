@@ -53,7 +53,7 @@
   onpointerdown={onPointerDown}
 >
   <header class="head">
-    <button class="back" onclick={back} aria-label="Zurück">‹</button>
+    <button class="back-btn" onclick={back} aria-label="Zurück">‹</button>
     <span class="title">Einstellungen</span>
   </header>
 
@@ -123,24 +123,6 @@
     align-items: center;
     gap: 10px;
     padding: 2px 16px 22px;
-  }
-  .back {
-    flex: 0 0 auto;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: none;
-    background: var(--card);
-    color: var(--text);
-    font-size: 24px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-  .back:hover {
-    background: var(--card-hover);
   }
   .title {
     font-size: 19px;

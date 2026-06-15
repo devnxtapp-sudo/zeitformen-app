@@ -505,33 +505,6 @@
     font-size: 14.5px;
     max-width: 560px;
   }
-  .subpage-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 18px;
-  }
-  .subpage-head h2 {
-    font-size: 20px;
-  }
-  .back-btn {
-    flex: 0 0 auto;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--bg-elev);
-    color: var(--text);
-    font-size: 22px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-  .back-btn:hover {
-    border-color: var(--accent);
-  }
   .footer-note {
     font-size: 14px;
     margin-top: -4px;

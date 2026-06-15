@@ -106,7 +106,7 @@
 <div class="body-analysis">
   <div class="head">
     <div class="head-title">
-      <button class="back" onclick={() => onback?.()} aria-label="Zurück">‹</button>
+      <button class="back-btn" onclick={() => onback?.()} aria-label="Zurück">‹</button>
       <div>
         <h2>Körperanalyse</h2>
         <span class="sub muted">Deine Körperwerte im Verlauf</span>
@@ -251,24 +251,6 @@
     gap: 8px;
     flex-wrap: wrap;
     justify-content: flex-end;
-  }
-  .back {
-    flex: 0 0 auto;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--bg-elev);
-    color: var(--text);
-    font-size: 22px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-  .back:hover {
-    border-color: var(--c-zone2);
   }
   .head h2 {
     font-size: 20px;

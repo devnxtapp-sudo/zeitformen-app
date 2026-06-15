@@ -76,7 +76,7 @@
 
 <div class="account">
   <div class="head">
-    <button class="back" onclick={() => onback?.()} aria-label="Zurück">‹</button>
+    <button class="back-btn" onclick={() => onback?.()} aria-label="Zurück">‹</button>
     <h2>Konto</h2>
   </div>
 
@@ -199,24 +199,6 @@
   }
   .head h2 {
     font-size: 20px;
-  }
-  .back {
-    flex: 0 0 auto;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--bg-elev);
-    color: var(--text);
-    font-size: 22px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-  .back:hover {
-    border-color: var(--accent);
   }
   .panel {
     background: var(--card);
