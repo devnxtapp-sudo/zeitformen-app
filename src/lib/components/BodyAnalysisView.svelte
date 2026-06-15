@@ -9,7 +9,7 @@
   } from "../bodyMetrics.js";
   import BodyMeasurementEditor from "./BodyMeasurementEditor.svelte";
 
-  let { onback, onpace } = $props();
+  let { onback } = $props();
 
   // chronological copy (oldest -> newest) for trends; reverse for the list.
   let sorted = $derived(
@@ -113,9 +113,6 @@
       </div>
     </div>
     <div class="head-actions">
-      {#if onpace}
-        <button class="btn btn-ghost btn-sm" onclick={() => onpace?.()}>Pace-Rechner</button>
-      {/if}
       <button class="btn btn-primary btn-sm" onclick={openNew}>+ Messung</button>
     </div>
   </div>

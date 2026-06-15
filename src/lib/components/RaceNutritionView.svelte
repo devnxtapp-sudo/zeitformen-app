@@ -75,14 +75,7 @@
 
 <div class="race-nut">
   <div class="topbar">
-    <button class="ico-btn" onclick={() => onback?.()} aria-label="Zurück">‹</button>
     <h2>Nutrition-Strategie</h2>
-    <span class="ico-btn flask" aria-hidden="true">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3" />
-        <path d="M7 14h10" />
-      </svg>
-    </span>
   </div>
 
   <section class="hero">
@@ -211,26 +204,7 @@
   }
   .topbar h2 {
     flex: 1;
-    text-align: center;
     font-size: 18px;
-  }
-  .ico-btn {
-    flex: 0 0 auto;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: none;
-    background: var(--accent, #f0a830);
-    color: #1a1205;
-    font-size: 22px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-  .ico-btn.flask {
-    cursor: default;
   }
   .hero {
     background: var(--bg-elev);

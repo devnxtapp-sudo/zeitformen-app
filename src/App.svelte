@@ -186,7 +186,7 @@
   {:else if app.view === "pace"}
     <PaceCalc onback={() => setView("body")} />
   {:else if app.view === "body"}
-    <BodyAnalysisView onback={() => setView("dashboard")} onpace={() => setView("pace")} />
+    <BodyAnalysisView onback={() => setView("dashboard")} />
   {:else if app.view === "nutrition"}
     <NutritionView onback={() => setView("dashboard")} />
   {:else if app.view === "racenutrition"}
