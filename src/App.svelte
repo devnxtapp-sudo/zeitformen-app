@@ -30,6 +30,7 @@
   import AccountView from "./lib/components/AccountView.svelte";
   import GarminView from "./lib/components/GarminView.svelte";
   import PaceCalc from "./lib/components/PaceCalc.svelte";
+  import IntervalTimer from "./lib/components/IntervalTimer.svelte";
   import AuthScreen from "./lib/components/AuthScreen.svelte";
   import { auth, checkSession } from "./lib/auth.svelte.js";
 
@@ -187,6 +188,8 @@
     <GarminView onback={() => setView("dashboard")} />
   {:else if app.view === "pace"}
     <PaceCalc onback={() => setView("dashboard")} />
+  {:else if app.view === "timer"}
+    <IntervalTimer onback={() => setView("dashboard")} />
   {:else if app.view === "body"}
     <BodyAnalysisView onback={() => setView("dashboard")} />
   {:else if app.view === "nutrition"}
@@ -322,6 +325,7 @@
       onsettings={goal ? () => (editingGoal = true) : undefined}
       onbody={() => setView("body")}
       onpace={() => setView("pace")}
+      ontimer={() => setView("timer")}
       onnutrition={() => setView("nutrition")}
       onracenutrition={() => setView("racenutrition")}
       onpacklist={() => setView("packlist")}

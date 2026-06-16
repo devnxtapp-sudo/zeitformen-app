@@ -15,6 +15,7 @@
     onstats,
     onbody,
     onpace,
+    ontimer,
     onnutrition,
     onracenutrition,
     onpacklist,
@@ -170,6 +171,12 @@
         <button class="item" onclick={() => { onpace(); onclose?.(); }}>
           <span class="ic" aria-hidden="true">◷</span>
           <span>Pace-Rechner</span>
+        </button>
+      {/if}
+      {#if ontimer}
+        <button class="item" onclick={() => { ontimer(); onclose?.(); }}>
+          <span class="ic" aria-hidden="true">◴</span>
+          <span>Intervall-Timer</span>
         </button>
       {/if}
       {#if onnutrition}
