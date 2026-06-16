@@ -259,8 +259,8 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(91, 141, 239, 0.14);
-    color: var(--accent2, #5b8def);
+    background: rgba(var(--accent-rgb), 0.14);
+    color: var(--accent2, #22d3ee);
     border-radius: 999px;
     padding: 6px 12px;
     font-size: 13px;
@@ -357,7 +357,7 @@
     flex: 0 0 auto;
     font-size: 13px;
     font-weight: 700;
-    color: var(--accent2, #5b8def);
+    color: var(--accent2, #22d3ee);
   }
   .phase-del {
     flex: 0 0 auto;
@@ -411,8 +411,8 @@
   }
   .qty {
     flex: 0 0 auto;
-    background: rgba(91, 141, 239, 0.16);
-    color: var(--accent2, #5b8def);
+    background: rgba(var(--accent-rgb), 0.16);
+    color: var(--accent2, #22d3ee);
     border-radius: 6px;
     padding: 4px 8px;
     font-size: 13px;

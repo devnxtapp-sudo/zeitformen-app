@@ -6,7 +6,7 @@
 const C = {
   orange: "#f0a830",
   green: "#5fb87a",
-  blue: "#5b8def",
+  blue: "#22d3ee",
   purple: "#a779e9",
   grey: "#9aa0a6",
   red: "#e5534b",

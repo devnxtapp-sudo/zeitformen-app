@@ -284,13 +284,13 @@
     border: none;
     padding: 0;
     overflow: hidden;
-    background: linear-gradient(135deg, var(--accent), #3b6fd4);
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 22px;
     font-weight: 700;
-    color: #fff;
+    color: var(--on-accent);
     cursor: pointer;
   }
   .avatar-lg img {
@@ -300,11 +300,11 @@
     display: block;
   }
   .avatar-lg:hover {
-    box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.25);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.25);
   }
   .avatar-lg.syncing {
     animation: avatar-spin 0.9s linear infinite;
-    box-shadow: 0 0 0 2px rgba(91, 141, 239, 0.5);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.5);
   }
   @keyframes avatar-spin {
     from {

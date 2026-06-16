@@ -220,6 +220,7 @@
     font-weight: 700;
     color: var(--accent);
     line-height: 1;
+    text-shadow: var(--glow);
   }
   .s-lbl {
     font-size: 12px;
@@ -313,7 +314,7 @@
     white-space: nowrap;
   }
   .mt-btn.active {
-    background: rgba(91, 141, 239, 0.12);
+    background: rgba(var(--accent-rgb), 0.12);
     border-color: var(--accent);
     color: var(--accent);
   }

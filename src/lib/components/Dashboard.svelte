@@ -103,7 +103,7 @@
     background: var(--accent);
     border: none;
     border-radius: var(--radius);
-    color: #fff;
+    color: var(--on-accent);
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;

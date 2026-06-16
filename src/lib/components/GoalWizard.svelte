@@ -341,14 +341,14 @@
   }
   .comp:hover {
     border-color: var(--accent);
-    background: rgba(91, 141, 239, 0.08);
+    background: rgba(var(--accent-rgb), 0.08);
   }
   .comp:active {
     transform: scale(0.98);
   }
   .comp.active {
     border-color: var(--accent);
-    background: rgba(91, 141, 239, 0.12);
+    background: rgba(var(--accent-rgb), 0.12);
   }
   .custom {
     display: flex;

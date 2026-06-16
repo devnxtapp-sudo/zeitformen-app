@@ -15,12 +15,17 @@
   /* training type accents */
   --c-kraft: #f0a830;
   --c-zone2: #5fb87a;
-  --c-threshold: #5b8def;
+  --c-threshold: #22d3ee;
   --c-vo2: #a779e9;
   --c-swim: #9aa0a6;
   --c-rest: #6b7178;
 
-  --accent: #5b8def;
+  /* cyan/teal accent (neon-on-black theme) */
+  --accent: #22d3ee;
+  --accent-strong: #06b6d4; /* hover / pressed */
+  --accent-rgb: 34, 211, 238; /* for rgba() tints + glows */
+  --on-accent: #04181c; /* readable text/icon on a filled cyan surface */
+  --glow: 0 0 18px rgba(34, 211, 238, 0.45);
 
   --radius: 14px;
   --radius-sm: 9px;
@@ -124,11 +129,12 @@ button {
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
+  font-weight: 650;
 }
 .btn-primary:hover {
-  background: #4f7fe0;
-  border-color: #4f7fe0;
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
 }
 .btn-ghost {
   background: transparent;

@@ -76,7 +76,7 @@ function hyroxGoal() {
   const types = [
     { id: "kraft", label: "Kraft", color: "#f0a830" },
     { id: "zone2", label: "Zone 2", color: "#5fb87a" },
-    { id: "threshold", label: "Threshold", color: "#5b8def" },
+    { id: "threshold", label: "Threshold", color: "#22d3ee" },
     { id: "vo2", label: "VO₂max", color: "#a779e9" },
     { id: "swim", label: "Schwimmen", color: "#9aa0a6" },
   ];

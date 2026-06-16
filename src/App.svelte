@@ -381,8 +381,8 @@
     border: none;
     padding: 0;
     overflow: hidden;
-    background: linear-gradient(135deg, var(--accent), #3b6fd4);
-    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    color: var(--on-accent);
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
@@ -399,12 +399,12 @@
   }
   .avatar-btn:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.25);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.25);
   }
   /* spin the avatar while a sync is in flight (1× tap triggers it) */
   .avatar-btn.syncing {
     animation: avatar-spin 0.9s linear infinite;
-    box-shadow: 0 0 0 2px rgba(91, 141, 239, 0.5);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.5);
   }
   @keyframes avatar-spin {
     from {
@@ -511,12 +511,18 @@
   .days-pill .flag-icon {
     flex: 0 0 auto;
   }
+  .days-pill .days-num {
+    text-shadow: var(--glow);
+  }
   .days-pill .days-lbl {
     font-weight: 600;
     color: var(--accent);
   }
   .days-pill.past {
     color: var(--text-muted);
+  }
+  .days-pill.past .days-num {
+    text-shadow: none;
   }
   .goal-desc {
     margin-top: 10px;
@@ -577,7 +583,7 @@
     margin-bottom: 4px;
     border-radius: 50%;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
   }
   .empty-title {
     font-size: 16px;

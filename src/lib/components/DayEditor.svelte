@@ -294,7 +294,7 @@
   .sess-tab.active {
     border-color: var(--accent);
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
   }
   .sess-tab.add {
     color: var(--accent);
@@ -346,7 +346,7 @@
   .mod-chip.active {
     border-color: var(--accent);
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
   }
   .interval {
     display: flex;

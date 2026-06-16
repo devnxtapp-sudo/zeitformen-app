@@ -602,7 +602,7 @@ export function swapDays(goalId, keyA, keyB) {
 export function addType(goalId) {
   const g = state.goals.find((x) => x.id === goalId);
   if (!g) return;
-  g.types.push({ id: uid(), label: "Neuer Typ", color: "#5b8def" });
+  g.types.push({ id: uid(), label: "Neuer Typ", color: "#22d3ee" });
   persist(true);
 }
 
