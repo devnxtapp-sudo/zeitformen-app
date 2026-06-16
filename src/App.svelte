@@ -58,6 +58,23 @@
   let profileOpen = $state(false);
   let settingsOpen = $state(false);
 
+  // Avatar gesture: single tap = manual sync, double tap = open the menu.
+  // A short timer disambiguates the two — a second click within the window
+  // cancels the pending sync and opens the drawer instead.
+  let avatarTapTimer = null;
+  function onAvatarClick() {
+    if (avatarTapTimer) {
+      clearTimeout(avatarTapTimer);
+      avatarTapTimer = null;
+      profileOpen = true;
+      return;
+    }
+    avatarTapTimer = setTimeout(() => {
+      avatarTapTimer = null;
+      syncNow();
+    }, 260);
+  }
+
   // Wizard done -> jump to the week view in edit mode so the user fills the plan.
   function onWizardCreated() {
     creatingGoal = false;
@@ -105,9 +122,10 @@
       {#if auth.user}
         <button
           class="avatar-btn"
-          onclick={() => (profileOpen = true)}
-          title={auth.user.email}
-          aria-label="Profil und Menü"
+          class:syncing={app.syncing}
+          onclick={onAvatarClick}
+          title={`${auth.user.email} · 1× tippen: synchronisieren, 2× tippen: Menü`}
+          aria-label="Tippen zum Synchronisieren, doppelt tippen für Menü"
         >
           {#if auth.user.picture}
             <img src={auth.user.picture} alt="" referrerpolicy="no-referrer" />
@@ -178,31 +196,6 @@
         </span>
       {/if}
     </div>
-    <button
-      class="sync-btn"
-      class:syncing={app.syncing}
-      onclick={() => syncNow()}
-      disabled={app.syncing}
-      title="Daten synchronisieren"
-      aria-label="Daten synchronisieren"
-    >
-      <svg
-        class="sync-icon"
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
-      >
-        <polyline points="23 4 23 10 17 10" />
-        <polyline points="1 20 1 14 7 14" />
-        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-      </svg>
-    </button>
   </header>
 
   {#if app.view === "account"}
@@ -394,44 +387,6 @@
     gap: 10px;
     min-width: 0;
   }
-  .sync-btn {
-    flex: 0 0 auto;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--card);
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-  }
-  .sync-btn:hover:not(:disabled) {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-  .sync-btn:disabled {
-    cursor: default;
-  }
-  .sync-btn.syncing {
-    color: var(--accent);
-  }
-  .sync-icon {
-    display: block;
-  }
-  .sync-btn.syncing .sync-icon {
-    animation: sync-spin 0.9s linear infinite;
-  }
-  @keyframes sync-spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
   .avatar-btn {
     flex: 0 0 auto;
     width: 36px;
@@ -459,6 +414,19 @@
   .avatar-btn:hover {
     transform: scale(1.05);
     box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.25);
+  }
+  /* spin the avatar while a sync is in flight (1× tap triggers it) */
+  .avatar-btn.syncing {
+    animation: avatar-spin 0.9s linear infinite;
+    box-shadow: 0 0 0 2px rgba(91, 141, 239, 0.5);
+  }
+  @keyframes avatar-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
   .goal-select {
     width: auto;
