@@ -3,7 +3,7 @@
   import SessionDetail from "./SessionDetail.svelte";
   import StatsView from "./StatsView.svelte";
   import ExerciseSwiper from "./ExerciseSwiper.svelte";
-  import { weekDates, todayKey, dayKeyOf, parseYmd } from "../dateutil.js";
+  import { weekDates, todayKey, dayKeyOf } from "../dateutil.js";
   import { updateLogEntry } from "../store.svelte.js";
 
   let { goal, ongotoplan } = $props();
@@ -13,14 +13,6 @@
   const todayDayKey = dayKeyOf(today);
 
   let todayDay = $derived(goal.days[todayDayKey]);
-
-  let todayLabel = $derived(
-    parseYmd(today).toLocaleDateString("de-DE", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    }),
-  );
 
   let started = $state(false);
 
@@ -38,7 +30,6 @@
 <section class="today-block">
   <div class="today-head">
     <span class="eyebrow">Heutiges Training</span>
-    <span class="date">{todayLabel}</span>
   </div>
   <SessionDetail
     {goal}
@@ -87,10 +78,6 @@
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--accent);
-  }
-  .date {
-    font-size: 13px;
-    color: var(--text-muted);
   }
   .start-btn {
     display: flex;
