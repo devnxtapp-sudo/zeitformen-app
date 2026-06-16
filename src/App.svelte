@@ -311,6 +311,7 @@
       onclose={() => (profileOpen = false)}
       onsync={() => syncNow()}
       syncing={app.syncing}
+      synced={app.synced}
       oncreate={() => (creatingGoal = true)}
       ontoggleedit={goal ? startEdit : undefined}
       editMode={app.editMode}

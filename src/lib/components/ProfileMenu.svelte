@@ -5,6 +5,7 @@
     onclose,
     onsync,
     syncing = false,
+    synced = false,
     onsettings,
     oncreate,
     ontoggleedit,
@@ -100,7 +101,15 @@
     <div class="meta">
       <span class="name">{name}</span>
       <span class="mail">{email}</span>
-      <span class="sync-hint">{syncing ? "Synchronisiert …" : "Tippen zum Synchronisieren"}</span>
+      <span class="sync-hint" class:done={synced && !syncing}>
+        {#if syncing}
+          Synchronisiert …
+        {:else if synced}
+          <span class="sync-dot" aria-hidden="true"></span>Synchronisiert
+        {:else}
+          Tippen zum Synchronisieren
+        {/if}
+      </span>
     </div>
   </header>
 
@@ -324,10 +333,23 @@
     white-space: nowrap;
   }
   .sync-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 11.5px;
     font-weight: 600;
     color: var(--accent);
     margin-top: 1px;
+  }
+  .sync-hint.done {
+    color: var(--c-zone2, #5fb87a);
+  }
+  .sync-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c-zone2, #5fb87a);
+    flex: 0 0 auto;
   }
   .menu {
     display: flex;

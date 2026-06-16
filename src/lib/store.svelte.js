@@ -16,6 +16,7 @@ export const state = $state({
   view: "dashboard", // 'dashboard' | 'week' | 'calendar' | 'stats' | 'body' | 'nutrition'
   loaded: false,
   syncing: false, // true while a pull/reconcile is in flight (drives the header spinner)
+  synced: false, // true after a successful sync (green "Synchronisiert" indicator)
 });
 
 // Default shape for the nutrition plan: a single set of daily macro targets plus
@@ -426,15 +427,19 @@ export async function loadState() {
 // Pull the server snapshot and reconcile with local (last-write-wins by mtime).
 export async function pullAndReconcile() {
   state.syncing = true;
+  state.synced = false;
   const started = Date.now();
+  let ok = false;
   try {
-    await pullAndReconcileInner();
+    ok = await pullAndReconcileInner();
   } finally {
     // keep the spinner visible briefly so the sync stays perceptible even when
     // the round-trip is near-instant
     const elapsed = Date.now() - started;
     if (elapsed < 650) await new Promise((r) => setTimeout(r, 650 - elapsed));
     state.syncing = false;
+    // green "Synchronisiert" indicator stays until the next sync begins
+    state.synced = ok;
   }
 }
 
@@ -449,7 +454,7 @@ async function pullAndReconcileInner() {
   try {
     snap = await api.syncGet();
   } catch {
-    return; // offline or not authenticated — keep local
+    return false; // offline or not authenticated — keep local
   }
   const serverTs = snap?.updatedAt || 0;
 
@@ -482,6 +487,7 @@ async function pullAndReconcileInner() {
     serverUpdatedAt = serverTs;
     await saveSyncMeta();
   }
+  return true;
 }
 
 export async function pushNow() {
