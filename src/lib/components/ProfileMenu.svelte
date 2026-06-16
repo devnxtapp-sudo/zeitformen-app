@@ -3,6 +3,8 @@
 
   let {
     onclose,
+    onsync,
+    syncing = false,
     onsettings,
     oncreate,
     ontoggleedit,
@@ -81,7 +83,14 @@
   onpointerdown={onPointerDown}
 >
   <header class="who">
-    <button class="avatar-lg" onclick={close} aria-label="Menü schließen">
+    <button
+      class="avatar-lg"
+      class:syncing
+      onclick={() => onsync?.()}
+      disabled={syncing}
+      aria-label="Daten synchronisieren"
+      title="Tippen zum Synchronisieren"
+    >
       {#if picture}
         <img src={picture} alt={name} referrerpolicy="no-referrer" />
       {:else}
@@ -91,6 +100,7 @@
     <div class="meta">
       <span class="name">{name}</span>
       <span class="mail">{email}</span>
+      <span class="sync-hint">{syncing ? "Synchronisiert …" : "Tippen zum Synchronisieren"}</span>
     </div>
   </header>
 
@@ -283,6 +293,18 @@
   .avatar-lg:hover {
     box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.25);
   }
+  .avatar-lg.syncing {
+    animation: avatar-spin 0.9s linear infinite;
+    box-shadow: 0 0 0 2px rgba(91, 141, 239, 0.5);
+  }
+  @keyframes avatar-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
   .meta {
     display: flex;
     flex-direction: column;
@@ -300,6 +322,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .sync-hint {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 1px;
   }
   .menu {
     display: flex;

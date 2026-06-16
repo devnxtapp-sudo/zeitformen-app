@@ -58,23 +58,6 @@
   let profileOpen = $state(false);
   let settingsOpen = $state(false);
 
-  // Avatar gesture: single tap = manual sync, double tap = open the menu.
-  // A short timer disambiguates the two — a second click within the window
-  // cancels the pending sync and opens the drawer instead.
-  let avatarTapTimer = null;
-  function onAvatarClick() {
-    if (avatarTapTimer) {
-      clearTimeout(avatarTapTimer);
-      avatarTapTimer = null;
-      profileOpen = true;
-      return;
-    }
-    avatarTapTimer = setTimeout(() => {
-      avatarTapTimer = null;
-      syncNow();
-    }, 260);
-  }
-
   // Wizard done -> jump to the week view in edit mode so the user fills the plan.
   function onWizardCreated() {
     creatingGoal = false;
@@ -123,9 +106,9 @@
         <button
           class="avatar-btn"
           class:syncing={app.syncing}
-          onclick={onAvatarClick}
-          title={`${auth.user.email} · 1× tippen: synchronisieren, 2× tippen: Menü`}
-          aria-label="Tippen zum Synchronisieren, doppelt tippen für Menü"
+          onclick={() => (profileOpen = true)}
+          title={auth.user.email}
+          aria-label="Profil und Menü"
         >
           {#if auth.user.picture}
             <img src={auth.user.picture} alt="" referrerpolicy="no-referrer" />
@@ -326,6 +309,8 @@
   {#if profileOpen && !settingsOpen}
     <ProfileMenu
       onclose={() => (profileOpen = false)}
+      onsync={() => syncNow()}
+      syncing={app.syncing}
       oncreate={() => (creatingGoal = true)}
       ontoggleedit={goal ? startEdit : undefined}
       editMode={app.editMode}
