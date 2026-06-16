@@ -15,6 +15,7 @@ export const state = $state({
   editMode: false,
   view: "dashboard", // 'dashboard' | 'week' | 'calendar' | 'stats' | 'body' | 'nutrition'
   loaded: false,
+  syncing: false, // true while a pull/reconcile is in flight (drives the header spinner)
 });
 
 // Default shape for the nutrition plan: a single set of daily macro targets plus
@@ -424,6 +425,26 @@ export async function loadState() {
 // ---- sync orchestration ----
 // Pull the server snapshot and reconcile with local (last-write-wins by mtime).
 export async function pullAndReconcile() {
+  state.syncing = true;
+  const started = Date.now();
+  try {
+    await pullAndReconcileInner();
+  } finally {
+    // keep the spinner visible briefly so the sync stays perceptible even when
+    // the round-trip is near-instant
+    const elapsed = Date.now() - started;
+    if (elapsed < 650) await new Promise((r) => setTimeout(r, 650 - elapsed));
+    state.syncing = false;
+  }
+}
+
+// Manual re-sync triggered from the header sync button.
+export async function syncNow() {
+  if (!syncEnabled) return;
+  await pullAndReconcile();
+}
+
+async function pullAndReconcileInner() {
   let snap;
   try {
     snap = await api.syncGet();

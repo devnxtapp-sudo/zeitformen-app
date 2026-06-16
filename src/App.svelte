@@ -8,6 +8,7 @@
     toggleEdit,
     toggleCompletion,
     setView,
+    syncNow,
   } from "./lib/store.svelte.js";
   import { weekDates, todayKey, parseYmd } from "./lib/dateutil.js";
   import Dashboard from "./lib/components/Dashboard.svelte";
@@ -177,6 +178,31 @@
         </span>
       {/if}
     </div>
+    <button
+      class="sync-btn"
+      class:syncing={app.syncing}
+      onclick={() => syncNow()}
+      disabled={app.syncing}
+      title="Daten synchronisieren"
+      aria-label="Daten synchronisieren"
+    >
+      <svg
+        class="sync-icon"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <polyline points="23 4 23 10 17 10" />
+        <polyline points="1 20 1 14 7 14" />
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+      </svg>
+    </button>
   </header>
 
   {#if app.view === "account"}
@@ -367,6 +393,44 @@
     flex-wrap: wrap;
     gap: 10px;
     min-width: 0;
+  }
+  .sync-btn {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .sync-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .sync-btn:disabled {
+    cursor: default;
+  }
+  .sync-btn.syncing {
+    color: var(--accent);
+  }
+  .sync-icon {
+    display: block;
+  }
+  .sync-btn.syncing .sync-icon {
+    animation: sync-spin 0.9s linear infinite;
+  }
+  @keyframes sync-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
   .avatar-btn {
     flex: 0 0 auto;
