@@ -8,7 +8,7 @@
   --text-dim: #6b7178;
   --accent: #5b8def;
   --radius: 14px;
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
