@@ -10,7 +10,7 @@
     setView,
     syncNow,
   } from "./lib/store.svelte.js";
-  import { weekDates, todayKey, parseYmd } from "./lib/dateutil.js";
+  import { weekDates, todayKey } from "./lib/dateutil.js";
   import Dashboard from "./lib/components/Dashboard.svelte";
   import WeekProgress from "./lib/components/WeekProgress.svelte";
   import WeekGrid from "./lib/components/WeekGrid.svelte";
@@ -45,11 +45,6 @@
 
   const week = weekDates();
   const today = todayKey();
-  const todayLabel = parseYmd(today).toLocaleDateString("de-DE", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
 
   // modal state
   let editingDay = $state(null);
@@ -275,7 +270,6 @@
     <section class="today-block">
       <div class="today-head">
         <span class="eyebrow">Heutiges Training</span>
-        <span class="date">{todayLabel}</span>
       </div>
       <button class="empty-card" onclick={() => (creatingGoal = true)}>
         <span class="empty-plus" aria-hidden="true">
@@ -555,10 +549,6 @@
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--accent);
-  }
-  .date {
-    font-size: 13px;
-    color: var(--text-muted);
   }
   .empty-card {
     display: flex;
