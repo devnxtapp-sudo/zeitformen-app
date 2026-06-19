@@ -33,7 +33,6 @@
   import IntervalTimer from "./lib/components/IntervalTimer.svelte";
   import AuthScreen from "./lib/components/AuthScreen.svelte";
   import { auth, checkSession } from "./lib/auth.svelte.js";
-  import { Select } from "flowbite-svelte";
 
   // load local state first, then resolve session + sync. The .catch guard makes
   // sure checkSession() still runs (and the loading screen clears) even if local
@@ -115,16 +114,15 @@
         </button>
       {/if}
       {#if app.goals.length}
-        <Select
+        <select
           class="goal-select"
-          placeholder=""
           value={app.activeGoalId}
           onchange={(e) => setActiveGoal(e.target.value)}
         >
           {#each app.goals as g (g.id)}
             <option value={g.id}>{g.name}</option>
           {/each}
-        </Select>
+        </select>
       {/if}
       {#if goal?.targetDate && countdown !== null}
         <span
