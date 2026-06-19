@@ -1,4 +1,5 @@
 <script>
+  import { Button, Input } from "flowbite-svelte";
   import Modal from "./Modal.svelte";
   import { COMPETITIONS, SPORTS } from "../sports.js";
 
@@ -23,94 +24,36 @@
 </script>
 
 <Modal title="" {onclose} {dismissable}>
-  <h4 class="picker-title">Wähle deinen Wettkampf</h4>
-  <div class="grid">
+  <h4 class="mb-[18px] text-center text-[17px] font-bold text-ink">Wähle deinen Wettkampf</h4>
+  <div class="grid grid-cols-2 gap-2.5">
     {#each COMPETITIONS as comp (comp.id)}
       <button
-        class="sport"
-        class:active={comp.custom && showCustom}
+        class="flex min-h-[56px] items-center justify-center rounded-xl border border-line bg-card px-2 py-3.5 text-center text-sm font-semibold text-ink transition-[border-color,background,transform] duration-100 hover:border-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.08)] active:scale-[0.98] sm:px-3.5 sm:py-4"
+        class:!border-[var(--accent)]={comp.custom && showCustom}
+        class:!bg-[rgba(var(--accent-rgb),0.12)]={comp.custom && showCustom}
         onclick={() => choose(comp)}
       >
-        <span class="label">{comp.label}</span>
+        <span>{comp.label}</span>
       </button>
     {/each}
   </div>
 
   {#if showCustom}
-    <div class="custom">
-      <input
+    <div class="mt-3.5 flex gap-2.5">
+      <Input
         bind:value={customName}
+        class="min-w-0 flex-auto"
         placeholder="Name deines Wettkampfs"
         onkeydown={(e) => e.key === "Enter" && confirmCustom()}
       />
-      <button class="btn btn-primary" disabled={!customName.trim()} onclick={confirmCustom}>
+      <Button
+        color="primary"
+        class="shrink-0 font-semibold text-[var(--on-accent)]"
+        disabled={!customName.trim()}
+        onclick={confirmCustom}
+      >
         Los geht's
-      </button>
+      </Button>
     </div>
   {/if}
 </Modal>
-
-<style>
-  .picker-title {
-    font-size: 17px;
-    font-weight: 700;
-    text-align: center;
-    margin: 0 0 18px;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  .sport {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 56px;
-    padding: 16px 14px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition:
-      border-color 0.12s,
-      background 0.12s,
-      transform 0.08s;
-  }
-  .sport:hover {
-    border-color: var(--accent);
-    background: rgba(var(--accent-rgb), 0.08);
-  }
-  .sport:active {
-    transform: scale(0.98);
-  }
-  .sport.active {
-    border-color: var(--accent);
-    background: rgba(var(--accent-rgb), 0.12);
-  }
-  .label {
-    font-size: 14.5px;
-    font-weight: 600;
-    color: var(--text);
-    text-align: center;
-  }
-  .custom {
-    display: flex;
-    gap: 10px;
-    margin-top: 14px;
-  }
-  .custom input {
-    flex: 1 1 auto;
-    min-width: 0;
-    padding: 12px 13px;
-    font-size: 15px;
-  }
-  @media (max-width: 420px) {
-    .grid {
-      grid-template-columns: 1fr 1fr;
-    }
-    .sport {
-      padding: 14px 8px;
-    }
-  }
-</style>

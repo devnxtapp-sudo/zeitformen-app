@@ -13,16 +13,11 @@
 </script>
 
 <span
-  class="badge"
-  class:sm={size === "sm"}
-  style="color: {color}; background: {tint(color, 0.14)}; border: 1px solid {tint(color, 0.32)};"
+  class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border font-semibold leading-snug {size ===
+  'sm'
+    ? 'px-2 py-0.5 text-[11px]'
+    : 'px-2.5 py-[3px] text-xs'}"
+  style="color: {color}; background: {tint(color, 0.14)}; border-color: {tint(color, 0.32)};"
 >
   {label}
 </span>
-
-<style>
-  .badge.sm {
-    font-size: 11px;
-    padding: 2px 8px;
-  }
-</style>

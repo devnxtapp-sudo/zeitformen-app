@@ -16,63 +16,19 @@
   let pct = $derived(planned ? Math.round((doneThisWeek / planned) * 100) : 0);
 </script>
 
-<div class="progress">
-  <div class="left">
-    <div class="row">
-      <span class="num">{doneThisWeek}<span class="den">/{planned}</span></span>
-      <span class="lbl">Einheiten diese Woche</span>
+<div class="mb-[18px] flex items-center gap-5 rounded-xl border border-line bg-card px-[18px] py-4">
+  <div class="min-w-0 flex-auto">
+    <div class="mb-2.5 flex items-baseline gap-2.5">
+      <span class="text-xl font-bold text-ink"
+        >{doneThisWeek}<span class="font-semibold text-ink-dim">/{planned}</span></span
+      >
+      <span class="text-sm text-ink-muted">Einheiten diese Woche</span>
     </div>
-    <div class="bar">
-      <div class="fill" style="width: {pct}%"></div>
+    <div class="h-2 overflow-hidden rounded-full border border-line bg-surface">
+      <div
+        class="h-full rounded-full bg-zone2 transition-[width] duration-300 ease-out"
+        style="width: {pct}%"
+      ></div>
     </div>
   </div>
 </div>
-
-<style>
-  .progress {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 18px;
-    margin-bottom: 18px;
-  }
-  .left {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-  .row {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  .num {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text);
-  }
-  .den {
-    color: var(--text-dim);
-    font-weight: 600;
-  }
-  .lbl {
-    font-size: 13px;
-    color: var(--text-muted);
-  }
-  .bar {
-    height: 8px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    overflow: hidden;
-  }
-  .fill {
-    height: 100%;
-    background: var(--c-zone2);
-    border-radius: 999px;
-    transition: width 0.3s ease;
-  }
-</style>

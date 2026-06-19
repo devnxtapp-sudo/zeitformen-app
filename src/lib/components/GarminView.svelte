@@ -2,6 +2,7 @@
   import { api } from "../api.js";
   import { activeGoal, updateLogEntry, isCompleted } from "../store.svelte.js";
   import { weekDates, dayKeyOf } from "../dateutil.js";
+  import { Button, Input, Label, Helper } from "flowbite-svelte";
 
   let { onback } = $props();
 
@@ -118,8 +119,8 @@
   <h2>Uhr / Tracker verbinden</h2>
 </div>
 
-<section class="card">
-  <p class="lead">
+<section class="mb-5 rounded-xl border border-line bg-card p-6">
+  <p class="text-sm leading-relaxed text-ink-muted [&_strong]:text-ink">
     RxZone liest deine Aktivitäten über <strong>intervals.icu</strong> — egal von welchem
     Gerät. Direkt verbindbar sind u.a. <strong>Garmin, Strava, Polar, Wahoo, COROS</strong> und
     Suunto. Eine <strong>Apple Watch</strong> geht über Strava (oder eine Export-App wie HealthFit).
@@ -127,115 +128,40 @@
     automatisch ausfüllen lassen.
   </p>
 
-  <ol class="steps">
+  <ol class="mb-5 mt-4 flex list-decimal flex-col gap-2 pl-5 text-sm text-ink-muted [&_strong]:text-ink">
     <li>Bei <strong>intervals.icu</strong> registrieren und dein Gerät verknüpfen (Garmin, Strava, Apple Watch via Strava …).</li>
     <li>In den intervals.icu-Einstellungen unter <em>Developer</em> den API-Key kopieren.</li>
     <li>Athlete-ID und API-Key unten eintragen.</li>
   </ol>
 
   {#if loading}
-    <p class="muted">Lädt …</p>
+    <p class="text-sm text-ink-dim">Lädt …</p>
   {:else if status.connected}
-    <div class="status connected">
-      <span class="dot" aria-hidden="true"></span>
+    <div class="mb-4 flex items-center gap-2.5 text-sm text-ink [&_strong]:text-ink">
+      <span class="h-2.5 w-2.5 rounded-full bg-zone2 shadow-[0_0_8px_rgba(95,184,122,0.7)]" aria-hidden="true"></span>
       Verbunden — Athlete-ID <strong>{status.athleteId}</strong>
     </div>
 
-    <button class="btn btn-primary block" onclick={syncWeek} disabled={busy}>
+    <Button color="primary" class="mt-2.5 w-full font-semibold text-[var(--on-accent)]" onclick={syncWeek} disabled={busy}>
       {busy ? "Synchronisiere …" : "Diese Woche synchronisieren"}
-    </button>
-    <button class="btn btn-ghost block" onclick={disconnect} disabled={busy}>
+    </Button>
+    <Button color="alternative" class="mt-2.5 w-full border-transparent bg-transparent" onclick={disconnect} disabled={busy}>
       Verbindung trennen
-    </button>
+    </Button>
   {:else}
-    <div class="field">
-      <label for="iv-id">Athlete-ID</label>
-      <input id="iv-id" bind:value={athleteId} placeholder="z.B. i123456" autocomplete="off" />
+    <div class="mb-3.5">
+      <Label for="iv-id" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-muted">Athlete-ID</Label>
+      <Input id="iv-id" bind:value={athleteId} placeholder="z.B. i123456" autocomplete="off" />
     </div>
-    <div class="field">
-      <label for="iv-key">API-Key</label>
-      <input id="iv-key" type="password" bind:value={apiKey} placeholder="aus intervals.icu" autocomplete="off" />
+    <div class="mb-3.5">
+      <Label for="iv-key" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-muted">API-Key</Label>
+      <Input id="iv-key" type="password" bind:value={apiKey} placeholder="aus intervals.icu" autocomplete="off" />
     </div>
-    <button class="btn btn-primary block" onclick={connect} disabled={busy}>
+    <Button color="primary" class="mt-2.5 w-full font-semibold text-[var(--on-accent)]" onclick={connect} disabled={busy}>
       {busy ? "Verbinde …" : "Verbinden"}
-    </button>
+    </Button>
   {/if}
 
-  {#if error}<p class="msg error">{error}</p>{/if}
-  {#if result}<p class="msg ok">{result}</p>{/if}
+  {#if error}<Helper class="mt-3.5 text-sm" color="red">{error}</Helper>{/if}
+  {#if result}<Helper class="mt-3.5 text-sm text-zone2">{result}</Helper>{/if}
 </section>
-
-<style>
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 22px 24px;
-    margin-bottom: 20px;
-  }
-  .lead {
-    font-size: 14.5px;
-    line-height: 1.5;
-    color: var(--text-muted);
-  }
-  .lead strong {
-    color: var(--text);
-  }
-  .steps {
-    margin: 16px 0 20px;
-    padding-left: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    font-size: 14px;
-    color: var(--text-muted);
-  }
-  .steps strong {
-    color: var(--text);
-  }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 14px;
-  }
-  .field label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-  .field input {
-    padding: 11px 12px;
-    font-size: 15px;
-  }
-  .status {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 14.5px;
-    margin-bottom: 16px;
-  }
-  .status.connected .dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--c-zone2, #5fb87a);
-  }
-  .status strong {
-    color: var(--text);
-  }
-  .block {
-    width: 100%;
-    margin-top: 10px;
-  }
-  .msg {
-    margin-top: 14px;
-    font-size: 14px;
-  }
-  .msg.error {
-    color: var(--c-danger, #e5534b);
-  }
-  .msg.ok {
-    color: var(--c-zone2, #5fb87a);
-  }
-</style>

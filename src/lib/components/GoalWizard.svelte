@@ -1,5 +1,6 @@
 <script>
   import Modal from "./Modal.svelte";
+  import { Button, Input, Select } from "flowbite-svelte";
   import { goalFromSport, DAY_KEYS, emptyExtraSession } from "../seed.js";
   import { COMPETITIONS, SPORTS } from "../sports.js";
   import { addPreparedGoal } from "../store.svelte.js";
@@ -177,15 +178,17 @@
   >
     <div class="track" class:dragging style="transform: translateX({offsetPct}%)">
       <div class="page" bind:this={pageEls[0]}>
-        <div class="step-head">
-          <h4>Wähle deinen Wettkampf</h4>
+        <div class="mb-4">
+          <h4 class="text-lg font-semibold text-ink">Wähle deinen Wettkampf</h4>
         </div>
-        <div class="comp-grid">
+        <div class="grid grid-cols-2 gap-2.5">
           {#each COMPETITIONS as comp (comp.id)}
             <button
               type="button"
-              class="comp"
-              class:active={competitionId === comp.id || (comp.custom && showCustom)}
+              class="flex min-h-[56px] items-center justify-center rounded-xl border px-3.5 py-4 text-center text-sm font-semibold text-ink transition-[border-color,background,transform] duration-100 hover:border-primary-500 hover:bg-primary-500/10 active:scale-[0.98]
+                {competitionId === comp.id || (comp.custom && showCustom)
+                  ? 'border-primary-500 bg-primary-500/15'
+                  : 'border-line bg-card'}"
               onclick={() => chooseCompetition(comp)}
             >
               {comp.label}
@@ -193,26 +196,32 @@
           {/each}
         </div>
         {#if showCustom}
-          <div class="custom">
-            <input
+          <div class="mt-3.5 flex gap-2.5">
+            <Input
+              class="flex-1"
               bind:value={customName}
               placeholder="Name deines Wettkampfs"
               onkeydown={(e) => e.key === "Enter" && confirmCustom()}
             />
-            <button class="btn btn-primary" disabled={!customName.trim()} onclick={confirmCustom}>
+            <Button
+              color="primary"
+              class="font-semibold text-[var(--on-accent)]"
+              disabled={!customName.trim()}
+              onclick={confirmCustom}
+            >
               Weiter
-            </button>
+            </Button>
           </div>
         {/if}
       </div>
 
       <div class="page" bind:this={pageEls[1]}>
-        <div class="step-head">
-          <h4>Wie oft trainierst du?</h4>
-          <p class="hint muted">Die Tage lassen sich später jederzeit verschieben.</p>
+        <div class="mb-4">
+          <h4 class="text-lg font-semibold text-ink">Wie oft trainierst du?</h4>
+          <p class="mt-1.5 text-xs text-ink-muted">Die Tage lassen sich später jederzeit verschieben.</p>
         </div>
-        <div class="slider-wrap">
-          <div class="slider-value">{count}</div>
+        <div class="px-1 pt-2">
+          <div class="mb-4 text-center text-[40px] font-extrabold leading-none text-primary-500">{count}</div>
           <input
             class="day-slider"
             type="range"
@@ -222,63 +231,84 @@
             bind:value={count}
             aria-label="Trainingstage pro Woche"
           />
-          <div class="slider-scale">
+          <div class="mt-2 flex justify-between text-xs font-semibold text-ink-muted">
             <span>0</span>
             <span>7</span>
           </div>
         </div>
-        <p class="count muted">{count} {count === 1 ? "Tag" : "Tage"} pro Woche</p>
+        <p class="mt-3.5 text-center text-[13px] text-ink-muted">{count} {count === 1 ? "Tag" : "Tage"} pro Woche</p>
       </div>
 
       <div class="page" bind:this={pageEls[2]}>
-        <div class="step-head">
-          <h4>Wähle deine Trainingstypen</h4>
+        <div class="mb-4">
+          <h4 class="text-lg font-semibold text-ink">Wähle deine Trainingstypen</h4>
         </div>
-        <div class="type-list">
+        <div class="flex flex-col gap-3.5">
           {#each selectedKeys as key (key)}
-            <div class="day-block">
-              <div class="day-head">
-                <span class="day-name">{DAY_FULL[key]}</span>
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-sm font-semibold text-ink">{DAY_FULL[key]}</span>
                 {#if (daySessions[key]?.length || 1) < 2}
-                  <button type="button" class="sess-add" onclick={() => addSession(key)}>
+                  <button
+                    type="button"
+                    class="px-1 py-0.5 text-xs font-semibold text-primary-400"
+                    onclick={() => addSession(key)}
+                  >
                     + 2. Session
                   </button>
                 {:else}
-                  <button type="button" class="sess-remove" onclick={() => removeSession(key)}>
+                  <button
+                    type="button"
+                    class="px-1 py-0.5 text-xs font-semibold text-ink-muted"
+                    onclick={() => removeSession(key)}
+                  >
                     2. Session entfernen
                   </button>
                 {/if}
               </div>
               {#each daySessions[key] || [] as _, si (si)}
-                <div class="sess-row">
+                <div class="flex items-center justify-between gap-3">
                   {#if (daySessions[key]?.length || 1) > 1}
-                    <span class="sess-label">{si + 1}. Session</span>
+                    <span class="text-[13px] font-semibold text-ink-muted">{si + 1}. Session</span>
                   {/if}
-                  <select class="type-select" bind:value={daySessions[key][si]}>
+                  <Select class="max-w-[200px] flex-1" placeholder="" bind:value={daySessions[key][si]}>
                     {#each types as t (t.id)}
                       <option value={t.id}>{t.label}</option>
                     {/each}
-                  </select>
+                  </Select>
                 </div>
               {/each}
             </div>
           {/each}
         </div>
-        <div class="actions">
-          <button class="btn btn-primary" onclick={finish}>Plan erstellen</button>
+        <div class="mt-6 flex justify-end gap-2.5">
+          <Button color="primary" class="font-semibold text-[var(--on-accent)]" onclick={finish}>Plan erstellen</Button>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="dots">
-    <button class="dot" class:active={index === 0} onclick={() => go(0)} aria-label="Seite 1"></button>
-    <button class="dot" class:active={index === 1} onclick={() => go(1)} aria-label="Seite 2"></button>
-    <button class="dot" class:active={index === 2} onclick={() => go(2)} aria-label="Seite 3"></button>
+  <div class="mt-[18px] flex justify-center gap-2">
+    <button
+      class="dot {index === 0 ? 'dot-active' : ''}"
+      onclick={() => go(0)}
+      aria-label="Seite 1"
+    ></button>
+    <button
+      class="dot {index === 1 ? 'dot-active' : ''}"
+      onclick={() => go(1)}
+      aria-label="Seite 2"
+    ></button>
+    <button
+      class="dot {index === 2 ? 'dot-active' : ''}"
+      onclick={() => go(2)}
+      aria-label="Seite 3"
+    ></button>
   </div>
 </Modal>
 
 <style>
+  /* Swipe slider mechanics — transforms/height animation utilities can't express cleanly */
   .viewport {
     overflow: hidden;
     touch-action: pan-y;
@@ -298,12 +328,7 @@
     box-sizing: border-box;
     padding: 2px;
   }
-  .dots {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 18px;
-  }
+  /* Pagination dots — need active scale transform */
   .dot {
     width: 8px;
     height: 8px;
@@ -314,79 +339,11 @@
     cursor: pointer;
     transition: background-color 0.15s, transform 0.15s;
   }
-  .dot.active {
+  .dot-active {
     background: var(--accent);
     transform: scale(1.25);
   }
-  .comp-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  .comp {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 56px;
-    padding: 16px 14px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 14.5px;
-    font-weight: 600;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.12s, background 0.12s, transform 0.08s;
-  }
-  .comp:hover {
-    border-color: var(--accent);
-    background: rgba(var(--accent-rgb), 0.08);
-  }
-  .comp:active {
-    transform: scale(0.98);
-  }
-  .comp.active {
-    border-color: var(--accent);
-    background: rgba(var(--accent-rgb), 0.12);
-  }
-  .custom {
-    display: flex;
-    gap: 10px;
-    margin-top: 14px;
-  }
-  .custom input {
-    flex: 1 1 auto;
-    min-width: 0;
-    padding: 12px 13px;
-    font-size: 15px;
-  }
-  .step-head {
-    margin-bottom: 16px;
-  }
-  .step-head h4 {
-    font-size: 16px;
-    margin: 0 0 4px;
-  }
-  .step-head p {
-    font-size: 13.5px;
-    margin: 0;
-  }
-  .step-head .hint {
-    margin-top: 6px;
-    font-size: 12.5px;
-  }
-  .slider-wrap {
-    padding: 8px 4px 0;
-  }
-  .slider-value {
-    text-align: center;
-    font-size: 40px;
-    font-weight: 800;
-    line-height: 1;
-    color: var(--accent);
-    margin-bottom: 16px;
-  }
+  /* Range slider with custom neon thumb — pseudo-elements not expressible as utilities */
   .day-slider {
     -webkit-appearance: none;
     appearance: none;
@@ -416,82 +373,5 @@
     background: var(--accent);
     border: 3px solid var(--bg-elev);
     cursor: pointer;
-  }
-  .slider-scale {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--text-muted);
-    font-weight: 600;
-  }
-  .count {
-    text-align: center;
-    font-size: 13px;
-    margin: 14px 0 0;
-  }
-  .type-list {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .day-block {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .day-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  .day-name {
-    font-size: 14.5px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .sess-add,
-  .sess-remove {
-    background: none;
-    border: none;
-    padding: 2px 4px;
-    font-size: 12.5px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .sess-add {
-    color: var(--accent);
-  }
-  .sess-remove {
-    color: var(--text-muted);
-  }
-  .sess-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  .sess-label {
-    font-size: 13px;
-    color: var(--text-muted);
-    font-weight: 600;
-  }
-  .type-select {
-    flex: 1 1 auto;
-    min-width: 0;
-    max-width: 200px;
-    padding: 10px 12px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 14px;
-  }
-  .actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 22px;
   }
 </style>

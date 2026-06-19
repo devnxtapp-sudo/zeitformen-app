@@ -1,5 +1,6 @@
 <script>
   import { untrack } from "svelte";
+  import { Button, Input, Label, Textarea } from "flowbite-svelte";
   import Modal from "./Modal.svelte";
   import { CORE_METRICS, OPTIONAL_METRICS } from "../bodyMetrics.js";
   import {
@@ -53,17 +54,28 @@
 </script>
 
 <Modal title={entry ? "Messung bearbeiten" : "Neue Messung"} {onclose}>
-  <div class="field">
-    <label for="bm-date">Datum</label>
-    <input id="bm-date" type="date" bind:value={draft.date} />
+  <div class="mb-3.5">
+    <Label
+      for="bm-date"
+      class="mb-1.5 block text-xs font-semibold text-ink-muted"
+    >
+      Datum
+    </Label>
+    <Input id="bm-date" type="date" bind:value={draft.date} />
   </div>
 
-  <span class="caption">Kernwerte</span>
-  <div class="grid">
+  <span
+    class="mb-2 mt-3.5 block text-xs font-bold uppercase tracking-wide text-primary-400"
+  >
+    Kernwerte
+  </span>
+  <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
     {#each CORE_METRICS as m (m.id)}
-      <div class="m-field">
-        <label for="bm-{m.id}">{m.label}{m.unit ? ` (${m.unit})` : ""}</label>
-        <input
+      <div class="flex flex-col gap-1.5">
+        <Label for="bm-{m.id}" class="text-xs font-medium text-ink-muted">
+          {m.label}{m.unit ? ` (${m.unit})` : ""}
+        </Label>
+        <Input
           id="bm-{m.id}"
           type="number"
           inputmode="decimal"
@@ -75,12 +87,18 @@
     {/each}
   </div>
 
-  <span class="caption">Weitere Werte</span>
-  <div class="grid">
+  <span
+    class="mb-2 mt-3.5 block text-xs font-bold uppercase tracking-wide text-primary-400"
+  >
+    Weitere Werte
+  </span>
+  <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
     {#each OPTIONAL_METRICS as m (m.id)}
-      <div class="m-field">
-        <label for="bm-{m.id}">{m.label}{m.unit ? ` (${m.unit})` : ""}</label>
-        <input
+      <div class="flex flex-col gap-1.5">
+        <Label for="bm-{m.id}" class="text-xs font-medium text-ink-muted">
+          {m.label}{m.unit ? ` (${m.unit})` : ""}
+        </Label>
+        <Input
           id="bm-{m.id}"
           type="number"
           inputmode="decimal"
@@ -92,71 +110,39 @@
     {/each}
   </div>
 
-  <div class="field note">
-    <label for="bm-note">Notiz</label>
-    <textarea
+  <div class="mt-4">
+    <Label
+      for="bm-note"
+      class="mb-1.5 block text-xs font-semibold text-ink-muted"
+    >
+      Notiz
+    </Label>
+    <Textarea
       id="bm-note"
       bind:value={draft.note}
-      rows="3"
+      rows={3}
       placeholder="z.B. nüchtern gemessen, morgens …"
-    ></textarea>
+    />
   </div>
 
-  <div class="actions">
+  <div class="mt-[18px] flex items-center gap-2.5">
     {#if entry}
-      <button class="btn btn-danger" onclick={remove}>Löschen</button>
+      <Button color="red" onclick={remove}>Löschen</Button>
     {/if}
-    <span class="spacer"></span>
-    <button class="btn btn-ghost" onclick={() => onclose?.()}>Abbrechen</button>
-    <button class="btn btn-primary" onclick={save}>Speichern</button>
+    <span class="flex-1"></span>
+    <Button
+      color="alternative"
+      class="border-transparent bg-transparent"
+      onclick={() => onclose?.()}
+    >
+      Abbrechen
+    </Button>
+    <Button
+      color="primary"
+      class="font-semibold text-[var(--on-accent)]"
+      onclick={save}
+    >
+      Speichern
+    </Button>
   </div>
 </Modal>
-
-<style>
-  .field label {
-    text-transform: none;
-    letter-spacing: 0;
-  }
-  .caption {
-    display: block;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    margin: 14px 0 8px;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .m-field {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .m-field label {
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-  .m-field input {
-    text-align: left;
-  }
-  .note {
-    margin-top: 16px;
-  }
-  .actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 18px;
-  }
-  .spacer {
-    flex: 1 1 auto;
-  }
-  @media (max-width: 480px) {
-    .grid {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>

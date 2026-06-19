@@ -44,63 +44,61 @@
   onpointerup={onPointerUp}
 />
 
-<div class="overlay" class:closing onclick={() => onclose?.()} role="presentation"></div>
+<div
+  class="overlay fixed inset-0 z-[1002] bg-black/55"
+  class:closing
+  onclick={() => onclose?.()}
+  role="presentation"
+></div>
 
 <aside
-  class="drawer"
+  class="drawer fixed inset-y-0 left-0 z-[1003] flex w-[min(84vw,320px)] flex-col overflow-y-auto border-r border-line bg-surface-elev pt-7 pb-4 [touch-action:pan-y] [will-change:transform]"
   class:dragging
   style="transform: translateX({dragX}px)"
   onpointerdown={onPointerDown}
 >
-  <header class="head">
-    <button class="back-btn" onclick={back} aria-label="Zurück">‹</button>
-    <span class="title">Einstellungen</span>
+  <header class="flex items-center gap-2.5 px-4 pt-0.5 pb-[22px]">
+    <button
+      class="flex h-9 w-9 items-center justify-center rounded-full text-2xl leading-none text-ink-muted hover:bg-card hover:text-ink"
+      onclick={back}
+      aria-label="Zurück"
+    >‹</button>
+    <span class="text-lg font-bold tracking-tight text-ink">Einstellungen</span>
   </header>
 
-  <nav class="menu">
+  <nav class="flex flex-col border-t border-line pt-2">
     {#if onaccount}
-      <button class="item" onclick={() => { onaccount(); onclose?.(); }}>
-        <span class="ic" aria-hidden="true">◐</span>
+      <button
+        class="flex w-full cursor-pointer items-center gap-4 px-[22px] py-3.5 text-left text-[15px] font-semibold text-ink hover:bg-card"
+        onclick={() => { onaccount(); onclose?.(); }}
+      >
+        <span class="w-[22px] flex-none text-center text-[17px] text-ink-muted" aria-hidden="true">◐</span>
         <span>Konto</span>
-        <span class="chev" aria-hidden="true">›</span>
+        <span class="ml-auto text-xl text-ink-dim" aria-hidden="true">›</span>
       </button>
     {/if}
     {#if ongarmin}
-      <button class="item" onclick={() => { ongarmin(); onclose?.(); }}>
-        <span class="ic" aria-hidden="true">◎</span>
+      <button
+        class="flex w-full cursor-pointer items-center gap-4 px-[22px] py-3.5 text-left text-[15px] font-semibold text-ink hover:bg-card"
+        onclick={() => { ongarmin(); onclose?.(); }}
+      >
+        <span class="w-[22px] flex-none text-center text-[17px] text-ink-muted" aria-hidden="true">◎</span>
         <span>Uhr / Tracker verbinden</span>
-        <span class="chev" aria-hidden="true">›</span>
+        <span class="ml-auto text-xl text-ink-dim" aria-hidden="true">›</span>
       </button>
     {/if}
   </nav>
 </aside>
 
 <style>
+  /* Entrance/exit + drag transitions can't be expressed cleanly as utilities. */
   .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.55);
-    z-index: 1002;
     animation: fade-in 0.18s ease;
   }
   .overlay.closing {
     animation: fade-out 0.22s ease forwards;
   }
   .drawer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: min(84vw, 320px);
-    background: var(--bg-elev);
-    border-right: 1px solid var(--border);
-    z-index: 1003;
-    display: flex;
-    flex-direction: column;
-    padding: 28px 0 16px;
-    overflow-y: auto;
-    will-change: transform;
-    touch-action: pan-y;
     animation: slide-in 0.22s cubic-bezier(0.22, 0.7, 0.3, 1);
   }
   .drawer:not(.dragging) {
@@ -117,51 +115,5 @@
   @keyframes fade-out {
     from { opacity: 1; }
     to { opacity: 0; }
-  }
-  .head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 2px 16px 22px;
-  }
-  .title {
-    font-size: 19px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-  }
-  .menu {
-    display: flex;
-    flex-direction: column;
-    border-top: 1px solid var(--border);
-    padding-top: 8px;
-  }
-  .item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    width: 100%;
-    padding: 14px 22px;
-    background: none;
-    border: none;
-    color: var(--text);
-    font-size: 15px;
-    font-weight: 600;
-    text-align: left;
-    cursor: pointer;
-  }
-  .item:hover {
-    background: var(--card);
-  }
-  .ic {
-    flex: 0 0 auto;
-    width: 22px;
-    font-size: 17px;
-    text-align: center;
-    color: var(--text-muted);
-  }
-  .chev {
-    margin-left: auto;
-    color: var(--text-dim);
-    font-size: 20px;
   }
 </style>

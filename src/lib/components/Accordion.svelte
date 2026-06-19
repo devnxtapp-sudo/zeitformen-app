@@ -6,13 +6,16 @@
   let isOpen = $state(untrack(() => open));
 </script>
 
-<div class="acc" class:open={isOpen}>
-  <button class="acc-head" onclick={() => (isOpen = !isOpen)}>
-    <span class="acc-title">{title}</span>
-    <span class="actions">
+<div class="mb-2.5 overflow-hidden rounded-lg border border-line bg-card">
+  <button
+    class="flex w-full items-center justify-between border-none bg-transparent px-[18px] py-[15px] text-left text-[15px] font-semibold text-ink hover:bg-card-hover"
+    onclick={() => (isOpen = !isOpen)}
+  >
+    <span>{title}</span>
+    <span class="flex items-center gap-3">
       {#if editMode}
         <span
-          class="mini"
+          class="cursor-pointer text-[13px] text-ink-dim hover:text-[var(--accent)]"
           role="button"
           tabindex="0"
           onclick={(e) => {
@@ -23,7 +26,7 @@
           aria-label="Bearbeiten">✎</span
         >
         <span
-          class="mini"
+          class="cursor-pointer text-[13px] text-ink-dim hover:text-[var(--accent)]"
           role="button"
           tabindex="0"
           onclick={(e) => {
@@ -34,64 +37,18 @@
           aria-label="Löschen">🗑</span
         >
       {/if}
-      <span class="chevron">▾</span>
+      <span
+        class="text-[13px] text-ink-dim transition-transform duration-[180ms] {isOpen
+          ? 'rotate-180'
+          : ''}">▾</span
+      >
     </span>
   </button>
   {#if isOpen}
-    <div class="acc-body">{@render children?.()}</div>
+    <div
+      class="whitespace-pre-wrap px-[18px] pb-4 text-[14.5px] leading-relaxed text-ink-muted"
+    >
+      {@render children?.()}
+    </div>
   {/if}
 </div>
-
-<style>
-  .acc {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    margin-bottom: 10px;
-    overflow: hidden;
-  }
-  .acc-head {
-    width: 100%;
-    background: transparent;
-    border: none;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 15px 18px;
-    font-size: 15px;
-    font-weight: 600;
-    text-align: left;
-  }
-  .acc-head:hover {
-    background: var(--card-hover);
-  }
-  .actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .mini {
-    font-size: 13px;
-    color: var(--text-dim);
-    cursor: pointer;
-  }
-  .mini:hover {
-    color: var(--accent);
-  }
-  .chevron {
-    color: var(--text-dim);
-    transition: transform 0.18s;
-    font-size: 13px;
-  }
-  .acc.open .chevron {
-    transform: rotate(180deg);
-  }
-  .acc-body {
-    padding: 0 18px 16px;
-    color: var(--text-muted);
-    font-size: 14.5px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-  }
-</style>

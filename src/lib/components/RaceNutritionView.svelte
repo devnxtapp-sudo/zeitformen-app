@@ -1,4 +1,5 @@
 <script>
+  import { Button, Input, Label } from "flowbite-svelte";
   import { state as store } from "../store.svelte.js";
   import {
     setRaceMeta,
@@ -73,448 +74,138 @@
   }
 </script>
 
-<div class="race-nut">
-  <div class="topbar">
-    <button class="back-btn" onclick={() => onback?.()} aria-label="Zurück">‹</button>
-    <h2>Nutrition-Strategie</h2>
+<div class="mb-[22px] flex flex-col gap-3.5">
+  <div class="flex items-center gap-2.5">
+    <button
+      class="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-2xl leading-none text-ink-muted transition-colors hover:border-primary-500 hover:text-primary-400"
+      onclick={() => onback?.()}
+      aria-label="Zurück">‹</button>
+    <h2 class="flex-1 text-lg font-semibold">Nutrition-Strategie</h2>
   </div>
 
-  <section class="hero">
+  <section class="flex flex-col gap-3.5 rounded-xl border border-line bg-surface-elev p-4 px-[18px]">
     <input
-      class="race-name"
+      class="bg-none border-0 p-0 text-xs font-bold uppercase tracking-wide text-ink-muted focus:text-ink focus:outline-none"
       type="text"
       placeholder="Wettkampf benennen"
       value={plan.raceName}
       oninput={(e) => setRaceMeta({ raceName: e.target.value })}
     />
-    <div class="hero-main">
-      <div class="gph" class:good={onTarget}>
-        <span class="gph-num">{overallGph ?? "–"}</span>
-        <span class="gph-unit">g/h</span>
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-baseline gap-1 text-ink">
+        <span class="text-[40px] font-extrabold leading-none {onTarget ? 'text-zone2' : ''}">{overallGph ?? "–"}</span>
+        <span class="text-base font-semibold text-ink-muted">g/h</span>
       </div>
-      <div class="goal-pill">
-        <span class="flag" aria-hidden="true">⚑</span>
+      <div class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[rgba(var(--accent-rgb),0.14)] px-3 py-1.5 text-[13px] font-semibold text-primary-400">
+        <span aria-hidden="true">⚑</span>
         Ziel {plan.targetGph || "–"} g/h
       </div>
     </div>
 
-    <div class="totals">
-      <div class="tot"><span class="tot-num">{totals.carbsG}</span><span class="tot-unit">g</span><span class="tot-lbl">Carbs</span></div>
-      <div class="tot"><span class="tot-num">{totals.fluidMl}</span><span class="tot-unit">ml</span><span class="tot-lbl">Flüssigkeit</span></div>
-      <div class="tot"><span class="tot-num">{totals.sodiumMg}</span><span class="tot-unit">mg</span><span class="tot-lbl">Natrium</span></div>
-      <div class="tot"><span class="tot-num">{totals.caffeineMg}</span><span class="tot-unit">mg</span><span class="tot-lbl">Koffein</span></div>
+    <div class="grid grid-cols-4 gap-2 border-t border-line pt-3.5">
+      <div class="flex flex-col items-start gap-0.5"><span class="text-lg font-bold">{totals.carbsG}</span><span class="-mt-0.5 text-[11px] text-ink-muted">g</span><span class="text-[10px] uppercase tracking-wide text-ink-dim">Carbs</span></div>
+      <div class="flex flex-col items-start gap-0.5"><span class="text-lg font-bold">{totals.fluidMl}</span><span class="-mt-0.5 text-[11px] text-ink-muted">ml</span><span class="text-[10px] uppercase tracking-wide text-ink-dim">Flüssigkeit</span></div>
+      <div class="flex flex-col items-start gap-0.5"><span class="text-lg font-bold">{totals.sodiumMg}</span><span class="-mt-0.5 text-[11px] text-ink-muted">mg</span><span class="text-[10px] uppercase tracking-wide text-ink-dim">Natrium</span></div>
+      <div class="flex flex-col items-start gap-0.5"><span class="text-lg font-bold">{totals.caffeineMg}</span><span class="-mt-0.5 text-[11px] text-ink-muted">mg</span><span class="text-[10px] uppercase tracking-wide text-ink-dim">Koffein</span></div>
     </div>
 
-    <div class="meta-edit">
-      <label class="me">
-        <span>Ziel g/h</span>
-        <input type="number" inputmode="decimal" min="0" placeholder="–"
+    <div class="grid grid-cols-2 gap-2.5">
+      <div class="flex flex-col gap-1">
+        <Label class="text-[11px] uppercase tracking-wide text-ink-dim">Ziel g/h</Label>
+        <Input type="number" inputmode="decimal" min="0" placeholder="–"
           value={plan.targetGph} oninput={(e) => setRaceMeta({ targetGph: e.target.value })} />
-      </label>
-      <label class="me">
-        <span>Dauer (h)</span>
-        <input type="number" inputmode="decimal" min="0" step="0.25" placeholder="–"
+      </div>
+      <div class="flex flex-col gap-1">
+        <Label class="text-[11px] uppercase tracking-wide text-ink-dim">Dauer (h)</Label>
+        <Input type="number" inputmode="decimal" min="0" step="0.25" placeholder="–"
           value={plan.durationH} oninput={(e) => setRaceMeta({ durationH: e.target.value })} />
-      </label>
+      </div>
     </div>
   </section>
 
   {#each plan.phases as phase (phase.id)}
-    <section class="phase">
-      <div class="phase-head">
+    <section class="flex flex-col gap-2.5 rounded-xl border border-line bg-card p-3.5">
+      <div class="flex items-center gap-2">
         <input
-          class="phase-name"
+          class="min-w-0 flex-1 border-0 bg-none p-0 text-[13px] font-bold uppercase tracking-wide text-ink focus:outline-none"
           type="text"
           value={phase.name}
           oninput={(e) => updateRacePhase(phase.id, { name: e.target.value })}
         />
         {#if phaseGph(phase) != null}
-          <span class="phase-gph">{phaseGph(phase)} g/h</span>
+          <span class="flex-none text-[13px] font-bold text-primary-400">{phaseGph(phase)} g/h</span>
         {/if}
-        <button class="phase-del" onclick={() => deleteRacePhase(phase.id)} aria-label="Phase löschen">×</button>
+        <button
+          class="flex h-6 w-6 flex-none items-center justify-center rounded-full border border-line bg-surface text-base leading-none text-ink-muted hover:border-rest hover:text-[var(--c-danger)]"
+          onclick={() => deleteRacePhase(phase.id)} aria-label="Phase löschen">×</button>
       </div>
 
-      <label class="phase-dur">
-        <span>Dauer (h)</span>
-        <input type="number" inputmode="decimal" min="0" step="0.25" placeholder="–"
+      <div class="flex flex-row items-center gap-2">
+        <Label class="text-[11px] uppercase tracking-wide text-ink-dim">Dauer (h)</Label>
+        <Input class="w-[90px]" type="number" inputmode="decimal" min="0" step="0.25" placeholder="–"
           value={phase.durationH} oninput={(e) => updateRacePhase(phase.id, { durationH: e.target.value })} />
-      </label>
+      </div>
 
-      <div class="items">
+      <div class="flex flex-col gap-2">
         {#each phase.items as it (it.id)}
-          <div class="item" class:open={editingId === it.id}>
-            <button class="item-row" onclick={() => (editingId = editingId === it.id ? null : it.id)}>
-              <span class="qty">{num(it.qty)}×</span>
-              <span class="item-main">
-                <span class="item-name">{it.name || "Eintrag"}</span>
-                {#if itemSubtitle(it)}<span class="item-sub">{itemSubtitle(it)}</span>{/if}
+          <div class="overflow-hidden rounded-lg border bg-surface {editingId === it.id ? 'border-zone2' : 'border-line'}">
+            <button
+              class="flex w-full cursor-pointer items-center gap-3 border-0 bg-none px-3 py-[11px] text-left text-ink"
+              onclick={() => (editingId = editingId === it.id ? null : it.id)}>
+              <span class="flex-none rounded-md bg-[rgba(var(--accent-rgb),0.16)] px-2 py-1 text-[13px] font-bold text-primary-400">{num(it.qty)}×</span>
+              <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span class="truncate text-sm font-semibold">{it.name || "Eintrag"}</span>
+                {#if itemSubtitle(it)}<span class="truncate text-xs text-ink-muted">{itemSubtitle(it)}</span>{/if}
               </span>
-              <span class="item-carbs">{itemCarbs(it)} g</span>
+              <span class="flex-none text-[15px] font-bold">{itemCarbs(it)} g</span>
             </button>
 
             {#if editingId === it.id}
-              <div class="item-edit">
-                <label class="fe wide"><span>Name</span>
-                  <input type="text" value={it.name}
-                    oninput={(e) => updateRaceItem(phase.id, it.id, { name: e.target.value })} /></label>
-                <label class="fe wide"><span>Art</span>
-                  <input type="text" placeholder="z. B. Gel, Getränk / Mix" value={it.type}
-                    oninput={(e) => updateRaceItem(phase.id, it.id, { type: e.target.value })} /></label>
-                <label class="fe"><span>Menge</span>
-                  <input type="number" inputmode="numeric" min="0" value={it.qty}
-                    oninput={(e) => updateRaceItem(phase.id, it.id, { qty: e.target.value })} /></label>
-                <label class="fe"><span>Carbs (g)</span>
-                  <input type="number" inputmode="decimal" min="0" value={it.carbsG}
-                    oninput={(e) => updateRaceItem(phase.id, it.id, { carbsG: e.target.value })} /></label>
-                <label class="fe"><span>Flüssigkeit (ml)</span>
-                  <input type="number" inputmode="numeric" min="0" value={it.fluidMl}
-                    oninput={(e) => updateRaceItem(phase.id, it.id, { fluidMl: e.target.value })} /></label>
-                <label class="fe"><span>Natrium (mg)</span>
-                  <input type="number" inputmode="numeric" min="0" value={it.sodiumMg}
-                    oninput={(e) => updateRaceItem(phase.id, it.id, { sodiumMg: e.target.value })} /></label>
-                <label class="fe"><span>Koffein (mg)</span>
-                  <input type="number" inputmode="numeric" min="0" value={it.caffeineMg}
-                    oninput={(e) => updateRaceItem(phase.id, it.id, { caffeineMg: e.target.value })} /></label>
-                <button class="item-rm" onclick={() => { deleteRaceItem(phase.id, it.id); editingId = null; }}>
+              <div class="grid grid-cols-2 gap-2.5 px-3 pb-3">
+                <div class="col-span-full flex flex-col gap-1">
+                  <Label class="text-[10px] uppercase tracking-wide text-ink-dim">Name</Label>
+                  <Input type="text" value={it.name}
+                    oninput={(e) => updateRaceItem(phase.id, it.id, { name: e.target.value })} /></div>
+                <div class="col-span-full flex flex-col gap-1">
+                  <Label class="text-[10px] uppercase tracking-wide text-ink-dim">Art</Label>
+                  <Input type="text" placeholder="z. B. Gel, Getränk / Mix" value={it.type}
+                    oninput={(e) => updateRaceItem(phase.id, it.id, { type: e.target.value })} /></div>
+                <div class="flex flex-col gap-1">
+                  <Label class="text-[10px] uppercase tracking-wide text-ink-dim">Menge</Label>
+                  <Input type="number" inputmode="numeric" min="0" value={it.qty}
+                    oninput={(e) => updateRaceItem(phase.id, it.id, { qty: e.target.value })} /></div>
+                <div class="flex flex-col gap-1">
+                  <Label class="text-[10px] uppercase tracking-wide text-ink-dim">Carbs (g)</Label>
+                  <Input type="number" inputmode="decimal" min="0" value={it.carbsG}
+                    oninput={(e) => updateRaceItem(phase.id, it.id, { carbsG: e.target.value })} /></div>
+                <div class="flex flex-col gap-1">
+                  <Label class="text-[10px] uppercase tracking-wide text-ink-dim">Flüssigkeit (ml)</Label>
+                  <Input type="number" inputmode="numeric" min="0" value={it.fluidMl}
+                    oninput={(e) => updateRaceItem(phase.id, it.id, { fluidMl: e.target.value })} /></div>
+                <div class="flex flex-col gap-1">
+                  <Label class="text-[10px] uppercase tracking-wide text-ink-dim">Natrium (mg)</Label>
+                  <Input type="number" inputmode="numeric" min="0" value={it.sodiumMg}
+                    oninput={(e) => updateRaceItem(phase.id, it.id, { sodiumMg: e.target.value })} /></div>
+                <div class="flex flex-col gap-1">
+                  <Label class="text-[10px] uppercase tracking-wide text-ink-dim">Koffein (mg)</Label>
+                  <Input type="number" inputmode="numeric" min="0" value={it.caffeineMg}
+                    oninput={(e) => updateRaceItem(phase.id, it.id, { caffeineMg: e.target.value })} /></div>
+                <Button color="red" class="col-span-full" onclick={() => { deleteRaceItem(phase.id, it.id); editingId = null; }}>
                   Eintrag löschen
-                </button>
+                </Button>
               </div>
             {/if}
           </div>
         {/each}
       </div>
 
-      <button class="add-item" onclick={() => addItem(phase.id)}>+ Eintrag</button>
+      <button
+        class="cursor-pointer rounded-lg border border-dashed border-line bg-none p-2.5 text-[13px] font-semibold text-ink-muted transition-colors hover:border-zone2 hover:text-zone2"
+        onclick={() => addItem(phase.id)}>+ Eintrag</button>
     </section>
   {/each}
 
-  <button class="add-phase" onclick={() => addRacePhase()}>+ Phase</button>
+  <button
+    class="cursor-pointer rounded-xl border border-line bg-card p-[13px] text-sm font-semibold text-ink transition-colors hover:border-zone2"
+    onclick={() => addRacePhase()}>+ Phase</button>
 </div>
-
-<style>
-  .race-nut {
-    margin-bottom: 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .topbar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .topbar h2 {
-    flex: 1;
-    font-size: 18px;
-  }
-  .hero {
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .race-name {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 0;
-  }
-  .race-name:focus {
-    outline: none;
-    color: var(--text);
-  }
-  .hero-main {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  .gph {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-    color: var(--text);
-  }
-  .gph.good .gph-num {
-    color: var(--c-zone2, #5fb87a);
-  }
-  .gph-num {
-    font-size: 40px;
-    font-weight: 800;
-    line-height: 1;
-  }
-  .gph-unit {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-  .goal-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(var(--accent-rgb), 0.14);
-    color: var(--accent2, #22d3ee);
-    border-radius: 999px;
-    padding: 6px 12px;
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .totals {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    border-top: 1px solid var(--border);
-    padding-top: 14px;
-  }
-  .tot {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-  }
-  .tot-num {
-    font-size: 18px;
-    font-weight: 700;
-  }
-  .tot-unit {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: -2px;
-  }
-  .tot-lbl {
-    font-size: 10px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .meta-edit {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  .me, .phase-dur {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .me > span, .phase-dur > span {
-    font-size: 11px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-  .me input, .phase-dur input {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-size: 15px;
-    font-weight: 600;
-    padding: 8px 10px;
-  }
-  .me input:focus, .phase-dur input:focus {
-    outline: none;
-    border-color: var(--c-zone2);
-  }
-  .phase {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .phase-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .phase-name {
-    flex: 1;
-    min-width: 0;
-    background: none;
-    border: none;
-    color: var(--text);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding: 0;
-  }
-  .phase-name:focus {
-    outline: none;
-  }
-  .phase-gph {
-    flex: 0 0 auto;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--accent2, #22d3ee);
-  }
-  .phase-del {
-    flex: 0 0 auto;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text-muted);
-    font-size: 16px;
-    line-height: 1;
-    cursor: pointer;
-  }
-  .phase-del:hover {
-    color: var(--c-danger, #e5534b);
-    border-color: var(--c-danger, #e5534b);
-  }
-  .phase-dur {
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-  }
-  .phase-dur input {
-    width: 90px;
-  }
-  .items {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .item {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-  }
-  .item.open {
-    border-color: var(--c-zone2);
-  }
-  .item-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    background: none;
-    border: none;
-    color: var(--text);
-    text-align: left;
-    padding: 11px 12px;
-    cursor: pointer;
-  }
-  .qty {
-    flex: 0 0 auto;
-    background: rgba(var(--accent-rgb), 0.16);
-    color: var(--accent2, #22d3ee);
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-size: 13px;
-    font-weight: 700;
-  }
-  .item-main {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .item-name {
-    font-size: 14px;
-    font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .item-sub {
-    font-size: 12px;
-    color: var(--text-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .item-carbs {
-    flex: 0 0 auto;
-    font-size: 15px;
-    font-weight: 700;
-  }
-  .item-edit {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    padding: 0 12px 12px;
-  }
-  .fe {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .fe.wide {
-    grid-column: 1 / -1;
-  }
-  .fe > span {
-    font-size: 10px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-  .fe input {
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-size: 14px;
-    padding: 8px;
-  }
-  .fe input:focus {
-    outline: none;
-    border-color: var(--c-zone2);
-  }
-  .item-rm {
-    grid-column: 1 / -1;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--c-danger, #e5534b);
-    font-size: 13px;
-    font-weight: 600;
-    padding: 9px;
-    cursor: pointer;
-  }
-  .item-rm:hover {
-    border-color: var(--c-danger, #e5534b);
-  }
-  .add-item {
-    background: none;
-    border: 1px dashed var(--border);
-    border-radius: 8px;
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 600;
-    padding: 10px;
-    cursor: pointer;
-  }
-  .add-item:hover {
-    border-color: var(--c-zone2);
-    color: var(--c-zone2);
-  }
-  .add-phase {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 14px;
-    font-weight: 600;
-    padding: 13px;
-    cursor: pointer;
-  }
-  .add-phase:hover {
-    border-color: var(--c-zone2);
-  }
-</style>

@@ -139,7 +139,7 @@
 </script>
 
 <div
-  class="grid"
+  class="mb-[22px] grid grid-cols-7 gap-3 max-[860px]:grid-cols-4 max-[560px]:grid-cols-2 max-[560px]:gap-2.5"
   role="presentation"
   onpointerdown={onPointerDown}
   onpointermove={onPointerMove}
@@ -167,23 +167,8 @@
 </div>
 
 <style>
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 12px;
-    margin-bottom: 22px;
-  }
-  @media (max-width: 860px) {
-    .grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-  @media (max-width: 560px) {
-    .grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-    }
-  }
+  /* Styles a node cloned imperatively in JS (ghost.classList.add("drag-ghost")),
+     so it must stay global — Tailwind utilities can't reach the cloned element. */
   :global(.drag-ghost) {
     position: fixed;
     z-index: 1200;

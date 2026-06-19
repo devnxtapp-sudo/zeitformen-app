@@ -7,6 +7,7 @@
     deleteMeal,
   } from "../store.svelte.js";
   import { parseYmd, todayKey } from "../dateutil.js";
+  import { Button, Input, Label } from "flowbite-svelte";
 
   let { onback } = $props();
 
@@ -50,93 +51,107 @@
   }
 </script>
 
-<div class="nutrition">
-  <div class="head">
-    <div class="head-title">
+<div class="mb-[22px] flex flex-col gap-4">
+  <div class="flex items-start justify-between gap-3">
+    <div class="flex items-center gap-2">
       <button class="back-btn" onclick={() => onback?.()} aria-label="Zurück">‹</button>
       <div>
-        <h2>Ernährungsplan</h2>
-        <span class="sub muted">Makro-Ziele & Tagesplan</span>
+        <h2 class="text-xl font-bold">Ernährungsplan</h2>
+        <span class="mt-0.5 block text-xs text-ink-muted">Makro-Ziele &amp; Tagesplan</span>
       </div>
     </div>
   </div>
 
-  <section class="panel">
-    <h3>Tagesziele</h3>
-    <div class="targets-grid">
+  <section class="rounded-xl border border-line bg-card p-[18px]">
+    <h3 class="mb-3.5 text-[15px] font-semibold">Tagesziele</h3>
+    <div class="grid grid-cols-2 gap-3">
       {#each MACROS as m (m.id)}
-        <label class="field">
-          <span class="field-lbl">{m.label}</span>
-          <span class="field-input">
-            <input
-              type="number"
-              inputmode="decimal"
-              min="0"
-              placeholder="–"
-              value={targets[m.id] ?? ""}
-              oninput={(e) => setNutritionTargets({ [m.id]: e.target.value })}
-            />
-            <span class="field-unit">{m.unit}</span>
-          </span>
-        </label>
+        <div>
+          <Label
+            for="nt-target-{m.id}"
+            class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-muted"
+          >
+            {m.label}
+          </Label>
+          <Input
+            id="nt-target-{m.id}"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            placeholder="–"
+            class="font-semibold"
+            value={targets[m.id] ?? ""}
+            oninput={(e) => setNutritionTargets({ [m.id]: e.target.value })}
+          >
+            {#snippet right()}
+              <span class="text-[11px] text-ink-dim">{m.unit}</span>
+            {/snippet}
+          </Input>
+        </div>
       {/each}
     </div>
   </section>
 
-  <section class="panel">
-    <div class="panel-head">
-      <h3>Tagesplan</h3>
-      <input
-        class="date-input"
+  <section class="rounded-xl border border-line bg-card p-[18px]">
+    <div class="mb-1 flex items-center justify-between gap-2.5">
+      <h3 class="text-[15px] font-semibold">Tagesplan</h3>
+      <Input
         type="date"
+        class="w-auto"
+        size="sm"
         value={date}
         oninput={(e) => (date = e.target.value)}
       />
     </div>
-    <span class="day-label muted">{longDate(date)}</span>
+    <span class="mb-3.5 block text-xs capitalize text-ink-muted">{longDate(date)}</span>
 
-    <div class="summary">
+    <div class="mb-4 grid grid-cols-2 gap-3">
       {#each MACROS as m (m.id)}
-        <div class="sum">
-          <div class="sum-top">
-            <span class="sum-lbl">{m.short}</span>
-            <span class="sum-val">
-              {totals[m.id]}{#if targets[m.id]}<span class="sum-goal"> / {targets[m.id]}</span>{/if}
+        <div>
+          <div class="mb-1.5 flex items-baseline justify-between">
+            <span class="text-[11px] uppercase tracking-wide text-ink-muted">{m.short}</span>
+            <span class="text-sm font-bold">
+              {totals[m.id]}{#if targets[m.id]}<span class="font-medium text-ink-dim"> / {targets[m.id]}</span>{/if}
             </span>
           </div>
-          <div class="bar">
-            <div class="bar-fill" style="width: {pct(totals[m.id], targets[m.id])}%"></div>
+          <div class="h-1.5 overflow-hidden rounded-full bg-surface">
+            <div
+              class="h-full rounded-full bg-zone2 transition-[width] duration-200"
+              style="width: {pct(totals[m.id], targets[m.id])}%"
+            ></div>
           </div>
         </div>
       {/each}
     </div>
 
-    <div class="meals">
+    <div class="flex flex-col gap-2.5">
       {#each meals as meal (meal.id)}
-        <div class="meal">
-          <div class="meal-row">
+        <div class="flex flex-col gap-2.5 rounded-lg border border-line bg-surface p-3">
+          <div class="flex items-center gap-2">
             <input
-              class="meal-name"
+              class="min-w-0 flex-1 border-0 border-b border-line bg-transparent py-1 text-[15px] font-semibold text-ink outline-none focus:border-zone2"
               type="text"
               placeholder="Mahlzeit"
               value={meal.name}
               oninput={(e) => updateMeal(date, meal.id, { name: e.target.value })}
             />
-            <button
-              class="meal-del"
+            <Button
+              color="alternative"
+              class="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full border-line bg-surface-elev !p-0 text-lg leading-none text-ink-muted hover:border-rest hover:text-rest"
               onclick={() => deleteMeal(date, meal.id)}
               aria-label="Mahlzeit löschen"
-            >×</button>
+            >×</Button>
           </div>
-          <div class="meal-macros">
+          <div class="grid grid-cols-4 gap-2">
             {#each MACROS as m (m.id)}
-              <label class="mm">
-                <span class="mm-lbl">{m.short}</span>
-                <input
+              <label class="flex flex-col gap-0.5">
+                <span class="text-[10px] uppercase text-ink-dim">{m.short}</span>
+                <Input
                   type="number"
                   inputmode="decimal"
                   min="0"
                   placeholder="–"
+                  size="sm"
                   value={meal[m.id] ?? ""}
                   oninput={(e) => updateMeal(date, meal.id, { [m.id]: e.target.value })}
                 />
@@ -147,233 +162,12 @@
       {/each}
     </div>
 
-    <button class="btn btn-ghost add-meal" onclick={() => addMeal(date, {})}>
+    <Button
+      color="alternative"
+      class="mt-3 w-full border-transparent bg-transparent"
+      onclick={() => addMeal(date, {})}
+    >
       + Mahlzeit
-    </button>
+    </Button>
   </section>
 </div>
-
-<style>
-  .nutrition {
-    margin-bottom: 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  .head-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .head h2 {
-    font-size: 20px;
-  }
-  .sub {
-    font-size: 12px;
-    display: block;
-    margin-top: 2px;
-  }
-  .panel {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px;
-  }
-  .panel h3 {
-    font-size: 15px;
-    margin-bottom: 14px;
-  }
-  .panel-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 4px;
-  }
-  .panel-head h3 {
-    margin-bottom: 0;
-  }
-  .day-label {
-    font-size: 12px;
-    display: block;
-    margin-bottom: 14px;
-    text-transform: capitalize;
-  }
-  .date-input {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-size: 13px;
-    padding: 6px 10px;
-  }
-  .targets-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .field-lbl {
-    font-size: 11px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-  .field-input {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0 10px;
-  }
-  .field-input input {
-    flex: 1;
-    min-width: 0;
-    background: none;
-    border: none;
-    color: var(--text);
-    font-size: 16px;
-    font-weight: 600;
-    padding: 9px 0;
-  }
-  .field-input input:focus {
-    outline: none;
-  }
-  .field-unit {
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-  .summary {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  .sum-top {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 5px;
-  }
-  .sum-lbl {
-    font-size: 11px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-  .sum-val {
-    font-size: 14px;
-    font-weight: 700;
-  }
-  .sum-goal {
-    color: var(--text-dim);
-    font-weight: 500;
-  }
-  .bar {
-    height: 6px;
-    border-radius: 3px;
-    background: var(--bg);
-    overflow: hidden;
-  }
-  .bar-fill {
-    height: 100%;
-    background: var(--c-zone2);
-    border-radius: 3px;
-    transition: width 0.2s;
-  }
-  .meals {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .meal {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .meal-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .meal-name {
-    flex: 1;
-    min-width: 0;
-    background: none;
-    border: none;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-    font-size: 15px;
-    font-weight: 600;
-    padding: 4px 0;
-  }
-  .meal-name:focus {
-    outline: none;
-    border-bottom-color: var(--c-zone2);
-  }
-  .meal-del {
-    flex: 0 0 auto;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--bg-elev);
-    color: var(--text-muted);
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
-  }
-  .meal-del:hover {
-    color: var(--c-danger, #e5534b);
-    border-color: var(--c-danger, #e5534b);
-  }
-  .meal-macros {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-  }
-  .mm {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-  .mm-lbl {
-    font-size: 10px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-  }
-  .mm input {
-    width: 100%;
-    min-width: 0;
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-size: 14px;
-    padding: 7px 8px;
-  }
-  .mm input:focus {
-    outline: none;
-    border-color: var(--c-zone2);
-  }
-  .add-meal {
-    margin-top: 12px;
-    width: 100%;
-  }
-</style>

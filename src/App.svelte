@@ -33,6 +33,7 @@
   import IntervalTimer from "./lib/components/IntervalTimer.svelte";
   import AuthScreen from "./lib/components/AuthScreen.svelte";
   import { auth, checkSession } from "./lib/auth.svelte.js";
+  import { Select } from "flowbite-svelte";
 
   // load local state first, then resolve session + sync. The .catch guard makes
   // sure checkSession() still runs (and the loading screen clears) even if local
@@ -92,12 +93,12 @@
 </script>
 
 {#if !app.loaded || !auth.checked}
-  <div class="loading">Lädt …</div>
+  <div class="py-20 text-center text-ink-muted">Lädt …</div>
 {:else if !auth.user}
   <AuthScreen dismissable={false} />
 {:else}
-  <header class="topbar">
-    <div class="brand-row">
+  <header class="mb-[22px] flex flex-wrap items-center justify-between gap-3">
+    <div class="flex min-w-0 flex-wrap items-center gap-2.5">
       {#if auth.user}
         <button
           class="avatar-btn"
@@ -107,31 +108,31 @@
           aria-label="Profil und Menü"
         >
           {#if auth.user.picture}
-            <img src={auth.user.picture} alt="" referrerpolicy="no-referrer" />
+            <img src={auth.user.picture} alt="" referrerpolicy="no-referrer" class="block h-full w-full object-cover" />
           {:else}
             {(auth.user.name?.[0] || auth.user.email[0] || "?").toUpperCase()}
           {/if}
         </button>
       {/if}
       {#if app.goals.length}
-        <select
+        <Select
           class="goal-select"
+          placeholder=""
           value={app.activeGoalId}
           onchange={(e) => setActiveGoal(e.target.value)}
         >
           {#each app.goals as g (g.id)}
             <option value={g.id}>{g.name}</option>
           {/each}
-        </select>
+        </Select>
       {/if}
       {#if goal?.targetDate && countdown !== null}
         <span
-          class="days-pill"
-          class:past={countdown < 0}
+          class="inline-flex h-[34px] flex-none items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-card px-[13px] text-[13.5px] font-bold {countdown < 0 ? 'text-ink-muted' : 'text-[var(--accent)]'}"
           title={`${fmtDate(goal.targetDate)} · bis zum Ziel`}
         >
           <svg
-            class="flag-icon"
+            class="flex-none"
             width="13"
             height="13"
             viewBox="0 0 24 24"
@@ -165,12 +166,12 @@
             />
           </svg>
           {#if countdown > 0}
-            <span class="days-num">{countdown}</span>
-            <span class="days-lbl">Tage</span>
+            <span class="[text-shadow:var(--glow)]">{countdown}</span>
+            <span class="font-semibold text-[var(--accent)]">Tage</span>
           {:else if countdown === 0}
-            <span class="days-num">heute</span>
+            <span class="[text-shadow:var(--glow)]">heute</span>
           {:else}
-            <span class="days-num">fertig</span>
+            <span>fertig</span>
           {/if}
         </span>
       {/if}
@@ -216,23 +217,23 @@
     {/if}
 
     {#if !app.editMode && (goal.targetGoal || goal.category || goal.description)}
-      <div class="goal-head">
+      <div class="mb-[18px] flex items-start justify-between gap-4 max-[560px]:flex-col">
         <div>
           {#if goal.targetGoal || goal.category}
-            <div class="goal-pill">
+            <div class="mt-2.5 inline-flex max-w-full items-stretch overflow-hidden rounded-full border border-line bg-card">
               {#if goal.category}
-                <span class="seg seg-cat">{goal.category}</span>
+                <span class="inline-flex items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink">{goal.category}</span>
               {/if}
               {#if goal.targetGoal}
-                <span class="seg seg-target">
-                  <span class="tg-icon">◎</span>
-                  <span class="tg-text">{goal.targetGoal}</span>
+                <span class="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 text-sm font-bold text-[var(--accent)] {goal.category ? 'border-l border-line' : ''}">
+                  <span class="flex-none text-[13px]">◎</span>
+                  <span class="overflow-hidden text-ellipsis">{goal.targetGoal}</span>
                 </span>
               {/if}
             </div>
           {/if}
           {#if goal.description}
-            <p class="goal-desc muted">{goal.description}</p>
+            <p class="muted mt-2.5 max-w-[560px] text-[14.5px]">{goal.description}</p>
           {/if}
         </div>
       </div>
@@ -259,7 +260,7 @@
     />
 
     {#if goal.footerNote}
-      <p class="footer-note muted">{goal.footerNote}</p>
+      <p class="muted -mt-1 mb-1 text-sm">{goal.footerNote}</p>
     {/if}
   {:else if goal}
     <Dashboard
@@ -267,17 +268,20 @@
       ongotoplan={() => setView("week")}
     />
   {:else}
-    <section class="today-block">
-      <div class="today-head">
-        <span class="eyebrow">Heutiges Training</span>
+    <section class="mb-[18px]">
+      <div class="mb-2.5 flex flex-wrap items-baseline justify-between gap-3">
+        <span class="text-xs font-bold uppercase tracking-wide text-[var(--accent)]">Heutiges Training</span>
       </div>
-      <button class="empty-card" onclick={() => (creatingGoal = true)}>
-        <span class="empty-plus" aria-hidden="true">
+      <button
+        class="flex w-full flex-col items-center gap-2 rounded-[var(--radius)] border border-dashed border-line-strong bg-card px-5 py-[34px] text-center transition-colors duration-150 hover:border-[var(--accent)] hover:bg-card-hover"
+        onclick={() => (creatingGoal = true)}
+      >
+        <span class="mb-1 flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[var(--accent)] text-[var(--on-accent)]" aria-hidden="true">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
           </svg>
         </span>
-        <span class="empty-title">Neues Training anlegen</span>
+        <span class="text-base font-bold text-ink">Neues Training anlegen</span>
       </button>
     </section>
   {/if}
@@ -335,14 +339,14 @@
     />
   {/if}
 
-  <footer class="site-footer">
-    <nav class="site-footer-links" aria-label="Rechtliches">
+  <footer class="mt-12 flex flex-col items-center gap-3 border-t border-line px-0 pb-4 pt-6 text-center">
+    <nav class="site-footer-links flex flex-wrap items-center justify-center" aria-label="Rechtliches">
       <a href="/impressum">Impressum</a>
       <a href="/agb">AGB</a>
       <a href="/datenschutz">Datenschutz</a>
       <a href="mailto:devnxt.app@gmail.com">Kontakt</a>
     </nav>
-    <span class="site-footer-copy">
+    <span class="flex flex-col items-center gap-1 text-[13px] text-ink-dim">
       <span>© 2026 rxZone.</span>
       <span>Alle Rechte vorbehalten.</span>
       <span>Made with <span aria-label="Liebe">❤️</span> in Germany</span>
@@ -351,26 +355,7 @@
 {/if}
 
 <style>
-  .loading {
-    text-align: center;
-    padding: 80px 0;
-    color: var(--text-muted);
-  }
-  .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 22px;
-    flex-wrap: wrap;
-  }
-  .brand-row {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    min-width: 0;
-  }
+  /* Avatar: gradient fill + sync spin keyframe (not expressible as utilities) */
   .avatar-btn {
     flex: 0 0 auto;
     width: 36px;
@@ -389,12 +374,6 @@
     justify-content: center;
     transition: transform 0.12s ease, box-shadow 0.12s ease;
   }
-  .avatar-btn img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
   .avatar-btn:hover {
     transform: scale(1.05);
     box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.25);
@@ -412,7 +391,8 @@
       transform: rotate(360deg);
     }
   }
-  .goal-select {
+  /* Goal select: pill chrome + custom SVG chevron background-image */
+  :global(.goal-select) {
     width: auto;
     min-width: 0;
     max-width: 100%;
@@ -435,176 +415,14 @@
     cursor: pointer;
     transition: border-color 0.15s, background-color 0.15s;
   }
-  .goal-select:hover {
+  :global(.goal-select:hover) {
     border-color: var(--border-strong);
     background-color: var(--card-hover);
   }
-  .goal-select:focus {
+  :global(.goal-select:focus) {
     border-color: var(--accent);
   }
-  .goal-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 18px;
-  }
-  .goal-pill {
-    display: inline-flex;
-    align-items: stretch;
-    margin-top: 10px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    overflow: hidden;
-    max-width: 100%;
-  }
-  .seg {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    white-space: nowrap;
-  }
-  .seg + .seg {
-    border-left: 1px solid var(--border);
-  }
-  .seg-cat {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    color: var(--text);
-  }
-  .seg-target {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--accent);
-    min-width: 0;
-  }
-  .seg-target .tg-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .tg-icon {
-    font-size: 13px;
-    flex: 0 0 auto;
-  }
-  .days-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    flex: 0 0 auto;
-    box-sizing: border-box;
-    height: 34px;
-    padding: 0 13px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    font-size: 13.5px;
-    font-weight: 700;
-    color: var(--accent);
-    white-space: nowrap;
-  }
-  .days-pill .flag-icon {
-    flex: 0 0 auto;
-  }
-  .days-pill .days-num {
-    text-shadow: var(--glow);
-  }
-  .days-pill .days-lbl {
-    font-weight: 600;
-    color: var(--accent);
-  }
-  .days-pill.past {
-    color: var(--text-muted);
-  }
-  .days-pill.past .days-num {
-    text-shadow: none;
-  }
-  .goal-desc {
-    margin-top: 10px;
-    font-size: 14.5px;
-    max-width: 560px;
-  }
-  .footer-note {
-    font-size: 14px;
-    margin-top: -4px;
-    margin-bottom: 4px;
-  }
-  .today-block {
-    margin-bottom: 18px;
-  }
-  .today-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-  }
-  .eyebrow {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-  .empty-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 34px 20px;
-    background: var(--card);
-    border: 1px dashed var(--border-strong);
-    border-radius: var(--radius);
-    cursor: pointer;
-    text-align: center;
-    transition: border-color 0.15s, background-color 0.15s;
-  }
-  .empty-card:hover {
-    border-color: var(--accent);
-    background: var(--card-hover);
-  }
-  .empty-plus {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 46px;
-    height: 46px;
-    margin-bottom: 4px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: var(--on-accent);
-  }
-  .empty-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-  }
-  @media (max-width: 560px) {
-    .goal-head {
-      flex-direction: column;
-    }
-  }
-  .site-footer {
-    margin-top: 48px;
-    padding: 24px 0 16px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    text-align: center;
-  }
-  .site-footer-links {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-  }
+  /* Footer links: muted color + vertical separators between items */
   .site-footer-links a {
     position: relative;
     color: var(--text-muted);
@@ -624,13 +442,5 @@
   }
   .site-footer-links a:hover {
     color: var(--text);
-  }
-  .site-footer-copy {
-    color: var(--text-dim);
-    font-size: 13px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
   }
 </style>

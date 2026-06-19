@@ -8,6 +8,7 @@
     deleteType,
     deleteGoal,
   } from "../store.svelte.js";
+  import { Button, Input, Select, Textarea, Label } from "flowbite-svelte";
 
   let { goal, onclose } = $props();
 
@@ -37,27 +38,28 @@
 </script>
 
 <Modal title="Trainingsziel bearbeiten" {onclose}>
-  <div class="field">
-    <label for="g-name">Name</label>
-    <input id="g-name" value={goal.name} oninput={(e) => patch("name", e.target.value)} />
+  <div class="mb-3.5">
+    <Label for="g-name" class="mb-1.5 block text-xs font-semibold text-ink-muted">Name</Label>
+    <Input id="g-name" value={goal.name} oninput={(e) => patch("name", e.target.value)} />
   </div>
 
-  <div class="row2">
-    <div class="field">
-      <label for="g-sportid">Sportart</label>
-      <select
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <div class="mb-3.5 min-w-0">
+      <Label for="g-sportid" class="mb-1.5 block text-xs font-semibold text-ink-muted">Sportart</Label>
+      <Select
         id="g-sportid"
+        placeholder=""
         value={goal.sportId}
         onchange={(e) => changeSport(e.target.value)}
       >
         {#each SPORT_LIST as s (s.id)}
           <option value={s.id}>{s.label}</option>
         {/each}
-      </select>
+      </Select>
     </div>
-    <div class="field">
-      <label for="g-date">Zieldatum</label>
-      <input
+    <div class="mb-3.5 min-w-0">
+      <Label for="g-date" class="mb-1.5 block text-xs font-semibold text-ink-muted">Zieldatum</Label>
+      <Input
         id="g-date"
         type="date"
         value={goal.targetDate}
@@ -66,19 +68,19 @@
     </div>
   </div>
 
-  <div class="row2">
-    <div class="field">
-      <label for="g-target">Übergeordnetes Ziel</label>
-      <input
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <div class="mb-3.5 min-w-0">
+      <Label for="g-target" class="mb-1.5 block text-xs font-semibold text-ink-muted">Übergeordnetes Ziel</Label>
+      <Input
         id="g-target"
         value={goal.targetGoal}
         oninput={(e) => patch("targetGoal", e.target.value)}
         placeholder="z.B. sub60"
       />
     </div>
-    <div class="field">
-      <label for="g-cat">Klasse</label>
-      <input
+    <div class="mb-3.5 min-w-0">
+      <Label for="g-cat" class="mb-1.5 block text-xs font-semibold text-ink-muted">Klasse</Label>
+      <Input
         id="g-cat"
         list="cat-options"
         value={goal.category}
@@ -93,96 +95,50 @@
     </div>
   </div>
 
-  <div class="field">
-    <label for="g-desc">Beschreibung</label>
-    <textarea
+  <div class="mb-3.5">
+    <Label for="g-desc" class="mb-1.5 block text-xs font-semibold text-ink-muted">Beschreibung</Label>
+    <Textarea
       id="g-desc"
+      rows={3}
       value={goal.description}
       oninput={(e) => patch("description", e.target.value)}
-    ></textarea>
+    />
   </div>
 
-  <div class="types">
-    <div class="types-head">
-      <span class="caption">Trainingstypen</span>
-      <button class="btn btn-sm" onclick={() => addType(goal.id)}>+ Typ</button>
+  <div class="mt-1.5">
+    <div class="mb-2.5 flex items-center justify-between">
+      <span class="text-xs font-semibold text-ink-muted">Trainingstypen</span>
+      <Button size="sm" color="alternative" onclick={() => addType(goal.id)}>+ Typ</Button>
     </div>
     {#each goal.types as t (t.id)}
-      <div class="type-row">
+      <div class="mb-2 flex items-center gap-2">
         <input
           type="color"
           value={t.color}
           oninput={(e) => updateType(goal.id, t.id, { color: e.target.value })}
-          class="color"
+          class="h-[38px] w-11 flex-none cursor-pointer rounded-lg border border-line bg-card p-[3px]"
         />
-        <input
+        <Input
+          class="flex-1"
           value={t.label}
           oninput={(e) => updateType(goal.id, t.id, { label: e.target.value })}
         />
-        <button
-          class="btn btn-sm btn-danger"
-          onclick={() => deleteType(goal.id, t.id)}>✕</button
+        <Button
+          size="sm"
+          color="red"
+          class="!p-2"
+          onclick={() => deleteType(goal.id, t.id)}>✕</Button
         >
       </div>
     {/each}
   </div>
 
-  <div class="actions">
-    <button class="btn btn-danger" onclick={confirmDelete}>Ziel löschen</button>
-    <button class="btn btn-primary" onclick={() => onclose?.()}>Fertig</button>
+  <div class="mt-[18px] flex items-center justify-between gap-2.5">
+    <Button color="red" onclick={confirmDelete}>Ziel löschen</Button>
+    <Button
+      color="primary"
+      class="font-semibold text-[var(--on-accent)]"
+      onclick={() => onclose?.()}>Fertig</Button
+    >
   </div>
 </Modal>
-
-<style>
-  .field label,
-  .types-head .caption {
-    text-transform: none;
-    letter-spacing: 0;
-  }
-  .row2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-  .field {
-    min-width: 0;
-  }
-  .types {
-    margin-top: 6px;
-  }
-  .types-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
-  .types-head .caption {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-  .type-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    align-items: center;
-  }
-  .color {
-    width: 44px;
-    height: 38px;
-    padding: 3px;
-    flex: 0 0 auto;
-    cursor: pointer;
-  }
-  .actions {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin-top: 18px;
-  }
-  @media (max-width: 480px) {
-    .row2 {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>

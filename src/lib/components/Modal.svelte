@@ -1,4 +1,6 @@
 <script>
+  import { Button } from "flowbite-svelte";
+
   let { title = "", onclose, dismissable = true, children } = $props();
 
   function onkeydown(e) {
@@ -9,49 +11,40 @@
 <svelte:window {onkeydown} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-<div class="overlay" onclick={() => dismissable && onclose?.()} role="presentation">
+<div
+  class="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-10 backdrop-blur-sm"
+  onclick={() => dismissable && onclose?.()}
+  role="presentation"
+>
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
   <div
-    class="modal"
+    class="pop w-full max-w-[560px] rounded-xl border border-line-strong bg-surface-elev shadow-[var(--shadow)]"
     onclick={(e) => e.stopPropagation()}
     role="dialog"
     aria-modal="true"
     tabindex="-1"
   >
     {#if title || dismissable}
-      <header>
-        <h3>{title}</h3>
+      <header class="flex items-center justify-between border-b border-line px-[18px] py-4">
+        <h3 class="text-base font-semibold text-ink">{title}</h3>
         {#if dismissable}
-          <button class="btn-ghost close" onclick={() => onclose?.()} aria-label="Schließen">✕</button>
+          <Button
+            color="alternative"
+            class="border-transparent bg-transparent !p-2 text-[15px] text-ink-muted hover:text-ink"
+            onclick={() => onclose?.()}
+            aria-label="Schließen"
+          >✕</Button>
         {/if}
       </header>
     {/if}
-    <div class="body">
+    <div class="p-[18px]">
       {@render children?.()}
     </div>
   </div>
 </div>
 
 <style>
-  .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(3px);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 40px 16px;
-    z-index: 100;
-    overflow-y: auto;
-  }
-  .modal {
-    background: var(--bg-elev);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius);
-    width: 100%;
-    max-width: 560px;
-    box-shadow: var(--shadow);
+  .pop {
     animation: pop 0.14s ease-out;
   }
   @keyframes pop {
@@ -59,21 +52,5 @@
       opacity: 0;
       transform: translateY(8px) scale(0.985);
     }
-  }
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 18px;
-    border-bottom: 1px solid var(--border);
-  }
-  header h3 {
-    font-size: 16px;
-  }
-  .close {
-    font-size: 15px;
-  }
-  .body {
-    padding: 18px;
   }
 </style>

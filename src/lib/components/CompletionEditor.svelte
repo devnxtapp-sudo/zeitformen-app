@@ -1,5 +1,6 @@
 <script>
   import { untrack } from "svelte";
+  import { Button, Input, Label, Textarea } from "flowbite-svelte";
   import Modal from "./Modal.svelte";
   import TypeBadge from "./TypeBadge.svelte";
   import { logEntry, updateLogEntry, typeById } from "../store.svelte.js";
@@ -117,242 +118,142 @@
 </script>
 
 <Modal title="Trainingsprotokoll" {onclose}>
-  <div class="head">
+  <div class="mb-4 flex items-start justify-between gap-3">
     <div>
-      <div class="date">{prettyDate}</div>
-      {#if entry?.title}<div class="title">{entry.title}</div>{/if}
+      <div class="text-[13px] text-ink-muted">{prettyDate}</div>
+      {#if entry?.title}
+        <div class="mt-1.5 text-[15px] font-semibold text-ink">{entry.title}</div>
+      {/if}
       {#if entry?.typeLabel}
-        <div class="type-pill">
+        <div class="mt-2">
           <TypeBadge label={entry.typeLabel} color={entry.typeColor} size="sm" />
         </div>
       {/if}
     </div>
   </div>
 
-  <div class="field">
-      <label for="c-note">Notiz</label>
-      <textarea
-        id="c-note"
-        bind:value={draft.note}
-        rows="4"
-        placeholder="Wie lief die Einheit? Gefühl, Wetter, Auffälligkeiten …"
-      ></textarea>
-    </div>
+  <div class="mb-3.5">
+    <Label
+      for="c-note"
+      class="mb-1.5 block text-sm font-medium normal-case tracking-normal text-ink-muted"
+      >Notiz</Label
+    >
+    <Textarea
+      id="c-note"
+      bind:value={draft.note}
+      rows={4}
+      placeholder="Wie lief die Einheit? Gefühl, Wetter, Auffälligkeiten …"
+    />
+  </div>
 
-    <div class="exercises">
-      <span class="caption">Übungen &amp; Sätze</span>
-      {#each draft.exercises as ex, ei (ei)}
-        <div class="exercise">
-          <div class="ex-head">
-            <input
-              class="ex-name"
-              bind:value={ex.name}
-              placeholder="Übung (z.B. Klimmzüge)"
-            />
-            <button
-              class="btn-ghost ex-del"
-              onclick={() => removeExercise(ei)}
-              aria-label="Übung entfernen">✕</button
-            >
-          </div>
-          <div class="set-grid-head">
-            <span>Satz</span>
-            <span>Wdh</span>
-            <span>kg</span>
-            <span></span>
-          </div>
-          {#each ex.sets as set, si (si)}
-            <div class="set-row">
-              <span class="set-num">{si + 1}</span>
-              <input
-                class="set-in"
-                type="number"
-                inputmode="numeric"
-                bind:value={set.reps}
-                placeholder="–"
-              />
-              <input
-                class="set-in"
-                type="number"
-                inputmode="decimal"
-                bind:value={set.weight}
-                placeholder="–"
-              />
-              <button
-                class="btn-ghost set-del"
-                onclick={() => removeSet(ex, si)}
-                aria-label="Satz entfernen">✕</button
-              >
-            </div>
-          {/each}
-          <button class="btn btn-ghost btn-sm add" onclick={() => addSet(ex)}>
-            + Satz
-          </button>
+  <div class="mt-4">
+    <span
+      class="mb-2 block text-xs font-bold uppercase tracking-wide text-primary-400"
+      >Übungen &amp; Sätze</span
+    >
+    {#each draft.exercises as ex, ei (ei)}
+      <div class="mb-2.5 rounded-xl border border-line bg-card p-3">
+        <div class="mb-2.5 flex items-center gap-2">
+          <Input
+            class="flex-1 font-semibold"
+            bind:value={ex.name}
+            placeholder="Übung (z.B. Klimmzüge)"
+          />
+          <Button
+            color="alternative"
+            class="shrink-0 border-transparent bg-transparent !p-2 text-[13px] text-ink-dim hover:text-[var(--c-danger,#e5534b)]"
+            onclick={() => removeExercise(ei)}
+            aria-label="Übung entfernen">✕</Button
+          >
         </div>
-      {/each}
-      <button class="btn btn-ghost btn-sm add" onclick={addExercise}>
-        + Übung
-      </button>
-    </div>
-
-    {#if !isStrength}
-      <div class="metrics">
-        <span class="caption">Werte</span>
-        {#each draft.rows as row, i (i)}
-          <div class="m-row">
-            <input class="m-key" bind:value={row.key} placeholder="Kennzahl" />
-            <input class="m-val" bind:value={row.value} placeholder="Wert" />
-            <button
-              class="btn-ghost m-del"
-              onclick={() => removeRow(i)}
-              aria-label="Wert entfernen">✕</button
+        <div
+          class="mb-1.5 grid grid-cols-[38px_1fr_1fr_32px] items-center gap-2 text-[10.5px] uppercase tracking-[0.04em] text-ink-dim"
+        >
+          <span>Satz</span>
+          <span class="text-center">Wdh</span>
+          <span class="text-center">kg</span>
+          <span></span>
+        </div>
+        {#each ex.sets as set, si (si)}
+          <div
+            class="mb-1.5 grid grid-cols-[38px_1fr_1fr_32px] items-center gap-2"
+          >
+            <span class="text-center text-[13px] text-ink-muted">{si + 1}</span>
+            <Input
+              class="!p-2 text-center"
+              type="number"
+              inputmode="numeric"
+              bind:value={set.reps}
+              placeholder="–"
+            />
+            <Input
+              class="!p-2 text-center"
+              type="number"
+              inputmode="decimal"
+              bind:value={set.weight}
+              placeholder="–"
+            />
+            <Button
+              color="alternative"
+              class="border-transparent bg-transparent !p-2 text-xs text-ink-dim hover:text-[var(--c-danger,#e5534b)]"
+              onclick={() => removeSet(ex, si)}
+              aria-label="Satz entfernen">✕</Button
             >
           </div>
         {/each}
-        <button class="btn btn-ghost btn-sm add" onclick={addRow}>+ Wert</button>
+        <Button
+          size="sm"
+          color="alternative"
+          class="mt-0.5 border-transparent bg-transparent"
+          onclick={() => addSet(ex)}>+ Satz</Button
+        >
       </div>
-    {/if}
+    {/each}
+    <Button
+      size="sm"
+      color="alternative"
+      class="mt-0.5 border-transparent bg-transparent"
+      onclick={addExercise}>+ Übung</Button
+    >
+  </div>
 
-  <div class="actions">
-    <button class="btn btn-ghost" onclick={() => onclose?.()}>Abbrechen</button>
-    <button class="btn btn-primary" onclick={save}>Speichern</button>
+  {#if !isStrength}
+    <div class="mt-3.5">
+      <span
+        class="mb-2 block text-xs font-bold uppercase tracking-wide text-primary-400"
+        >Werte</span
+      >
+      {#each draft.rows as row, i (i)}
+        <div class="mb-2 flex items-center gap-2">
+          <Input class="flex-1" bind:value={row.key} placeholder="Kennzahl" />
+          <Input class="flex-1" bind:value={row.value} placeholder="Wert" />
+          <Button
+            color="alternative"
+            class="shrink-0 border-transparent bg-transparent !p-2 text-[13px] text-ink-dim hover:text-[var(--c-danger,#e5534b)]"
+            onclick={() => removeRow(i)}
+            aria-label="Wert entfernen">✕</Button
+          >
+        </div>
+      {/each}
+      <Button
+        size="sm"
+        color="alternative"
+        class="mt-0.5 border-transparent bg-transparent"
+        onclick={addRow}>+ Wert</Button
+      >
+    </div>
+  {/if}
+
+  <div class="mt-[18px] flex justify-end gap-2.5">
+    <Button
+      color="alternative"
+      class="border-transparent bg-transparent"
+      onclick={() => onclose?.()}>Abbrechen</Button
+    >
+    <Button
+      color="primary"
+      class="font-semibold text-[var(--on-accent)]"
+      onclick={save}>Speichern</Button
+    >
   </div>
 </Modal>
-
-<style>
-  .head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  .date {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-  }
-  .title {
-    font-size: 15px;
-    font-weight: 650;
-    margin-top: 6px;
-  }
-  .type-pill {
-    margin-top: 8px;
-  }
-  .field label {
-    text-transform: none;
-    letter-spacing: 0;
-  }
-  .exercises {
-    margin-top: 16px;
-  }
-  .exercise {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px;
-    margin-bottom: 10px;
-    background: var(--card);
-  }
-  .ex-head {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  .ex-name {
-    flex: 1 1 auto;
-    font-weight: 600;
-  }
-  .ex-del {
-    flex: 0 0 auto;
-    color: var(--text-dim);
-    font-size: 13px;
-  }
-  .ex-del:hover {
-    color: var(--c-danger, #e5534b);
-  }
-  .set-grid-head,
-  .set-row {
-    display: grid;
-    grid-template-columns: 38px 1fr 1fr 32px;
-    gap: 8px;
-    align-items: center;
-  }
-  .set-grid-head {
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-  }
-  .set-grid-head span {
-    text-align: center;
-  }
-  .set-grid-head span:first-child {
-    text-align: left;
-  }
-  .set-row {
-    margin-bottom: 6px;
-  }
-  .set-num {
-    font-size: 13px;
-    color: var(--text-muted);
-    text-align: center;
-  }
-  .set-in {
-    text-align: center;
-    padding: 8px;
-  }
-  .set-del {
-    color: var(--text-dim);
-    font-size: 12px;
-  }
-  .set-del:hover {
-    color: var(--c-danger, #e5534b);
-  }
-  .metrics {
-    margin-top: 14px;
-  }
-  .caption {
-    display: block;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-  }
-  .m-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    align-items: center;
-  }
-  .m-key {
-    flex: 1 1 45%;
-  }
-  .m-val {
-    flex: 1 1 45%;
-  }
-  .m-del {
-    flex: 0 0 auto;
-    color: var(--text-dim);
-    font-size: 13px;
-  }
-  .m-del:hover {
-    color: var(--c-danger, #e5534b);
-  }
-  .add {
-    margin-top: 2px;
-  }
-  .actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 18px;
-  }
-  .empty {
-    margin: 4px 0;
-    font-size: 14px;
-  }
-</style>

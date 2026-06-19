@@ -1,4 +1,6 @@
 <script>
+  import { Input, Label } from "flowbite-svelte";
+
   let { onback } = $props();
 
   // Standard race distances (km) for the finish-time table.
@@ -61,11 +63,11 @@
   <h2>Pace-Rechner</h2>
 </div>
 
-<section class="card">
-  <div class="fields">
-    <div class="field">
-      <label for="pc-dist">Distanz (km)</label>
-      <input
+<section class="mb-5 rounded-xl border border-line bg-card p-6">
+  <div class="flex gap-3.5">
+    <div class="flex-1">
+      <Label for="pc-dist" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-muted">Distanz (km)</Label>
+      <Input
         id="pc-dist"
         type="text"
         inputmode="decimal"
@@ -73,9 +75,9 @@
         placeholder="z.B. 10"
       />
     </div>
-    <div class="field">
-      <label for="pc-time">Zeit</label>
-      <input
+    <div class="flex-1">
+      <Label for="pc-time" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-muted">Zeit</Label>
+      <Input
         id="pc-time"
         type="text"
         inputmode="numeric"
@@ -85,122 +87,30 @@
     </div>
   </div>
 
-  <div class="results">
-    <div class="result">
-      <span class="val">{fmtPace(paceSec)}</span>
-      <span class="unit">min/km</span>
+  <div class="mt-5 flex gap-3.5">
+    <div class="flex flex-1 flex-col items-center gap-1 rounded-xl border border-line bg-surface-elev px-2.5 py-4">
+      <span class="text-3xl font-extrabold leading-none text-[var(--accent)]">{fmtPace(paceSec)}</span>
+      <span class="text-xs font-semibold text-ink-muted">min/km</span>
     </div>
-    <div class="result">
-      <span class="val">{valid ? speed.toFixed(1) : "–"}</span>
-      <span class="unit">km/h</span>
+    <div class="flex flex-1 flex-col items-center gap-1 rounded-xl border border-line bg-surface-elev px-2.5 py-4">
+      <span class="text-3xl font-extrabold leading-none text-[var(--accent)]">{valid ? speed.toFixed(1) : "–"}</span>
+      <span class="text-xs font-semibold text-ink-muted">km/h</span>
     </div>
   </div>
 </section>
 
-<section class="card">
-  <h3 class="sec-title">Endzeiten bei dieser Pace</h3>
+<section class="mb-5 rounded-xl border border-line bg-card p-6">
+  <h3 class="mb-3.5 text-lg font-semibold">Endzeiten bei dieser Pace</h3>
   {#if valid}
-    <ul class="race-list">
+    <ul class="flex list-none flex-col p-0">
       {#each RACES as r (r.km)}
-        <li class="race">
-          <span class="race-name">{r.label}</span>
-          <span class="race-time">{fmtTime(paceSec * r.km)}</span>
+        <li class="flex items-center justify-between border-b border-line py-2.5 last:border-b-0">
+          <span class="text-sm font-semibold text-ink">{r.label}</span>
+          <span class="text-sm font-bold tabular-nums text-ink">{fmtTime(paceSec * r.km)}</span>
         </li>
       {/each}
     </ul>
   {:else}
-    <p class="muted hint">Distanz und Zeit eingeben, um die Endzeiten zu sehen.</p>
+    <p class="m-0 text-sm text-ink-muted">Distanz und Zeit eingeben, um die Endzeiten zu sehen.</p>
   {/if}
 </section>
-
-<style>
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 22px 24px;
-    margin-bottom: 20px;
-  }
-  .fields {
-    display: flex;
-    gap: 14px;
-  }
-  .field {
-    flex: 1 1 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .field label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-  .field input {
-    padding: 11px 12px;
-    font-size: 15px;
-  }
-  .results {
-    display: flex;
-    gap: 14px;
-    margin-top: 20px;
-  }
-  .result {
-    flex: 1 1 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 16px 10px;
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-  }
-  .result .val {
-    font-size: 30px;
-    font-weight: 800;
-    line-height: 1;
-    color: var(--accent);
-  }
-  .result .unit {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-  .sec-title {
-    font-size: 15px;
-    margin: 0 0 14px;
-  }
-  .race-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .race {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 11px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .race:last-child {
-    border-bottom: none;
-  }
-  .race-name {
-    font-size: 14.5px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .race-time {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
-  }
-  .hint {
-    font-size: 14px;
-    margin: 0;
-  }
-</style>

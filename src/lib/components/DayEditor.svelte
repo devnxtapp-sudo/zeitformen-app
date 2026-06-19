@@ -3,6 +3,7 @@
   import Modal from "./Modal.svelte";
   import { DAY_LABELS, MODALITIES, modalityById, emptyExtraSession } from "../seed.js";
   import { updateDay, typeById } from "../store.svelte.js";
+  import { Button, Input, Select, Textarea, Label } from "flowbite-svelte";
 
   let { goal, dayKey, onclose } = $props();
 
@@ -105,54 +106,66 @@
 
 <Modal title={`${DAY_LABELS[dayKey]} bearbeiten`} {onclose}>
   {#if !draft.isRest}
-    <div class="sess-tabs">
+    <div class="mb-3.5 flex flex-wrap gap-2">
       <button
         type="button"
-        class="sess-tab"
-        class:active={activeSlot === 0}
+        class="rounded-full border px-3.5 py-1.5 text-[13.5px] font-semibold transition-colors duration-100 {activeSlot ===
+        0
+          ? 'border-primary-500 bg-primary-500 text-[var(--on-accent)]'
+          : 'border-line bg-card text-ink hover:border-primary-500'}"
         onclick={() => (activeSlot = 0)}
       >Session 1</button>
       {#each draft.extraSessions as _, i (i)}
         <button
           type="button"
-          class="sess-tab"
-          class:active={activeSlot === i + 1}
+          class="rounded-full border px-3.5 py-1.5 text-[13.5px] font-semibold transition-colors duration-100 {activeSlot ===
+          i + 1
+            ? 'border-primary-500 bg-primary-500 text-[var(--on-accent)]'
+            : 'border-line bg-card text-ink hover:border-primary-500'}"
           onclick={() => (activeSlot = i + 1)}
         >Session {i + 2}</button>
       {/each}
       {#if draft.extraSessions.length < 1}
-        <button type="button" class="sess-tab add" onclick={addSession}>+ Session</button>
+        <button
+          type="button"
+          class="rounded-full border border-line bg-card px-3.5 py-1.5 text-[13.5px] font-semibold text-primary-400 transition-colors duration-100 hover:border-primary-500"
+          onclick={addSession}
+        >+ Session</button>
       {/if}
     </div>
     {#if activeSlot > 0}
-      <button type="button" class="sess-del" onclick={removeSession}>Diese Session entfernen</button>
+      <button
+        type="button"
+        class="cursor-pointer border-none bg-none px-0 pb-3 text-xs font-semibold text-ink-muted hover:text-ink"
+        onclick={removeSession}
+      >Diese Session entfernen</button>
     {/if}
   {/if}
 
   {#if !curRest}
-    <div class="field">
-      <label for="d-type">Trainingstyp</label>
-      <select id="d-type" bind:value={cur.typeId}>
+    <div class="mb-3.5">
+      <Label for="d-type" class="mb-1.5 block text-xs font-semibold text-ink-muted">Trainingstyp</Label>
+      <Select id="d-type" placeholder="" bind:value={cur.typeId}>
         <option value={null}>— kein Typ —</option>
         {#each goal.types as t (t.id)}
           <option value={t.id}>{t.label}</option>
         {/each}
-      </select>
+      </Select>
     </div>
   {/if}
 
-  <div class="field">
-    <label for="d-title">Titel</label>
-    <input
+  <div class="mb-3.5">
+    <Label for="d-title" class="mb-1.5 block text-xs font-semibold text-ink-muted">Titel</Label>
+    <Input
       id="d-title"
       bind:value={cur.title}
       placeholder={isStrength ? "z.B. Oberkörper, Unterkörper" : "z.B. Grundlagenausdauer"}
     />
   </div>
 
-  <div class="field">
-    <label for="d-meta">Untertitel / Dauer</label>
-    <input
+  <div class="mb-3.5">
+    <Label for="d-meta" class="mb-1.5 block text-xs font-semibold text-ink-muted">Untertitel / Dauer</Label>
+    <Input
       id="d-meta"
       bind:value={cur.meta}
       placeholder={isStrength ? "z.B. 90 min" : "z.B. 60–120 min · 60–65 % HFmax"}
@@ -161,20 +174,22 @@
 
   {#if !curRest}
     {#if !isStrength}
-      <div class="field">
-        <label for="d-obj">Ziel</label>
-        <textarea id="d-obj" bind:value={cur.session.objective}></textarea>
+      <div class="mb-3.5">
+        <Label for="d-obj" class="mb-1.5 block text-xs font-semibold text-ink-muted">Ziel</Label>
+        <Textarea id="d-obj" rows={3} bind:value={cur.session.objective} />
       </div>
     {/if}
 
-    <div class="field">
-      <span class="caption">Modalität</span>
-      <div class="mod-chips">
+    <div class="mb-3.5">
+      <span class="mb-2 block text-xs font-semibold text-ink-muted">Modalität</span>
+      <div class="flex flex-wrap gap-2">
         {#each MODALITIES as m (m.id)}
           <button
             type="button"
-            class="mod-chip"
-            class:active={cur.session.modality === m.id}
+            class="rounded-full border px-3.5 py-2 text-[13.5px] font-semibold transition-colors duration-100 {cur
+              .session.modality === m.id
+              ? 'border-primary-500 bg-primary-500 text-[var(--on-accent)]'
+              : 'border-line bg-card text-ink hover:border-primary-500'}"
             onclick={() => pickModality(m.id)}
           >
             {m.label}
@@ -184,228 +199,90 @@
     </div>
 
     {#if modality}
-      <div class="field">
-        <label for="d-intensity">Intensität / Zielbereich</label>
-        <input
+      <div class="mb-3.5">
+        <Label for="d-intensity" class="mb-1.5 block text-xs font-semibold text-ink-muted">Intensität / Zielbereich</Label>
+        <Input
           id="d-intensity"
           bind:value={cur.session.intensity}
           placeholder="z.B. 80–85 % HFmax · Schwellentempo"
         />
       </div>
 
-      <div class="blocks">
-        <div class="blocks-head">
-          <span class="caption">{isStrength ? "Übungen" : "Intervalle"}</span>
-          <button class="btn btn-sm" onclick={addInterval}>
+      <div>
+        <div class="mb-2 flex items-center justify-between">
+          <span class="text-xs font-semibold text-ink-muted">{isStrength ? "Übungen" : "Intervalle"}</span>
+          <Button size="sm" color="alternative" onclick={addInterval}>
             {isStrength ? "+ Übung" : "+ Intervall"}
-          </button>
+          </Button>
         </div>
 
         {#each cur.session.intervals as iv, i (i)}
-          <div class="interval">
+          <div class="mb-2.5 flex flex-wrap items-end gap-2 rounded-lg border border-line bg-card p-3">
             {#if isStrength}
-              <input
-                class="iv-name"
+              <Input
+                class="basis-full font-semibold"
                 bind:value={iv.name}
                 placeholder="Übung (z.B. Bankdrücken)"
               />
             {/if}
-            <label class="iv-cell iv-repeat">
-              <span>{modality.id === "strength" ? "Sätze" : "Anzahl"}</span>
-              <input type="number" inputmode="numeric" min="1" bind:value={iv.repeat} placeholder="1" />
+            <label class="flex min-w-0 flex-[1_1_56px] flex-col gap-1">
+              <span class="text-[10.5px] font-bold uppercase tracking-wide text-ink-muted">{modality.id === "strength" ? "Sätze" : "Anzahl"}</span>
+              <Input type="number" inputmode="numeric" min="1" bind:value={iv.repeat} placeholder="1" />
             </label>
-            <span class="iv-x">×</span>
+            <span class="self-center pb-2.5 font-bold text-ink-muted">×</span>
             {#if planFields.includes("amount")}
-              <label class="iv-cell iv-amount">
-                <span>{modality.id === "strength" ? "Wdh" : "Menge"}</span>
-                <input type="number" inputmode="decimal" bind:value={iv.amount} placeholder="–" />
+              <label class="flex min-w-0 flex-[1_1_56px] flex-col gap-1">
+                <span class="text-[10.5px] font-bold uppercase tracking-wide text-ink-muted">{modality.id === "strength" ? "Wdh" : "Menge"}</span>
+                <Input type="number" inputmode="decimal" bind:value={iv.amount} placeholder="–" />
               </label>
-              <label class="iv-cell iv-unit">
-                <span>Einheit</span>
-                <select bind:value={iv.amountUnit}>
+              <label class="flex min-w-0 flex-[0_0_72px] flex-col gap-1">
+                <span class="text-[10.5px] font-bold uppercase tracking-wide text-ink-muted">Einheit</span>
+                <Select placeholder="" bind:value={iv.amountUnit}>
                   {#each amountUnits as u (u)}
                     <option value={u}>{u}</option>
                   {/each}
-                </select>
+                </Select>
               </label>
             {/if}
             {#if planFields.includes("weight")}
-              <label class="iv-cell iv-weight">
-                <span>kg</span>
-                <input type="number" inputmode="decimal" bind:value={iv.weight} placeholder="–" />
+              <label class="flex min-w-0 flex-[1_1_56px] flex-col gap-1">
+                <span class="text-[10.5px] font-bold uppercase tracking-wide text-ink-muted">kg</span>
+                <Input type="number" inputmode="decimal" bind:value={iv.weight} placeholder="–" />
               </label>
             {/if}
             {#if planFields.includes("rest")}
-              <label class="iv-cell iv-rest">
-                <span>Pause</span>
-                <input type="number" inputmode="numeric" bind:value={iv.rest} placeholder="–" />
+              <label class="flex min-w-0 flex-[1_1_56px] flex-col gap-1">
+                <span class="text-[10.5px] font-bold uppercase tracking-wide text-ink-muted">Pause</span>
+                <Input type="number" inputmode="numeric" bind:value={iv.rest} placeholder="–" />
               </label>
-              <label class="iv-cell iv-unit">
-                <span>&nbsp;</span>
-                <select bind:value={iv.restUnit}>
+              <label class="flex min-w-0 flex-[0_0_72px] flex-col gap-1">
+                <span class="text-[10.5px] font-bold uppercase tracking-wide text-ink-muted">&nbsp;</span>
+                <Select placeholder="" bind:value={iv.restUnit}>
                   <option value="s">s</option>
                   <option value="min">min</option>
-                </select>
+                </Select>
               </label>
             {/if}
-            <button class="btn btn-sm btn-ghost iv-del" onclick={() => removeInterval(i)} aria-label="Intervall entfernen">✕</button>
+            <Button
+              size="sm"
+              color="alternative"
+              class="ml-auto self-center border-transparent bg-transparent !p-2 text-ink-muted hover:text-ink"
+              onclick={() => removeInterval(i)}
+              aria-label="Intervall entfernen"
+            >✕</Button>
           </div>
         {/each}
       </div>
     {/if}
 
-    <div class="field" style="margin-top:14px;">
-      <label for="d-bonus">Bonus / Hinweis</label>
-      <textarea id="d-bonus" bind:value={cur.session.bonus}></textarea>
+    <div class="mb-3.5 mt-3.5">
+      <Label for="d-bonus" class="mb-1.5 block text-xs font-semibold text-ink-muted">Bonus / Hinweis</Label>
+      <Textarea id="d-bonus" rows={3} bind:value={cur.session.bonus} />
     </div>
   {/if}
 
-  <div class="actions">
-    <button class="btn btn-ghost" onclick={() => onclose?.()}>Abbrechen</button>
-    <button class="btn btn-primary" onclick={save}>Speichern</button>
+  <div class="mt-[18px] flex justify-end gap-2.5">
+    <Button color="alternative" class="border-transparent bg-transparent" onclick={() => onclose?.()}>Abbrechen</Button>
+    <Button color="primary" class="font-semibold text-[var(--on-accent)]" onclick={save}>Speichern</Button>
   </div>
 </Modal>
-
-<style>
-  .field label {
-    text-transform: none;
-    letter-spacing: 0;
-  }
-  .sess-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 14px;
-  }
-  .sess-tab {
-    padding: 7px 14px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    color: var(--text);
-    font-size: 13.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: border-color 0.12s, background 0.12s, color 0.12s;
-  }
-  .sess-tab:hover {
-    border-color: var(--accent);
-  }
-  .sess-tab.active {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--on-accent);
-  }
-  .sess-tab.add {
-    color: var(--accent);
-  }
-  .sess-del {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 12.5px;
-    font-weight: 600;
-    padding: 0 0 12px;
-    cursor: pointer;
-  }
-  .blocks-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
-  }
-  .caption {
-    display: block;
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-  }
-  .blocks-head .caption {
-    margin-bottom: 0;
-  }
-  .mod-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .mod-chip {
-    padding: 8px 13px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    color: var(--text);
-    font-size: 13.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: border-color 0.12s, background 0.12s, color 0.12s;
-  }
-  .mod-chip:hover {
-    border-color: var(--accent);
-  }
-  .mod-chip.active {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--on-accent);
-  }
-  .interval {
-    display: flex;
-    align-items: flex-end;
-    flex-wrap: wrap;
-    gap: 8px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 12px;
-    margin-bottom: 10px;
-    background: var(--card);
-  }
-  .iv-name {
-    flex: 1 1 100%;
-    font-weight: 600;
-    padding: 9px 10px;
-    font-size: 14px;
-  }
-  .iv-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-  }
-  .iv-cell span {
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-muted);
-    font-weight: 700;
-  }
-  .iv-cell input,
-  .iv-cell select {
-    padding: 8px 9px;
-    font-size: 14px;
-  }
-  .iv-repeat,
-  .iv-amount,
-  .iv-weight,
-  .iv-rest {
-    flex: 1 1 56px;
-  }
-  .iv-unit {
-    flex: 0 0 64px;
-  }
-  .iv-x {
-    align-self: center;
-    padding-bottom: 9px;
-    color: var(--text-muted);
-    font-weight: 700;
-  }
-  .iv-del {
-    align-self: center;
-    margin-left: auto;
-  }
-  .actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 18px;
-  }
-</style>

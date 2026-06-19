@@ -1,5 +1,6 @@
 <script>
   import { auth, updateName, changePassword, deleteAccount } from "../auth.svelte.js";
+  import { Button, Input, Label, Helper } from "flowbite-svelte";
 
   let { onback } = $props();
 
@@ -74,51 +75,53 @@
   }
 </script>
 
-<div class="account">
-  <div class="head">
+<div class="mb-[22px] flex flex-col gap-4">
+  <div class="subpage-head">
     <button class="back-btn" onclick={() => onback?.()} aria-label="Zurück">‹</button>
     <h2>Konto</h2>
   </div>
 
-  <section class="panel">
-    <h3>Benutzername</h3>
-    <div class="field">
-      <label for="ac-name">Anzeigename</label>
-      <input id="ac-name" bind:value={name} maxlength="80" autocomplete="name" />
+  <section class="rounded-xl border border-line bg-card p-[18px]">
+    <h3 class="mb-3.5 text-lg font-semibold">Benutzername</h3>
+    <div class="mb-3.5">
+      <Label for="ac-name" class="mb-1.5 block text-xs font-semibold text-ink-muted">Anzeigename</Label>
+      <Input id="ac-name" bind:value={name} maxlength="80" autocomplete="name" />
     </div>
-    <div class="row">
-      {#if nameMsg}<span class="msg">{nameMsg}</span>{/if}
-      <button
-        class="btn btn-primary btn-sm save"
+    <div class="mt-1 flex items-center justify-end gap-3">
+      {#if nameMsg}<span class="text-sm text-zone2">{nameMsg}</span>{/if}
+      <Button
+        color="primary"
+        size="sm"
+        class="shrink-0 font-semibold text-[var(--on-accent)]"
         onclick={saveName}
         disabled={nameBusy || !name.trim() || name.trim() === auth.user?.name}
       >
         {nameBusy ? "Speichern …" : "Speichern"}
-      </button>
+      </Button>
     </div>
   </section>
 
-  <section class="panel">
-    <h3>E-Mail</h3>
-    <div class="field">
-      <label for="ac-email">E-Mail-Adresse</label>
-      <input id="ac-email" value={auth.user?.email ?? ""} readonly />
+  <section class="rounded-xl border border-line bg-card p-[18px]">
+    <h3 class="mb-3.5 text-lg font-semibold">E-Mail</h3>
+    <div class="mb-3.5">
+      <Label for="ac-email" class="mb-1.5 block text-xs font-semibold text-ink-muted">E-Mail-Adresse</Label>
+      <Input id="ac-email" value={auth.user?.email ?? ""} readonly class="text-ink-muted" />
     </div>
-    <p class="hint muted">Die E-Mail-Adresse kann nicht geändert werden.</p>
+    <p class="m-0 text-sm text-ink-muted">Die E-Mail-Adresse kann nicht geändert werden.</p>
   </section>
 
-  <section class="panel">
-    <h3>{hasPassword ? "Passwort ändern" : "Passwort festlegen"}</h3>
+  <section class="rounded-xl border border-line bg-card p-[18px]">
+    <h3 class="mb-3.5 text-lg font-semibold">{hasPassword ? "Passwort ändern" : "Passwort festlegen"}</h3>
     {#if !hasPassword}
-      <p class="hint muted">
+      <p class="m-0 mb-3.5 text-sm text-ink-muted">
         Du bist mit Google angemeldet. Lege optional ein Passwort fest, um dich
         zusätzlich mit E-Mail und Passwort anmelden zu können.
       </p>
     {/if}
     {#if hasPassword}
-      <div class="field">
-        <label for="ac-cur">Aktuelles Passwort</label>
-        <input
+      <div class="mb-3.5">
+        <Label for="ac-cur" class="mb-1.5 block text-xs font-semibold text-ink-muted">Aktuelles Passwort</Label>
+        <Input
           id="ac-cur"
           type="password"
           bind:value={currentPw}
@@ -126,9 +129,9 @@
         />
       </div>
     {/if}
-    <div class="field">
-      <label for="ac-new">Neues Passwort</label>
-      <input
+    <div class="mb-3.5">
+      <Label for="ac-new" class="mb-1.5 block text-xs font-semibold text-ink-muted">Neues Passwort</Label>
+      <Input
         id="ac-new"
         type="password"
         bind:value={newPw}
@@ -136,126 +139,52 @@
         placeholder="mindestens 8 Zeichen"
       />
     </div>
-    <div class="field">
-      <label for="ac-new2">Neues Passwort wiederholen</label>
-      <input
+    <div class="mb-3.5">
+      <Label for="ac-new2" class="mb-1.5 block text-xs font-semibold text-ink-muted">Neues Passwort wiederholen</Label>
+      <Input
         id="ac-new2"
         type="password"
         bind:value={newPw2}
         autocomplete="new-password"
       />
     </div>
-    <div class="row">
-      {#if pwMsg}<span class="msg" class:error={pwError}>{pwMsg}</span>{/if}
-      <button
-        class="btn btn-primary btn-sm save"
+    <div class="mt-1 flex items-center justify-end gap-3">
+      {#if pwMsg}<span class="text-sm {pwError ? 'text-rest' : 'text-zone2'}">{pwMsg}</span>{/if}
+      <Button
+        color="primary"
+        size="sm"
+        class="shrink-0 font-semibold text-[var(--on-accent)]"
         onclick={savePassword}
         disabled={pwBusy || !newPw || !newPw2 || (hasPassword && !currentPw)}
       >
         {pwBusy ? "Speichern …" : hasPassword ? "Passwort ändern" : "Passwort festlegen"}
-      </button>
+      </Button>
     </div>
   </section>
 
-  <section class="panel danger">
-    <h3>Konto löschen</h3>
-    <p class="hint muted">
+  <section class="rounded-xl border border-rest/40 bg-card p-[18px]">
+    <h3 class="mb-3.5 text-lg font-semibold text-rest">Konto löschen</h3>
+    <p class="m-0 text-sm text-ink-muted">
       Dein Konto und alle gespeicherten Trainingsdaten werden unwiderruflich
       gelöscht. Dies kann nicht rückgängig gemacht werden.
     </p>
     {#if !delConfirm}
-      <div class="row">
-        <button class="btn btn-sm danger-btn" onclick={() => (delConfirm = true)}>
+      <div class="mt-1 flex items-center justify-end gap-3">
+        <Button color="red" size="sm" class="shrink-0" onclick={() => (delConfirm = true)}>
           Konto löschen
-        </button>
+        </Button>
       </div>
     {:else}
-      <p class="confirm-text">Möchtest du dein Konto wirklich endgültig löschen?</p>
-      {#if delMsg}<span class="msg error">{delMsg}</span>{/if}
-      <div class="row">
-        <button class="btn btn-sm" onclick={() => (delConfirm = false)} disabled={delBusy}>
+      <p class="m-0 mb-2.5 mt-3.5 text-sm text-ink">Möchtest du dein Konto wirklich endgültig löschen?</p>
+      {#if delMsg}<Helper class="mb-2.5" color="red">{delMsg}</Helper>{/if}
+      <div class="mt-1 flex items-center justify-end gap-3">
+        <Button color="alternative" size="sm" onclick={() => (delConfirm = false)} disabled={delBusy}>
           Abbrechen
-        </button>
-        <button class="btn btn-sm danger-btn" onclick={removeAccount} disabled={delBusy}>
+        </Button>
+        <Button color="red" size="sm" class="shrink-0" onclick={removeAccount} disabled={delBusy}>
           {delBusy ? "Löschen …" : "Endgültig löschen"}
-        </button>
+        </Button>
       </div>
     {/if}
   </section>
 </div>
-
-<style>
-  .account {
-    margin-bottom: 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 2px;
-  }
-  .head h2 {
-    font-size: 20px;
-  }
-  .panel {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px;
-  }
-  .panel h3 {
-    font-size: 15px;
-    margin-bottom: 14px;
-  }
-  .field label {
-    text-transform: none;
-    letter-spacing: 0;
-  }
-  input[readonly] {
-    color: var(--text-muted);
-  }
-  .hint {
-    font-size: 13px;
-    margin: 0;
-  }
-  .row {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 4px;
-  }
-  .save {
-    flex: 0 0 auto;
-  }
-  .msg {
-    font-size: 13px;
-    color: var(--c-zone2, #5fb87a);
-  }
-  .msg.error {
-    color: var(--c-danger, #e5534b);
-  }
-  .panel.danger {
-    border-color: rgba(229, 83, 75, 0.4);
-  }
-  .panel.danger h3 {
-    color: var(--c-danger, #e5534b);
-  }
-  .confirm-text {
-    font-size: 13.5px;
-    color: var(--text);
-    margin: 0 0 10px;
-  }
-  .danger-btn {
-    flex: 0 0 auto;
-    background: var(--c-danger, #e5534b);
-    color: #fff;
-    border: none;
-  }
-  .danger-btn:hover {
-    filter: brightness(1.08);
-  }
-</style>

@@ -5,6 +5,7 @@
   import ExerciseSwiper from "./ExerciseSwiper.svelte";
   import { weekDates, todayKey, dayKeyOf } from "../dateutil.js";
   import { updateLogEntry } from "../store.svelte.js";
+  import { Button } from "flowbite-svelte";
 
   let { goal, ongotoplan } = $props();
 
@@ -27,9 +28,9 @@
   }
 </script>
 
-<section class="today-block">
-  <div class="today-head">
-    <span class="eyebrow">Heutiges Training</span>
+<section class="mb-[18px]">
+  <div class="mb-2.5 flex flex-wrap items-baseline justify-between gap-3">
+    <span class="text-xs font-bold uppercase tracking-wide text-primary-400">Heutiges Training</span>
   </div>
   <SessionDetail
     {goal}
@@ -39,91 +40,31 @@
 
   {#if !todayDay.isRest}
     {#if !started}
-      <button class="start-btn" onclick={startWorkout}>
+      <Button
+        color="primary"
+        onclick={startWorkout}
+        class="mb-3 w-full gap-2 py-[15px] text-[15px] font-bold text-[var(--on-accent)] transition hover:brightness-110 active:scale-[0.99]"
+      >
         <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
           <polygon points="6,4 20,12 6,20" fill="currentColor" />
         </svg>
         <span>Workout starten</span>
-      </button>
+      </Button>
     {:else}
       <ExerciseSwiper {goal} day={todayDay} onsave={saveWorkout} />
     {/if}
   {/if}
 
-  <button class="plan-link" onclick={() => ongotoplan?.()}>
+  <Button
+    color="alternative"
+    onclick={() => ongotoplan?.()}
+    class="w-full gap-1.5 rounded-xl border-line bg-card py-3 text-sm font-semibold text-primary-400 transition hover:border-[var(--accent)] hover:bg-card-hover"
+  >
     <span>Wochenplan ansehen</span>
-    <span class="chev" aria-hidden="true">›</span>
-  </button>
+    <span class="text-lg leading-none" aria-hidden="true">›</span>
+  </Button>
 </section>
 
 <WeekProgress {goal} {week} />
 
 <StatsView {goal} />
-
-<style>
-  .today-block {
-    margin-bottom: 18px;
-  }
-  .today-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-  }
-  .eyebrow {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-  .start-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    margin-bottom: 12px;
-    padding: 15px;
-    background: var(--accent);
-    border: none;
-    border-radius: var(--radius);
-    color: var(--on-accent);
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: filter 0.15s, transform 0.1s;
-  }
-  .start-btn:hover {
-    filter: brightness(1.08);
-  }
-  .start-btn:active {
-    transform: scale(0.99);
-  }
-  .plan-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    width: 100%;
-    padding: 12px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--accent);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: border-color 0.15s, background-color 0.15s;
-  }
-  .plan-link:hover {
-    border-color: var(--accent);
-    background: var(--card-hover);
-  }
-  .plan-link .chev {
-    font-size: 18px;
-    line-height: 1;
-  }
-</style>

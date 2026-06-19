@@ -1,15 +1,23 @@
 <script>
   import Accordion from "./Accordion.svelte";
   import { addNote, deleteNote } from "../store.svelte.js";
+  import { Button } from "flowbite-svelte";
 
   let { goal, editMode = false, oneditnote } = $props();
 </script>
 
-<div class="notes">
-  <div class="section-head">
-    <h3 class="section-title">Hinweise & Periodisierung</h3>
+<div class="mt-[26px]">
+  <div class="mb-3 flex items-center justify-between">
+    <h3 class="text-xs font-bold uppercase tracking-wide text-ink-muted">
+      Hinweise &amp; Periodisierung
+    </h3>
     {#if editMode}
-      <button class="btn btn-sm" onclick={() => addNote(goal.id)}>+ Hinweis</button>
+      <Button
+        size="sm"
+        color="alternative"
+        class="border-transparent bg-transparent text-primary-400 hover:text-primary-500"
+        onclick={() => addNote(goal.id)}>+ Hinweis</Button
+      >
     {/if}
   </div>
 
@@ -25,28 +33,6 @@
   {/each}
 
   {#if !goal.notes.length}
-    <p class="empty muted">Noch keine Hinweise.</p>
+    <p class="text-sm text-ink-muted">Noch keine Hinweise.</p>
   {/if}
 </div>
-
-<style>
-  .notes {
-    margin-top: 26px;
-  }
-  .section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-  }
-  .section-title {
-    font-size: 12.5px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-  }
-  .empty {
-    font-size: 14px;
-  }
-</style>

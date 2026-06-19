@@ -1,4 +1,5 @@
 <script>
+  import { Button } from "flowbite-svelte";
   import { monthGrid, MONTH_NAMES, todayKey } from "../dateutil.js";
   import { logEntry } from "../store.svelte.js";
 
@@ -42,147 +43,41 @@
   }
 </script>
 
-<div class="calendar">
-  <div class="cal-head">
-    <div class="nav">
-      <button class="btn btn-sm btn-ghost" onclick={prev} aria-label="Vorheriger Monat">‹</button>
-      <span class="month-name">{MONTH_NAMES[month]} {year}</span>
-      <button class="btn btn-sm btn-ghost" onclick={next} aria-label="Nächster Monat">›</button>
+<div class="mb-[22px] rounded-xl border border-line bg-card p-4 max-[480px]:px-2.5 max-[480px]:pt-3 max-[480px]:pb-4 sm:px-[18px] sm:pt-4 sm:pb-5">
+  <div class="mb-3.5 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-2.5">
+      <Button color="alternative" size="sm" class="!px-2.5" onclick={prev} aria-label="Vorheriger Monat">‹</Button>
+      <span class="min-w-[150px] text-center text-lg font-bold">{MONTH_NAMES[month]} {year}</span>
+      <Button color="alternative" size="sm" class="!px-2.5" onclick={next} aria-label="Nächster Monat">›</Button>
     </div>
-    <div class="cal-meta">
-      <span class="count">{monthCount} Einheiten</span>
-      <button class="btn btn-sm" onclick={goToday}>Heute</button>
+    <div class="flex items-center gap-3">
+      <span class="text-xs text-ink-muted">{monthCount} Einheiten</span>
+      <Button color="alternative" size="sm" onclick={goToday}>Heute</Button>
     </div>
   </div>
 
-  <div class="dow-row">
-    {#each DOW as d (d)}<span class="dow">{d}</span>{/each}
+  <div class="mb-1.5 grid grid-cols-7 gap-1.5 max-[480px]:gap-1">
+    {#each DOW as d (d)}<span class="text-center text-xs font-bold tracking-wider text-ink-dim">{d}</span>{/each}
   </div>
 
-  <div class="month-grid">
+  <div class="grid grid-cols-7 gap-1.5 max-[480px]:gap-1">
     {#each weeks as wk, wi (wi)}
       {#each wk as cell (cell.date)}
         {@const entry = logEntry(goal, cell.date)}
         <button
-          class="cell"
-          class:outside={cell.outside}
-          class:today={cell.date === today}
-          class:done={!!entry}
+          class="relative flex aspect-square cursor-pointer flex-col items-center justify-center gap-[5px] rounded-lg border bg-surface-elev text-ink transition-colors duration-150 hover:border-line-strong hover:bg-card-hover
+            {cell.outside ? 'opacity-35' : ''}
+            {cell.date === today ? 'border-primary-500' : 'border-line'}
+            {entry ? 'border-primary-500/45 bg-primary-500/10' : ''}"
           onclick={() => onopen?.(cell.date, entry?.dayKey)}
           title={entry ? entry.title || entry.typeLabel : ""}
         >
-          <span class="dnum">{cell.day}</span>
+          <span class="text-[13px] font-semibold max-[480px]:text-xs">{cell.day}</span>
           {#if entry}
-            <span class="dot" style="background: {entry.typeColor}"></span>
+            <span class="h-[7px] w-[7px] rounded-full" style="background: {entry.typeColor}"></span>
           {/if}
         </button>
       {/each}
     {/each}
   </div>
 </div>
-
-<style>
-  .calendar {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 18px 20px;
-    margin-bottom: 22px;
-  }
-  .cal-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-  }
-  .nav {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .month-name {
-    font-size: 17px;
-    font-weight: 700;
-    min-width: 150px;
-    text-align: center;
-  }
-  .cal-meta {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .count {
-    font-size: 12.5px;
-    color: var(--text-muted);
-  }
-  .dow-row {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-    margin-bottom: 6px;
-  }
-  .dow {
-    text-align: center;
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: var(--text-dim);
-  }
-  .month-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-  }
-  .cell {
-    aspect-ratio: 1 / 1;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--bg-elev);
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    cursor: pointer;
-    transition: border-color 0.13s, background 0.13s;
-    position: relative;
-  }
-  .cell:hover {
-    border-color: var(--border-strong);
-    background: var(--card-hover);
-  }
-  .cell.outside {
-    opacity: 0.35;
-  }
-  .cell.today {
-    border-color: var(--accent);
-  }
-  .cell.done {
-    background: rgba(95, 184, 122, 0.1);
-    border-color: rgba(95, 184, 122, 0.45);
-  }
-  .dnum {
-    font-size: 13px;
-    font-weight: 600;
-  }
-  .dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 999px;
-  }
-  @media (max-width: 480px) {
-    .calendar {
-      padding: 12px 10px 16px;
-    }
-    .month-grid,
-    .dow-row {
-      gap: 4px;
-    }
-    .dnum {
-      font-size: 12px;
-    }
-  }
-</style>

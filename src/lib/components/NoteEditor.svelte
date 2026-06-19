@@ -2,6 +2,7 @@
   import { untrack } from "svelte";
   import Modal from "./Modal.svelte";
   import { updateNote } from "../store.svelte.js";
+  import { Button, Input, Label, Textarea } from "flowbite-svelte";
 
   let { goal, noteId, onclose } = $props();
 
@@ -20,29 +21,16 @@
 </script>
 
 <Modal title="Hinweis bearbeiten" {onclose}>
-  <div class="field">
-    <label for="n-title">Titel</label>
-    <input id="n-title" bind:value={draft.title} />
+  <div class="mb-3.5">
+    <Label for="n-title" class="mb-1.5 block text-xs font-semibold text-ink-muted">Titel</Label>
+    <Input id="n-title" bind:value={draft.title} />
   </div>
-  <div class="field">
-    <label for="n-body">Text</label>
-    <textarea id="n-body" bind:value={draft.body} rows="6"></textarea>
+  <div class="mb-3.5">
+    <Label for="n-body" class="mb-1.5 block text-xs font-semibold text-ink-muted">Text</Label>
+    <Textarea id="n-body" bind:value={draft.body} rows={6} />
   </div>
-  <div class="actions">
-    <button class="btn btn-ghost" onclick={() => onclose?.()}>Abbrechen</button>
-    <button class="btn btn-primary" onclick={save}>Speichern</button>
+  <div class="mt-2 flex justify-end gap-2.5">
+    <Button color="alternative" onclick={() => onclose?.()}>Abbrechen</Button>
+    <Button color="primary" class="font-semibold text-[var(--on-accent)]" onclick={save}>Speichern</Button>
   </div>
 </Modal>
-
-<style>
-  .field label {
-    text-transform: none;
-    letter-spacing: 0;
-  }
-  .actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 8px;
-  }
-</style>

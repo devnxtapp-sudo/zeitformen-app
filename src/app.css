@@ -1,3 +1,53 @@
+@import "tailwindcss";
+@plugin "flowbite/plugin";
+@source "../node_modules/flowbite-svelte/dist";
+
+/* The app is permanently dark — drive Flowbite's `dark:` variants off the
+   `.dark` class on <html> instead of the OS colour-scheme preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Map the design tokens into Tailwind's theme so utilities inherit the
+   neon-on-black brand: bg-card / text-ink / border-line / font-sans, and the
+   cyan `primary-*` scale that Flowbite components use by default. Default
+   Tailwind colours (gray, red, …) are kept for Flowbite's dark surfaces. */
+@theme {
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+
+  /* surfaces + ink */
+  --color-surface: #0a0b0d;
+  --color-surface-elev: #131519;
+  --color-card: #16181d;
+  --color-card-hover: #1b1e24;
+  --color-line: #262a31;
+  --color-line-strong: #333842;
+  --color-ink: #e8eaed;
+  --color-ink-muted: #9aa0a6;
+  --color-ink-dim: #6b7178;
+
+  /* training-type accents */
+  --color-kraft: #f0a830;
+  --color-zone2: #5fb87a;
+  --color-threshold: #22d3ee;
+  --color-vo2: #a779e9;
+  --color-swim: #9aa0a6;
+  --color-rest: #6b7178;
+
+  /* cyan/teal neon — remaps Flowbite's primary scale onto the brand accent */
+  --color-primary-50: #ecfeff;
+  --color-primary-100: #cffafe;
+  --color-primary-200: #a5f3fc;
+  --color-primary-300: #67e8f9;
+  --color-primary-400: #38e0f5;
+  --color-primary-500: #22d3ee;
+  --color-primary-600: #06b6d4;
+  --color-primary-700: #0891b2;
+  --color-primary-800: #0e7490;
+  --color-primary-900: #155e75;
+  --color-primary-950: #083344;
+}
+
 :root {
   /* surfaces */
   --bg: #0a0b0d;

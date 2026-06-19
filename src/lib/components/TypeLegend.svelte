@@ -4,23 +4,9 @@
   let { types = [], restLabel = "Ruhetag" } = $props();
 </script>
 
-<div class="legend">
+<div class="mb-4 flex flex-wrap gap-2">
   {#each types as t (t.id)}
     <TypeBadge label={t.label} color={t.color} />
   {/each}
-  <span class="badge rest">{restLabel}</span>
+  <span class="badge border border-line bg-card text-ink-muted">{restLabel}</span>
 </div>
-
-<style>
-  .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .rest {
-    color: var(--text-muted);
-    background: var(--card);
-    border: 1px solid var(--border);
-  }
-</style>
