@@ -7,24 +7,24 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Map the design tokens into Tailwind's theme so utilities inherit the
-   neon-on-black brand: bg-card / text-ink / border-line / font-sans, and the
-   cyan `primary-*` scale that Flowbite components use by default. Default
-   Tailwind colours (gray, red, …) are kept for Flowbite's dark surfaces. */
+   Flowbite admin-dashboard look: bg-card / text-ink / border-line / font-sans,
+   and the orange-red `primary-*` scale that Flowbite components use by default.
+   Default Tailwind colours (gray, red, …) are kept for Flowbite's dark surfaces. */
 @theme {
   --font-sans:
     "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
 
-  /* surfaces + ink */
-  --color-surface: #0a0b0d;
-  --color-surface-elev: #131519;
-  --color-card: #16181d;
-  --color-card-hover: #1b1e24;
-  --color-line: #262a31;
-  --color-line-strong: #333842;
-  --color-ink: #e8eaed;
-  --color-ink-muted: #9aa0a6;
-  --color-ink-dim: #6b7178;
+  /* surfaces + ink — Flowbite slate palette (gray-900/800/700) */
+  --color-surface: #111827;
+  --color-surface-elev: #1f2937;
+  --color-card: #1f2937;
+  --color-card-hover: #374151;
+  --color-line: #374151;
+  --color-line-strong: #4b5563;
+  --color-ink: #f9fafb;
+  --color-ink-muted: #9ca3af;
+  --color-ink-dim: #6b7280;
 
   /* training-type accents */
   --color-kraft: #f0a830;
@@ -34,33 +34,33 @@
   --color-swim: #9aa0a6;
   --color-rest: #6b7178;
 
-  /* cyan/teal neon — remaps Flowbite's primary scale onto the brand accent */
-  --color-primary-50: #ecfeff;
-  --color-primary-100: #cffafe;
-  --color-primary-200: #a5f3fc;
-  --color-primary-300: #67e8f9;
-  --color-primary-400: #38e0f5;
-  --color-primary-500: #22d3ee;
-  --color-primary-600: #06b6d4;
-  --color-primary-700: #0891b2;
-  --color-primary-800: #0e7490;
-  --color-primary-900: #155e75;
-  --color-primary-950: #083344;
+  /* Flowbite admin-dashboard orange-red — Flowbite's default `primary` scale */
+  --color-primary-50: #fff5f2;
+  --color-primary-100: #fff1ee;
+  --color-primary-200: #ffe4de;
+  --color-primary-300: #ffd5cc;
+  --color-primary-400: #ffbcad;
+  --color-primary-500: #fe795d;
+  --color-primary-600: #ef562f;
+  --color-primary-700: #eb4f27;
+  --color-primary-800: #cc4522;
+  --color-primary-900: #a5371b;
+  --color-primary-950: #7d2914;
 }
 
 :root {
-  /* surfaces */
-  --bg: #0a0b0d;
-  --bg-elev: #131519;
-  --card: #16181d;
-  --card-hover: #1b1e24;
-  --border: #262a31;
-  --border-strong: #333842;
+  /* surfaces — Flowbite slate palette */
+  --bg: #111827;
+  --bg-elev: #1f2937;
+  --card: #1f2937;
+  --card-hover: #374151;
+  --border: #374151;
+  --border-strong: #4b5563;
 
   /* text */
-  --text: #e8eaed;
-  --text-muted: #9aa0a6;
-  --text-dim: #6b7178;
+  --text: #f9fafb;
+  --text-muted: #9ca3af;
+  --text-dim: #6b7280;
 
   /* training type accents */
   --c-kraft: #f0a830;
@@ -70,12 +70,12 @@
   --c-swim: #9aa0a6;
   --c-rest: #6b7178;
 
-  /* cyan/teal accent (neon-on-black theme) */
-  --accent: #22d3ee;
-  --accent-strong: #06b6d4; /* hover / pressed */
-  --accent-rgb: 34, 211, 238; /* for rgba() tints + glows */
-  --on-accent: #04181c; /* readable text/icon on a filled cyan surface */
-  --glow: 0 0 18px rgba(34, 211, 238, 0.45);
+  /* orange-red accent (Flowbite admin-dashboard) */
+  --accent: #ef562f; /* primary-600 — links / filled buttons */
+  --accent-strong: #eb4f27; /* primary-700 — hover / pressed */
+  --accent-rgb: 239, 86, 47; /* for rgba() tints */
+  --on-accent: #ffffff; /* readable text/icon on a filled orange surface */
+  --glow: none; /* neon glow removed for the flat dashboard look */
 
   --radius: 14px;
   --radius-sm: 9px;
@@ -119,14 +119,14 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: var(--bg) url(/metal-bg.jpg) center center / cover no-repeat;
+  background: var(--bg);
   pointer-events: none;
 }
 
+/* Full-width app container — the authenticated view manages its own layout
+   (fixed sidebar + content column); pre-auth screens center themselves. */
 #app {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 18px 16px 64px;
+  width: 100%;
 }
 
 h1,
@@ -288,8 +288,3 @@ textarea {
   color: var(--text-dim);
 }
 
-@media (max-width: 560px) {
-  #app {
-    padding: 12px 12px 56px;
-  }
-}

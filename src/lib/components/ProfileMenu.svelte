@@ -21,14 +21,22 @@
     onpacklist,
     onappsettings,
     editMode = false,
+    // "drawer" = mobile off-canvas overlay (default, keeps swipe/Escape/sync-tap).
+    // "sidebar" = desktop fixed rail, always visible (no overlay/drag).
+    variant = "drawer",
+    // current app.view + modal flags, used to highlight the active nav item.
+    view = "dashboard",
+    settingsActive = false,
   } = $props();
+
+  let isSidebar = $derived(variant === "sidebar");
 
   let email = $derived(auth.user?.email ?? "");
   let picture = $derived(auth.user?.picture ?? null);
   let name = $derived(auth.user?.name || email.split("@")[0] || "Athlet");
   let initial = $derived((name[0] || email[0] || "?").toUpperCase());
 
-  // swipe-to-close: drag the drawer left with the finger/mouse
+  // swipe-to-close: drag the drawer left with the finger/mouse (drawer variant only)
   const OFFSCREEN = -380;
   let dragX = $state(0);
   let dragging = $state(false);
@@ -43,7 +51,7 @@
   }
 
   function onPointerDown(e) {
-    if (closing) return;
+    if (isSidebar || closing) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
     dragging = true;
     startX = e.clientX;
@@ -61,12 +69,23 @@
   }
 
   function onKey(e) {
-    if (e.key === "Escape") close();
+    if (!isSidebar && e.key === "Escape") close();
   }
 
-  const itemClass =
-    "flex w-full items-center gap-4 px-[22px] py-3.5 text-left text-[15px] font-semibold text-ink hover:bg-card";
-  const iconClass = "w-[22px] flex-none text-center text-[17px] text-ink-muted";
+  // On the desktop sidebar nav stays mounted, so a tap shouldn't close anything;
+  // on the mobile drawer every navigation also dismisses the overlay.
+  function dismiss() {
+    if (!isSidebar) onclose?.();
+  }
+
+  const itemBase =
+    "flex w-full items-center gap-4 rounded-lg px-[18px] py-3 text-left text-[15px] font-semibold transition-colors";
+  const itemIdle = "text-ink hover:bg-card-hover";
+  const itemActive = "bg-primary-600/15 text-primary-500";
+  function navClass(active) {
+    return `${itemBase} ${active ? itemActive : itemIdle}`;
+  }
+  const iconClass = "w-[22px] flex-none text-center text-[17px]";
 </script>
 
 <svelte:window
@@ -75,19 +94,115 @@
   onpointerup={onPointerUp}
 />
 
-<div
-  class="overlay fixed inset-0 z-[1000] bg-black/55"
-  class:closing
-  onclick={close}
-  role="presentation"
-></div>
+{#snippet navItems()}
+  <nav class="flex flex-col gap-1 px-2">
+    <div class="flex flex-col gap-1 py-2">
+      {#if ontoggleedit}
+        <button class={navClass(editMode)} onclick={() => { ontoggleedit(); dismiss(); }}>
+          <span class="{iconClass} {editMode ? '' : 'text-ink-muted'}" aria-hidden="true">✎</span>
+          <span>{editMode ? "Bearbeiten beenden" : "Trainingsplan bearbeiten"}</span>
+        </button>
+      {/if}
+      {#if onsettings}
+        <button class={navClass(settingsActive)} onclick={() => { onsettings(); dismiss(); }}>
+          <span class="{iconClass} {settingsActive ? '' : 'text-ink-muted'}" aria-hidden="true">⚙</span>
+          <span>Ziel-Einstellungen</span>
+        </button>
+      {/if}
+      {#if oncreate}
+        <button class={navClass(false)} onclick={() => { oncreate(); dismiss(); }}>
+          <span class="{iconClass} text-ink-muted" aria-hidden="true">＋</span>
+          <span>Neues Training</span>
+        </button>
+      {/if}
+    </div>
 
-<aside
-  class="drawer fixed inset-y-0 left-0 z-[1001] flex w-[min(84vw,320px)] flex-col overflow-y-auto border-r border-line bg-surface-elev pt-7 pb-4 [touch-action:pan-y] [will-change:transform]"
-  class:dragging
-  style="transform: translateX({dragX}px)"
-  onpointerdown={onPointerDown}
->
+    <div class="flex flex-col gap-1 border-t border-line py-2">
+      {#if onhome}
+        <button class={navClass(view === "dashboard")} onclick={() => { onhome(); dismiss(); }}>
+          <span class="{iconClass} {view === 'dashboard' ? '' : 'text-ink-muted'}" aria-hidden="true">◆</span>
+          <span>Dashboard</span>
+        </button>
+      {/if}
+      {#if onplan}
+        <button class={navClass(view === "week")} onclick={() => { onplan(); dismiss(); }}>
+          <span class="{iconClass} {view === 'week' ? '' : 'text-ink-muted'}" aria-hidden="true">▤</span>
+          <span>Wochenplan</span>
+        </button>
+      {/if}
+      {#if oncalendar}
+        <button class={navClass(view === "calendar")} onclick={() => { oncalendar(); dismiss(); }}>
+          <span class="{iconClass} {view === 'calendar' ? '' : 'text-ink-muted'}" aria-hidden="true">▦</span>
+          <span>Kalender</span>
+        </button>
+      {/if}
+      {#if onstats}
+        <button class={navClass(view === "stats")} onclick={() => { onstats(); dismiss(); }}>
+          <span class="{iconClass} {view === 'stats' ? '' : 'text-ink-muted'}" aria-hidden="true">▲</span>
+          <span>Statistik</span>
+        </button>
+      {/if}
+      {#if onbody}
+        <button class={navClass(view === "body")} onclick={() => { onbody(); dismiss(); }}>
+          <span class="{iconClass} {view === 'body' ? '' : 'text-ink-muted'}" aria-hidden="true">◉</span>
+          <span>Körperanalyse</span>
+        </button>
+      {/if}
+      {#if onpace}
+        <button class={navClass(view === "pace")} onclick={() => { onpace(); dismiss(); }}>
+          <span class="{iconClass} {view === 'pace' ? '' : 'text-ink-muted'}" aria-hidden="true">◷</span>
+          <span>Pace-Rechner</span>
+        </button>
+      {/if}
+      {#if ontimer}
+        <button class={navClass(view === "timer")} onclick={() => { ontimer(); dismiss(); }}>
+          <span class="{iconClass} {view === 'timer' ? '' : 'text-ink-muted'}" aria-hidden="true">◴</span>
+          <span>Intervall-Timer</span>
+        </button>
+      {/if}
+      {#if onnutrition}
+        <button class={navClass(view === "nutrition")} onclick={() => { onnutrition(); dismiss(); }}>
+          <span class="{iconClass} {view === 'nutrition' ? '' : 'text-ink-muted'}" aria-hidden="true">▢</span>
+          <span>Ernährungsplan</span>
+        </button>
+      {/if}
+    </div>
+
+    {#if onracenutrition || onpacklist}
+      <div class="flex flex-col gap-1 border-t border-line py-2">
+        <span class="px-[18px] pt-1 pb-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-dim">Wettkampftag</span>
+        {#if onracenutrition}
+          <button class={navClass(view === "racenutrition")} onclick={() => { onracenutrition(); dismiss(); }}>
+            <span class="{iconClass} {view === 'racenutrition' ? '' : 'text-ink-muted'}" aria-hidden="true">◇</span>
+            <span>Nutrition-Strategie</span>
+          </button>
+        {/if}
+        {#if onpacklist}
+          <button class={navClass(view === "packlist")} onclick={() => { onpacklist(); dismiss(); }}>
+            <span class="{iconClass} {view === 'packlist' ? '' : 'text-ink-muted'}" aria-hidden="true">▣</span>
+            <span>Packliste</span>
+          </button>
+        {/if}
+      </div>
+    {/if}
+
+    <div class="flex flex-col gap-1 border-t border-line py-2">
+      {#if onappsettings}
+        <button class={navClass(view === "account" || view === "garmin")} onclick={() => onappsettings()}>
+          <span class="{iconClass} {view === 'account' || view === 'garmin' ? '' : 'text-ink-muted'}" aria-hidden="true">⚙</span>
+          <span>Einstellungen</span>
+          <span class="ml-auto text-[20px] text-ink-dim" aria-hidden="true">›</span>
+        </button>
+      {/if}
+      <button class="{itemBase} text-ink hover:bg-card-hover hover:text-[#ff6b6f]" onclick={() => logout()}>
+        <span class="{iconClass} text-ink-muted" aria-hidden="true">⎋</span>
+        <span>Abmelden</span>
+      </button>
+    </div>
+  </nav>
+{/snippet}
+
+{#snippet brandHeader()}
   <header class="flex items-center gap-3.5 px-5 pt-1.5 pb-[22px]">
     <button
       class="avatar-lg flex h-14 w-14 flex-none items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-strong)] text-[22px] font-bold text-[var(--on-accent)] hover:shadow-[0_0_0_3px_rgba(var(--accent-rgb),0.25)]"
@@ -119,113 +234,39 @@
       </span>
     </div>
   </header>
+{/snippet}
 
-  <nav class="flex flex-col">
-    <div class="flex flex-col border-t border-line py-2">
-      {#if ontoggleedit}
-        <button class={itemClass} onclick={() => { ontoggleedit(); onclose?.(); }}>
-          <span class={iconClass} aria-hidden="true">✎</span>
-          <span>{editMode ? "Bearbeiten beenden" : "Trainingsplan bearbeiten"}</span>
-        </button>
-      {/if}
-      {#if onsettings}
-        <button class={itemClass} onclick={() => { onsettings(); onclose?.(); }}>
-          <span class={iconClass} aria-hidden="true">⚙</span>
-          <span>Ziel-Einstellungen</span>
-        </button>
-      {/if}
-      {#if oncreate}
-        <button class={itemClass} onclick={() => { oncreate(); onclose?.(); }}>
-          <span class={iconClass} aria-hidden="true">＋</span>
-          <span>Neues Training</span>
-        </button>
-      {/if}
-    </div>
+{#if isSidebar}
+  <!-- Desktop fixed rail: always visible inside the layout flex row. -->
+  <aside
+    class="hidden lg:flex lg:sticky lg:top-0 lg:h-screen w-64 flex-none flex-col overflow-y-auto border-r border-line bg-surface-elev pt-7 pb-4"
+  >
+    <a href="/" class="flex items-center gap-2.5 px-5 pb-5" aria-label="rxZone">
+      <img src="/logo.png" alt="" class="h-9 w-9 flex-none rounded-lg object-cover" />
+      <span class="text-[20px] font-extrabold tracking-[-0.01em] text-ink">rxZone</span>
+    </a>
+    {@render brandHeader()}
+    {@render navItems()}
+  </aside>
+{:else}
+  <!-- Mobile off-canvas drawer overlay. -->
+  <div
+    class="overlay fixed inset-0 z-[1000] bg-black/55 lg:hidden"
+    class:closing
+    onclick={close}
+    role="presentation"
+  ></div>
 
-    <div class="flex flex-col border-t border-line py-2">
-      {#if onhome}
-        <button class={itemClass} onclick={() => { onhome(); onclose?.(); }}>
-          <span class={iconClass} aria-hidden="true">◆</span>
-          <span>Dashboard</span>
-        </button>
-      {/if}
-      {#if onplan}
-        <button class={itemClass} onclick={() => { onplan(); onclose?.(); }}>
-          <span class={iconClass} aria-hidden="true">▤</span>
-          <span>Wochenplan</span>
-        </button>
-      {/if}
-      {#if oncalendar}
-        <button class={itemClass} onclick={() => { oncalendar(); onclose?.(); }}>
-          <span class={iconClass} aria-hidden="true">▦</span>
-          <span>Kalender</span>
-        </button>
-      {/if}
-      {#if onstats}
-        <button class={itemClass} onclick={() => { onstats(); onclose?.(); }}>
-          <span class={iconClass} aria-hidden="true">▲</span>
-          <span>Statistik</span>
-        </button>
-      {/if}
-      {#if onbody}
-        <button class={itemClass} onclick={() => { onbody(); onclose?.(); }}>
-          <span class={iconClass} aria-hidden="true">◉</span>
-          <span>Körperanalyse</span>
-        </button>
-      {/if}
-      {#if onpace}
-        <button class={itemClass} onclick={() => { onpace(); onclose?.(); }}>
-          <span class={iconClass} aria-hidden="true">◷</span>
-          <span>Pace-Rechner</span>
-        </button>
-      {/if}
-      {#if ontimer}
-        <button class={itemClass} onclick={() => { ontimer(); onclose?.(); }}>
-          <span class={iconClass} aria-hidden="true">◴</span>
-          <span>Intervall-Timer</span>
-        </button>
-      {/if}
-      {#if onnutrition}
-        <button class={itemClass} onclick={() => { onnutrition(); onclose?.(); }}>
-          <span class={iconClass} aria-hidden="true">▢</span>
-          <span>Ernährungsplan</span>
-        </button>
-      {/if}
-    </div>
-
-    {#if onracenutrition || onpacklist}
-      <div class="flex flex-col border-t border-line py-2">
-        <span class="px-[22px] pt-1 pb-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-dim">Wettkampftag</span>
-        {#if onracenutrition}
-          <button class={itemClass} onclick={() => { onracenutrition(); onclose?.(); }}>
-            <span class={iconClass} aria-hidden="true">◇</span>
-            <span>Nutrition-Strategie</span>
-          </button>
-        {/if}
-        {#if onpacklist}
-          <button class={itemClass} onclick={() => { onpacklist(); onclose?.(); }}>
-            <span class={iconClass} aria-hidden="true">▣</span>
-            <span>Packliste</span>
-          </button>
-        {/if}
-      </div>
-    {/if}
-
-    <div class="flex flex-col border-t border-line py-2">
-      {#if onappsettings}
-        <button class={itemClass} onclick={() => onappsettings()}>
-          <span class={iconClass} aria-hidden="true">⚙</span>
-          <span>Einstellungen</span>
-          <span class="ml-auto text-[20px] text-ink-dim" aria-hidden="true">›</span>
-        </button>
-      {/if}
-      <button class="{itemClass} hover:text-[#ff6b6f]" onclick={() => logout()}>
-        <span class={iconClass} aria-hidden="true">⎋</span>
-        <span>Abmelden</span>
-      </button>
-    </div>
-  </nav>
-</aside>
+  <aside
+    class="drawer fixed inset-y-0 left-0 z-[1001] flex w-[min(84vw,320px)] flex-col overflow-y-auto border-r border-line bg-surface-elev pt-7 pb-4 lg:hidden [touch-action:pan-y] [will-change:transform]"
+    class:dragging
+    style="transform: translateX({dragX}px)"
+    onpointerdown={onPointerDown}
+  >
+    {@render brandHeader()}
+    {@render navItems()}
+  </aside>
+{/if}
 
 <style>
   /* Entrance/exit + spin animations and the drag snap-back transition can't be

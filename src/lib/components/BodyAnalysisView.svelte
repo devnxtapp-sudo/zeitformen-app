@@ -8,6 +8,7 @@
     fmtMetric,
   } from "../bodyMetrics.js";
   import BodyMeasurementEditor from "./BodyMeasurementEditor.svelte";
+  import ApexCharts from "apexcharts";
 
   let { onback } = $props();
 
@@ -58,10 +59,7 @@
     });
   }
 
-  // ---- trend chart (same approach as StatsView) ----
-  const W = 300;
-  const H = 120;
-  const PAD = 8;
+  // ---- trend chart (Flowbite area chart via ApexCharts) ----
   let metricMeta = $derived(metricById(metric));
   let series = $derived(
     sorted
@@ -69,28 +67,11 @@
       .map((e) => ({ date: e.date, value: Number(e.metrics[metric]) }))
       .filter((p) => !Number.isNaN(p.value)),
   );
+  // summary numbers (first/last value) reused by the delta + the big "current"
   let chart = $derived.by(() => {
-    const pts = series;
-    if (pts.length === 0) return null;
-    const values = pts.map((p) => p.value);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const span = max - min || 1;
-    const n = pts.length;
-    const x = (i) => (n === 1 ? W / 2 : PAD + (i * (W - 2 * PAD)) / (n - 1));
-    const y = (v) => H - PAD - ((v - min) / span) * (H - 2 * PAD);
-    const coords = pts.map((p, i) => ({
-      cx: x(i),
-      cy: y(p.value),
-      value: p.value,
-      date: p.date,
-    }));
-    return {
-      coords,
-      line: coords.map((c) => `${c.cx},${c.cy}`).join(" "),
-      first: values[0],
-      last: values[values.length - 1],
-    };
+    if (series.length === 0) return null;
+    const values = series.map((p) => p.value);
+    return { first: values[0], last: values[values.length - 1] };
   });
   let delta = $derived(
     chart ? Math.round((chart.last - chart.first) * 10) / 10 : 0,
@@ -101,6 +82,78 @@
       ? Math.sign(delta) === metricMeta.goodDir
       : null,
   );
+
+  // Flowbite admin-dashboard area chart on the dark theme, fed by `series`.
+  let chartOptions = $derived({
+    chart: {
+      type: "area",
+      height: 280,
+      fontFamily: "Inter, sans-serif",
+      toolbar: { show: false },
+      background: "transparent",
+    },
+    theme: { mode: "dark" },
+    series: [
+      {
+        name: metricMeta?.label ?? "Wert",
+        data: series.map((p) => p.value),
+      },
+    ],
+    xaxis: {
+      categories: series.map((p) => shortDate(p.date)),
+      labels: { style: { colors: "#9ca3af" } },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    },
+    yaxis: { labels: { style: { colors: "#9ca3af" } } },
+    colors: ["#fe795d", "#ef562f"],
+    fill: {
+      type: "gradient",
+      gradient: { opacityFrom: 0.45, opacityTo: 0, shade: "dark" },
+    },
+    stroke: { curve: "smooth", width: 3 },
+    dataLabels: { enabled: false },
+    grid: {
+      borderColor: "#374151",
+      strokeDashArray: 4,
+      padding: { left: 4, right: 4 },
+    },
+    legend: { labels: { colors: "#9ca3af" } },
+    tooltip: {
+      theme: "dark",
+      y: {
+        formatter: (v) =>
+          metricMeta?.unit ? `${v} ${metricMeta.unit}` : `${v}`,
+      },
+    },
+  });
+
+  // Mount/refresh the ApexChart whenever the options (i.e. selected metric or
+  // data) change. Renders into the bound container div.
+  let chartEl = $state(null);
+  let apex = null;
+  $effect(() => {
+    const options = chartOptions;
+    if (!chartEl || !chart) {
+      if (apex) {
+        apex.destroy();
+        apex = null;
+      }
+      return;
+    }
+    if (apex) {
+      apex.updateOptions(options, true, true);
+    } else {
+      apex = new ApexCharts(chartEl, options);
+      apex.render();
+    }
+    return () => {
+      if (apex) {
+        apex.destroy();
+        apex = null;
+      }
+    };
+  });
 </script>
 
 <div class="body-analysis">
@@ -173,22 +226,8 @@
               </span>
             {/if}
           </div>
-          <svg class="chart" viewBox="0 0 {W} {H}" preserveAspectRatio="none">
-            <polyline
-              points={chart.line}
-              fill="none"
-              stroke="var(--c-zone2)"
-              stroke-width="2"
-              stroke-linejoin="round"
-              stroke-linecap="round"
-            />
-            {#each chart.coords as c (c.date)}
-              <circle cx={c.cx} cy={c.cy} r="3" fill="var(--c-zone2)" />
-            {/each}
-          </svg>
-          <div class="chart-axis">
-            <span>{shortDate(series[0].date)}</span>
-            <span>{shortDate(series[series.length - 1].date)}</span>
+          <div class="rounded-xl border border-line bg-card p-4">
+            <div bind:this={chartEl} class="chart"></div>
           </div>
         {:else}
           <p class="muted">Für diese Kennzahl sind noch keine Werte erfasst.</p>
@@ -350,16 +389,7 @@
   }
   .chart {
     width: 100%;
-    height: 120px;
-    display: block;
-    overflow: visible;
-  }
-  .chart-axis {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10.5px;
-    color: var(--text-dim);
-    margin-top: 4px;
+    min-height: 280px;
   }
   .list {
     display: flex;

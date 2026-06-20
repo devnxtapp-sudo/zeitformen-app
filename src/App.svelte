@@ -96,23 +96,50 @@
 {:else if !auth.user}
   <AuthScreen dismissable={false} />
 {:else}
+  <!-- Sidebar shell: fixed desktop rail + content column. Negative margins
+       cancel #app's padding so the rail can sit flush against the left edge;
+       the content column re-applies the spacing it needs. -->
+  <div class="flex min-h-screen">
+    <!-- Desktop fixed sidebar (lg+) — always visible. -->
+    <ProfileMenu
+      variant="sidebar"
+      onsync={() => syncNow()}
+      syncing={app.syncing}
+      synced={app.synced}
+      oncreate={() => (creatingGoal = true)}
+      ontoggleedit={goal ? startEdit : undefined}
+      editMode={app.editMode}
+      view={app.view}
+      settingsActive={editingGoal}
+      onhome={() => setView("dashboard")}
+      onplan={goal ? () => setView("week") : undefined}
+      oncalendar={goal ? () => setView("calendar") : undefined}
+      onstats={goal ? () => setView("stats") : undefined}
+      onsettings={goal ? () => (editingGoal = true) : undefined}
+      onbody={() => setView("body")}
+      onpace={() => setView("pace")}
+      ontimer={() => setView("timer")}
+      onnutrition={() => setView("nutrition")}
+      onracenutrition={() => setView("racenutrition")}
+      onpacklist={() => setView("packlist")}
+      onappsettings={() => (settingsOpen = true)}
+    />
+
+    <!-- Content column -->
+    <div class="mx-auto min-w-0 max-w-6xl flex-1 px-4 pt-[18px] pb-16 lg:px-8">
   <header class="mb-[22px] flex flex-wrap items-center justify-between gap-3">
     <div class="flex min-w-0 flex-wrap items-center gap-2.5">
-      {#if auth.user}
-        <button
-          class="avatar-btn"
-          class:syncing={app.syncing}
-          onclick={() => (profileOpen = true)}
-          title={auth.user.email}
-          aria-label="Profil und Menü"
-        >
-          {#if auth.user.picture}
-            <img src={auth.user.picture} alt="" referrerpolicy="no-referrer" class="block h-full w-full object-cover" />
-          {:else}
-            {(auth.user.name?.[0] || auth.user.email[0] || "?").toUpperCase()}
-          {/if}
-        </button>
-      {/if}
+      <!-- Mobile hamburger opens the off-canvas drawer (hidden on desktop). -->
+      <button
+        class="hamburger-btn lg:hidden"
+        class:syncing={app.syncing}
+        onclick={() => (profileOpen = true)}
+        aria-label="Menü öffnen"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+          <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
       {#if app.goals.length}
         <select
           class="goal-select"
@@ -307,6 +334,7 @@
   {/if}
   {#if profileOpen && !settingsOpen}
     <ProfileMenu
+      variant="drawer"
       onclose={() => (profileOpen = false)}
       onsync={() => syncNow()}
       syncing={app.syncing}
@@ -314,6 +342,8 @@
       oncreate={() => (creatingGoal = true)}
       ontoggleedit={goal ? startEdit : undefined}
       editMode={app.editMode}
+      view={app.view}
+      settingsActive={editingGoal}
       onhome={() => setView("dashboard")}
       onplan={goal ? () => setView("week") : undefined}
       oncalendar={goal ? () => setView("calendar") : undefined}
@@ -350,34 +380,42 @@
       <span>Made with <span aria-label="Liebe">❤️</span> in Germany</span>
     </span>
   </footer>
+    </div>
+    <!-- /content column -->
+  </div>
+  <!-- /sidebar shell -->
 {/if}
 
 <style>
-  /* Avatar: gradient fill + sync spin keyframe (not expressible as utilities) */
-  .avatar-btn {
+  /* Mobile hamburger: pill button that opens the off-canvas drawer. Spins while
+     a sync is in flight (matches the old avatar-tap affordance). */
+  .hamburger-btn {
     flex: 0 0 auto;
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    border: none;
+    border: 1px solid var(--border);
     padding: 0;
-    overflow: hidden;
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-    color: var(--on-accent);
-    font-size: 15px;
-    font-weight: 700;
+    background: var(--card);
+    color: var(--text);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.15s,
+      border-color 0.15s;
   }
-  .avatar-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.25);
+  .hamburger-btn:hover {
+    background: var(--card-hover);
+    border-color: var(--border-strong);
   }
-  /* spin the avatar while a sync is in flight (1× tap triggers it) */
-  .avatar-btn.syncing {
+  /* desktop has the always-on sidebar rail — hide the drawer trigger */
+  @media (min-width: 1024px) {
+    .hamburger-btn {
+      display: none;
+    }
+  }
+  .hamburger-btn.syncing {
     animation: avatar-spin 0.9s linear infinite;
     box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.5);
   }

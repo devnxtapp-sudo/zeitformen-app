@@ -1,4 +1,5 @@
 <script>
+  import ApexCharts from "apexcharts";
   import {
     computeStats,
     exerciseNames,
@@ -10,11 +11,33 @@
   let { goal } = $props();
 
   let stats = $derived(computeStats(goal));
-  let maxWeek = $derived(Math.max(1, ...stats.weekly.map((w) => w.count)));
 
   function weekLabel(monday) {
     const d = parseYmd(monday);
     return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+  }
+
+  // Flowbite admin-dashboard dark theme defaults shared by both charts.
+  const CHART_BASE = {
+    fontFamily: "Inter, sans-serif",
+    toolbar: { show: false },
+    background: "transparent",
+    animations: { enabled: true },
+  };
+  const AXIS_LABEL = { style: { colors: "#9ca3af", fontFamily: "Inter, sans-serif" } };
+
+  // Svelte action: mount an ApexCharts instance and keep it in sync with `options`.
+  function apexChart(node, options) {
+    let chart = new ApexCharts(node, options);
+    chart.render();
+    return {
+      update(next) {
+        chart.updateOptions(next, true, true);
+      },
+      destroy() {
+        chart.destroy();
+      },
+    };
   }
 
   // ---- per-exercise progression ----
@@ -36,28 +59,17 @@
   );
   let metricMeta = $derived(PROGRESS_METRICS.find((m) => m.id === metric));
 
-  // build an SVG polyline over the data points
-  const W = 300;
-  const H = 120;
-  const PAD = 8;
+  // summary values derived from the progress series (kept for the meta header)
   let chart = $derived.by(() => {
     const pts = progress;
     if (pts.length === 0) return null;
     const values = pts.map((p) => p.value);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const span = max - min || 1;
-    const n = pts.length;
-    const x = (i) => (n === 1 ? W / 2 : PAD + (i * (W - 2 * PAD)) / (n - 1));
-    const y = (v) => H - PAD - ((v - min) / span) * (H - 2 * PAD);
-    const coords = pts.map((p, i) => ({
-      cx: x(i),
-      cy: y(p.value),
-      value: p.value,
-      date: p.date,
-    }));
-    const line = coords.map((c) => `${c.cx},${c.cy}`).join(" ");
-    return { coords, line, min, max, first: values[0], last: values[values.length - 1] };
+    return {
+      min: Math.min(...values),
+      max: Math.max(...values),
+      first: values[0],
+      last: values[values.length - 1],
+    };
   });
 
   function shortDate(d) {
@@ -70,6 +82,88 @@
   let delta = $derived(
     chart ? Math.round((chart.last - chart.first) * 10) / 10 : 0,
   );
+
+  // ---- ApexCharts options (Flowbite admin-dashboard dark theme) ----
+
+  // Weekly training count — rounded bar columns.
+  let weeklyOptions = $derived({
+    chart: { ...CHART_BASE, type: "bar", height: 260 },
+    theme: { mode: "dark" },
+    series: [
+      { name: "Einheiten", data: stats.weekly.map((w) => w.count) },
+    ],
+    xaxis: {
+      categories: stats.weekly.map((w) => weekLabel(w.monday)),
+      labels: AXIS_LABEL,
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    },
+    yaxis: {
+      labels: {
+        ...AXIS_LABEL,
+        formatter: (v) => Math.round(v),
+      },
+    },
+    colors: ["#ef562f"],
+    plotOptions: {
+      bar: { borderRadius: 6, columnWidth: "55%", borderRadiusApplication: "end" },
+    },
+    dataLabels: { enabled: false },
+    grid: {
+      borderColor: "#374151",
+      strokeDashArray: 4,
+      padding: { left: 4, right: 4 },
+    },
+    legend: { show: false },
+    tooltip: { theme: "dark", y: { formatter: (v) => `${Math.round(v)} Einheiten` } },
+  });
+
+  // Per-exercise progression — area trend (like the dashboard revenue chart).
+  let progressOptions = $derived({
+    chart: { ...CHART_BASE, type: "area", height: 260 },
+    theme: { mode: "dark" },
+    series: [
+      {
+        name: metricMeta?.label ?? "Wert",
+        data: progress.map((p) => p.value),
+      },
+    ],
+    xaxis: {
+      categories: progress.map((p) => shortDate(p.date)),
+      labels: { ...AXIS_LABEL, hideOverlappingLabels: true, rotate: 0 },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+      tooltip: { enabled: false },
+    },
+    yaxis: {
+      labels: {
+        ...AXIS_LABEL,
+        formatter: (v) =>
+          metricMeta?.unit ? `${Math.round(v)} ${metricMeta.unit}` : Math.round(v),
+      },
+    },
+    colors: ["#fe795d", "#ef562f"],
+    fill: {
+      type: "gradient",
+      gradient: { opacityFrom: 0.45, opacityTo: 0, shade: "dark" },
+    },
+    stroke: { curve: "smooth", width: 3 },
+    markers: { size: progress.length === 1 ? 5 : 0, colors: ["#fe795d"] },
+    dataLabels: { enabled: false },
+    grid: {
+      borderColor: "#374151",
+      strokeDashArray: 4,
+      padding: { left: 4, right: 4 },
+    },
+    legend: { show: false },
+    tooltip: {
+      theme: "dark",
+      y: {
+        formatter: (v) =>
+          metricMeta?.unit ? `${v} ${metricMeta.unit}` : `${v}`,
+      },
+    },
+  });
 </script>
 
 <div class="stats">
@@ -91,22 +185,8 @@
   <section class="panel">
     <h3>Wochen-Trend</h3>
     <span class="sub muted">letzte 8 Wochen</span>
-    <div class="trend">
-      {#each stats.weekly as w (w.monday)}
-        <div class="bar-col">
-          <div class="bar-wrap">
-            {#if w.count > 0}
-              <span class="bar-val">{w.count}</span>
-            {/if}
-            <div
-              class="bar"
-              style="height: {(w.count / maxWeek) * 100}%"
-              class:empty={w.count === 0}
-            ></div>
-          </div>
-          <span class="bar-lbl">{weekLabel(w.monday)}</span>
-        </div>
-      {/each}
+    <div class="rounded-xl border border-line bg-card p-4">
+      <div class="apex" use:apexChart={weeklyOptions}></div>
     </div>
   </section>
 
@@ -146,22 +226,10 @@
             </span>
           {/if}
         </div>
-        <svg class="chart" viewBox="0 0 {W} {H}" preserveAspectRatio="none">
-          <polyline
-            points={chart.line}
-            fill="none"
-            stroke="var(--accent)"
-            stroke-width="2"
-            stroke-linejoin="round"
-            stroke-linecap="round"
-          />
-          {#each chart.coords as c (c.date)}
-            <circle cx={c.cx} cy={c.cy} r="3" fill="var(--accent)" />
-          {/each}
-        </svg>
-        <div class="chart-axis">
-          <span>{shortDate(progress[0].date)}</span>
-          <span>{shortDate(progress[progress.length - 1].date)}</span>
+        <div class="rounded-xl border border-line bg-card p-4">
+          {#key selectedExercise + "::" + metric}
+            <div class="apex" use:apexChart={progressOptions}></div>
+          {/key}
         </div>
       {:else}
         <p class="muted">Für diese Übung sind noch keine Werte erfasst.</p>
@@ -243,49 +311,8 @@
     display: block;
     margin-bottom: 16px;
   }
-  .trend {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 8px;
-    align-items: end;
-    height: 160px;
-  }
-  .bar-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    height: 100%;
-    justify-content: flex-end;
-  }
-  .bar-wrap {
-    flex: 1 1 auto;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 4px;
-  }
-  .bar-val {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-muted);
-  }
-  .bar {
-    width: 100%;
-    max-width: 34px;
-    background: var(--c-zone2);
-    border-radius: 6px 6px 0 0;
-    min-height: 3px;
-    transition: height 0.3s ease;
-  }
-  .bar.empty {
-    background: var(--border);
-  }
-  .bar-lbl {
-    font-size: 10.5px;
-    color: var(--text-dim);
+  .apex {
+    min-height: 260px;
   }
   .ex-controls {
     display: flex;
@@ -341,19 +368,6 @@
   .cm-delta.down {
     color: var(--c-danger, #e5534b);
   }
-  .chart {
-    width: 100%;
-    height: 120px;
-    display: block;
-    overflow: visible;
-  }
-  .chart-axis {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10.5px;
-    color: var(--text-dim);
-    margin-top: 4px;
-  }
   .types {
     display: flex;
     flex-direction: column;
@@ -395,12 +409,6 @@
   @media (max-width: 480px) {
     .cards {
       grid-template-columns: 1fr;
-    }
-    .trend {
-      gap: 4px;
-    }
-    .bar-lbl {
-      font-size: 9px;
     }
   }
 </style>
