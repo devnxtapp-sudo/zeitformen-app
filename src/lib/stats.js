@@ -58,11 +58,35 @@ export function computeStats(goal, ref = new Date()) {
 
 // ---- per-exercise progression ----
 
+// Weekday keys in week order, with German labels (log entries carry `dayKey`).
+export const WEEKDAYS = [
+  { key: "mo", label: "Montag", short: "Mo" },
+  { key: "di", label: "Dienstag", short: "Di" },
+  { key: "mi", label: "Mittwoch", short: "Mi" },
+  { key: "do", label: "Donnerstag", short: "Do" },
+  { key: "fr", label: "Freitag", short: "Fr" },
+  { key: "sa", label: "Samstag", short: "Sa" },
+  { key: "so", label: "Sonntag", short: "So" },
+];
+
+// Weekdays that actually have logged exercise data, in week order Mo→So.
+export function loggedDays(goal) {
+  const log = goal?.log ?? {};
+  const present = new Set();
+  for (const e of Object.values(log)) {
+    if (!e.dayKey) continue;
+    if (e.exercises?.some((ex) => ex.name && ex.sets?.length)) present.add(e.dayKey);
+  }
+  return WEEKDAYS.filter((d) => present.has(d.key));
+}
+
 // Distinct exercise names that have logged sets, sorted by frequency.
-export function exerciseNames(goal) {
+// Optionally scoped to a single training day (dayKey "mo".."so").
+export function exerciseNames(goal, dayKey = null) {
   const log = goal?.log ?? {};
   const counts = new Map();
   for (const e of Object.values(log)) {
+    if (dayKey && e.dayKey !== dayKey) continue;
     for (const ex of e.exercises ?? []) {
       if (!ex.name || !(ex.sets?.length)) continue;
       counts.set(ex.name, (counts.get(ex.name) ?? 0) + 1);
@@ -108,10 +132,12 @@ function sessionValue(sets, metric) {
 }
 
 // Time series for an exercise + metric: [{date, value}], oldest first.
-export function exerciseProgress(goal, name, metric) {
+// Optionally scoped to a single training day (dayKey "mo".."so").
+export function exerciseProgress(goal, name, metric, dayKey = null) {
   const log = goal?.log ?? {};
   const points = [];
   for (const [date, e] of Object.entries(log)) {
+    if (dayKey && e.dayKey !== dayKey) continue;
     const ex = (e.exercises ?? []).find((x) => x.name === name);
     if (!ex) continue;
     const value = sessionValue(ex.sets, metric);

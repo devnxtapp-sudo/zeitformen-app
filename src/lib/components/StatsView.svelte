@@ -3,6 +3,7 @@
     computeStats,
     exerciseNames,
     exerciseProgress,
+    loggedDays,
     PROGRESS_METRICS,
   } from "../stats.js";
   import { parseYmd } from "../dateutil.js";
@@ -49,11 +50,15 @@
   }
 
   // ---- per-exercise progression ----
-  let exercises = $derived(exerciseNames(goal));
+  let days = $derived(loggedDays(goal)); // weekdays present in the log
+  let selectedDay = $state(""); // "" = Alle Tage, else dayKey "mo".."so"
+  let dayFilter = $derived(selectedDay || null);
+  let exercises = $derived(exerciseNames(goal, dayFilter));
   let selectedExercise = $state(null);
   let metric = $state("topWeight");
 
-  // default the selection to the first available exercise
+  // default the selection to the first available exercise (re-runs when the
+  // training-day filter narrows the list)
   $effect(() => {
     if (exercises.length && !exercises.includes(selectedExercise)) {
       selectedExercise = exercises[0];
@@ -63,7 +68,9 @@
   });
 
   let progress = $derived(
-    selectedExercise ? exerciseProgress(goal, selectedExercise, metric) : [],
+    selectedExercise
+      ? exerciseProgress(goal, selectedExercise, metric, dayFilter)
+      : [],
   );
   let metricMeta = $derived(PROGRESS_METRICS.find((m) => m.id === metric));
 
@@ -204,7 +211,15 @@
       <span class="sub muted">Verlauf einer Übung über die Zeit</span>
 
       <div class="ex-controls">
-        <select class="ex-select" bind:value={selectedExercise}>
+        {#if days.length > 1}
+          <select class="ex-select" bind:value={selectedDay} aria-label="Trainingstag">
+            <option value="">Alle Tage</option>
+            {#each days as d (d.key)}
+              <option value={d.key}>{d.label}</option>
+            {/each}
+          </select>
+        {/if}
+        <select class="ex-select" bind:value={selectedExercise} aria-label="Übung">
           {#each exercises as name (name)}
             <option value={name}>{name}</option>
           {/each}
@@ -235,7 +250,7 @@
           {/if}
         </div>
         <div class="rounded-xl border border-line bg-card p-4">
-          {#key selectedExercise + "::" + metric}
+          {#key selectedDay + "::" + selectedExercise + "::" + metric}
             <div class="apex" use:apexChart={progressOptions}></div>
           {/key}
         </div>
