@@ -8,7 +8,6 @@
     fmtMetric,
   } from "../bodyMetrics.js";
   import BodyMeasurementEditor from "./BodyMeasurementEditor.svelte";
-  import ApexCharts from "apexcharts";
 
   let { onback } = $props();
 
@@ -132,6 +131,7 @@
   // data) change. Renders into the bound container div.
   let chartEl = $state(null);
   let apex = null;
+  let ApexCtor = null; // cached after the first lazy import
   $effect(() => {
     const options = chartOptions;
     if (!chartEl || !chart) {
@@ -141,13 +141,20 @@
       }
       return;
     }
-    if (apex) {
-      apex.updateOptions(options, true, true);
-    } else {
-      apex = new ApexCharts(chartEl, options);
-      apex.render();
-    }
+    let cancelled = false;
+    (async () => {
+      // Lazy-load ApexCharts on first use (own chunk), cache the constructor.
+      if (!ApexCtor) ApexCtor = (await import("apexcharts")).default;
+      if (cancelled || !chartEl) return;
+      if (apex) {
+        apex.updateOptions(options, true, true);
+      } else {
+        apex = new ApexCtor(chartEl, options);
+        apex.render();
+      }
+    })();
     return () => {
+      cancelled = true;
       if (apex) {
         apex.destroy();
         apex = null;

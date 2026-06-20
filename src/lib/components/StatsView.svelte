@@ -1,5 +1,4 @@
 <script>
-  import ApexCharts from "apexcharts";
   import {
     computeStats,
     exerciseNames,
@@ -26,16 +25,25 @@
   };
   const AXIS_LABEL = { style: { colors: "#9ca3af", fontFamily: "Inter, sans-serif" } };
 
-  // Svelte action: mount an ApexCharts instance and keep it in sync with `options`.
+  // Svelte action: lazy-load ApexCharts (own chunk, only fetched when a chart
+  // view is opened), then mount an instance and keep it in sync with `options`.
   function apexChart(node, options) {
-    let chart = new ApexCharts(node, options);
-    chart.render();
+    let chart = null;
+    let current = options;
+    let destroyed = false;
+    import("apexcharts").then(({ default: ApexCharts }) => {
+      if (destroyed) return;
+      chart = new ApexCharts(node, current);
+      chart.render();
+    });
     return {
       update(next) {
-        chart.updateOptions(next, true, true);
+        current = next;
+        if (chart) chart.updateOptions(next, true, true);
       },
       destroy() {
-        chart.destroy();
+        destroyed = true;
+        if (chart) chart.destroy();
       },
     };
   }
