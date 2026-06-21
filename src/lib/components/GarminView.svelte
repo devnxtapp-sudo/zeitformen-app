@@ -102,6 +102,7 @@
         const patch = { metrics, note: a.name || "" };
         if (a.hrZoneTimes) patch.hrZones = a.hrZoneTimes;
         if (a.type) patch.actType = a.type;
+        if (a.durationSec != null) patch.durationSec = a.durationSec;
         updateLogEntry(goal.id, a.date, patch, dk);
         imported++;
       }

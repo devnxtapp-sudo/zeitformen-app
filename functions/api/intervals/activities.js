@@ -20,6 +20,7 @@ function normalize(a) {
     type: a.type || "",
     name: a.name || "",
     durationMin: seconds != null ? Math.round(seconds / 60) : null,
+    durationSec: seconds,
     distanceKm: distanceM != null ? Math.round((distanceM / 1000) * 100) / 100 : null,
     hr: num(a.average_heartrate),
     watts: num(a.icu_average_watts ?? a.average_watts),

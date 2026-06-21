@@ -148,6 +148,102 @@ export function exerciseProgress(goal, name, metric, dayKey = null) {
   return points;
 }
 
+// ---- personal records (PRs) -------------------------------------------
+// Strength PRs come from the user's own set-log (max weight per exercise).
+// Endurance distance PRs come from synced intervals.icu activities (best time
+// for a standard distance among activities that essentially ARE that distance).
+const PR_DISTANCES = [
+  { km: 1, label: "1 km", tol: 0.08 },
+  { km: 5, label: "5 km", tol: 0.04 },
+  { km: 10, label: "10 km", tol: 0.04 },
+  { km: 21.0975, label: "Halbmarathon", tol: 0.03 },
+  { km: 42.195, label: "Marathon", tol: 0.03 },
+];
+
+function metricNumOf(e, re) {
+  for (const [k, v] of Object.entries(e?.metrics ?? {})) {
+    if (re.test(k)) {
+      const n = Number(String(v).replace(",", ".").replace(/[^\d.]/g, ""));
+      if (Number.isFinite(n)) return n;
+    }
+  }
+  return null;
+}
+function fmtDuration(sec) {
+  sec = Math.round(sec);
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  const p = (n) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${p(m)}:${p(s)}` : `${m}:${p(s)}`;
+}
+function fmtGap(sec) {
+  sec = Math.round(sec);
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return m > 0 ? `${m}:${String(s).padStart(2, "0")} min` : `${s} sek`;
+}
+function relAgo(dateStr, today) {
+  const days = Math.round((today.getTime() - parseYmd(dateStr).getTime()) / DAY_MS);
+  if (days <= 0) return "heute";
+  if (days === 1) return "gestern";
+  if (days < 14) return `vor ${days} Tagen`;
+  const w = Math.round(days / 7);
+  if (w < 9) return `vor ${w} Woche${w === 1 ? "" : "n"}`;
+  const mo = Math.round(days / 30);
+  return `vor ${mo} Monat${mo === 1 ? "" : "en"}`;
+}
+
+// Returns up to `limit` PRs, newest first. Each: { kind, emoji, name, value,
+// delta, sub, badge, date }. badge "NEU" if achieved within 21 days, else "PR".
+export function personalRecords(goal, todayStr, limit = 6) {
+  const log = goal?.log ?? {};
+  const recs = [];
+
+  // strength: best top-weight per exercise
+  const strength = [];
+  for (const name of exerciseNames(goal)) {
+    const pts = exerciseProgress(goal, name, "topWeight");
+    let best = -Infinity, prev = null, bestDate = null;
+    for (const p of pts) {
+      if (p.value > best) { prev = best === -Infinity ? null : best; best = p.value; bestDate = p.date; }
+    }
+    if (best > 0)
+      strength.push({
+        kind: "strength", emoji: "🏋️", name, date: bestDate,
+        value: `${Math.round(best * 10) / 10} kg`,
+        delta: prev != null && best > prev ? `↑ ${Math.round((best - prev) * 10) / 10} kg` : null,
+      });
+  }
+  strength.sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
+  recs.push(...strength.slice(0, 3));
+
+  // endurance: distance best-times from synced runs
+  const acts = [];
+  for (const [date, e] of Object.entries(log)) {
+    const km = metricNumOf(e, /distanz/i);
+    const sec = Number(e.durationSec) || (metricNumOf(e, /dauer/i) ?? 0) * 60;
+    if (!(km > 0) || !(sec > 0)) continue;
+    const t = String(e.actType ?? "").toLowerCase();
+    if (t && !/run/.test(t)) continue; // unknown type → assume run
+    acts.push({ date: baseDate(date), km, sec });
+  }
+  for (const d of PR_DISTANCES) {
+    const m = acts.filter((a) => Math.abs(a.km - d.km) <= d.km * d.tol).sort((x, y) => x.sec - y.sec);
+    if (!m.length) continue;
+    recs.push({
+      kind: "run", emoji: "🏃", name: d.label, date: m[0].date,
+      value: fmtDuration(m[0].sec),
+      delta: m[1] && m[1].sec > m[0].sec ? `↓ ${fmtGap(m[1].sec - m[0].sec)}` : null,
+    });
+  }
+
+  recs.sort((a, b) => (a.date < b.date ? 1 : -1));
+  const today = todayStr ? parseYmd(todayStr) : new Date();
+  return recs.slice(0, limit).map((r) => ({
+    ...r,
+    sub: relAgo(r.date, today),
+    badge: (today.getTime() - parseYmd(r.date).getTime()) / DAY_MS <= 21 ? "NEU" : "PR",
+  }));
+}
+
 // ---- Dashboard helpers -------------------------------------------------
 
 function typeOf(goal, id) {

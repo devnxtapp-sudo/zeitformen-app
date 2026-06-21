@@ -7,6 +7,7 @@
     exerciseNames,
     exerciseProgress,
     loggedDays,
+    personalRecords,
     PROGRESS_METRICS,
   } from "../stats.js";
   import { weekDates, todayKey, parseYmd, ymd, lastNWeekMondays, weekDatesFrom, dayKeyOf } from "../dateutil.js";
@@ -232,12 +233,15 @@
     { label: "Zone 4–5", pct: 12, color: "#ef4444" },
     { label: "Kraft", pct: 8, color: "var(--c-purple)" },
   ];
-  const prs = [
+  const prsDemo = [
     { emoji: "🏃", name: "5 km Lauf", sub: "vor 2 Wochen", value: "22:14", delta: "↓ 0:38 min", badge: "PR" },
     { emoji: "🏊", name: "100m Kraul", sub: "vor 1 Woche", value: "1:48", delta: "↓ 3 sek", badge: "NEU" },
     { emoji: "🏋️", name: "Back Squat", sub: "vor 3 Wochen", value: "107.5 kg", delta: "↑ 2.5 kg", badge: "PR" },
     { emoji: "🏃", name: "1 km Pace", sub: "vor 1 Woche", value: "4:02/km", delta: "↓ 0:08", badge: "PR" },
   ];
+  let realPRs = $derived(personalRecords(goal, today));
+  let prsShown = $derived(realPRs.length ? realPRs : prsDemo);
+  let prSub = $derived(realPRs.length ? "Kraft (Log) + Distanz (intervals.icu)" : "Demo · füllt sich mit Training & Sync");
 
   // ---- chosen (real if synced, else demo placeholder) ----
   const ZONE_LABELS = [
@@ -373,13 +377,13 @@
     </div>
 
     <div class="card">
-      <div class="card-head" style="padding-bottom:0"><div class="card-title">Persönliche Bestleistungen</div></div>
+      <div class="card-head" style="padding-bottom:0"><div><div class="card-title">Persönliche Bestleistungen</div><div class="card-sub">{prSub}</div></div></div>
       <div class="pr-list">
-        {#each prs as p (p.name)}
+        {#each prsShown as p (p.kind ? p.kind + p.name : p.name)}
           <div class="pr-item">
             <div class="pr-icon" style="background:var(--surface-3)">{p.emoji}</div>
             <div style="flex:1"><div class="pr-name">{p.name}</div><div class="pr-sub">{p.sub}</div></div>
-            <div><div class="pr-value">{p.value}</div><div class="pr-delta delta-up">{p.delta}</div></div>
+            <div><div class="pr-value">{p.value}</div>{#if p.delta}<div class="pr-delta delta-up">{p.delta}</div>{/if}</div>
             <span class="pr-badge {p.badge === 'NEU' ? 'badge-new' : 'badge-pr'}">{p.badge}</span>
           </div>
         {/each}
