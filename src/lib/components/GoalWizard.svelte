@@ -27,7 +27,6 @@
   // Gewählter Wettkampf -> Basis-Ziel (mit Trainingstypen). Wird beim Auswählen
   // einmalig erzeugt, damit die Typ-IDs für die Selects stabil bleiben.
   let competitionId = $state(null);
-  let showCustom = $state(false);
   let customName = $state("");
   let base = $state(null);
   let types = $state([]); // [{ id, label, color }]
@@ -52,10 +51,6 @@
   let selectedKeys = $derived(DAY_KEYS.slice(0, count));
 
   function chooseCompetition(comp) {
-    if (comp.custom) {
-      showCustom = true;
-      return;
-    }
     commit(comp.id, SPORTS[comp.sportId], comp.label);
   }
 
@@ -137,7 +132,6 @@
   $effect(() => {
     void index;
     void count;
-    void showCustom;
     void customName;
     void types;
     void sessionTick;
@@ -196,15 +190,15 @@
   >
     <div class="track" class:dragging style="transform: translateX({offsetPct}%)">
       <div class="page" bind:this={pageEls[0]}>
-        <div class="mb-4">
+        <div class="mb-4 text-center">
           <h4 class="text-lg font-semibold text-ink">Wähle deinen Wettkampf</h4>
         </div>
         <div class="grid grid-cols-2 gap-2.5">
-          {#each COMPETITIONS as comp (comp.id)}
+          {#each COMPETITIONS.filter((c) => !c.custom) as comp (comp.id)}
             <button
               type="button"
               class="flex min-h-[56px] items-center justify-center rounded-xl border px-3.5 py-4 text-center text-sm font-semibold text-ink transition-[border-color,background,transform] duration-100 hover:border-primary-500 hover:bg-primary-500/10 active:scale-[0.98]
-                {competitionId === comp.id || (comp.custom && showCustom)
+                {competitionId === comp.id
                   ? 'border-primary-500 bg-primary-500/15'
                   : 'border-line bg-card'}"
               onclick={() => chooseCompetition(comp)}
@@ -213,24 +207,23 @@
             </button>
           {/each}
         </div>
-        {#if showCustom}
-          <div class="mt-3.5 flex gap-2.5">
-            <Input
-              class="flex-1"
-              bind:value={customName}
-              placeholder="Name deines Wettkampfs"
-              onkeydown={(e) => e.key === "Enter" && confirmCustom()}
-            />
+        <div class="mt-2.5 flex flex-col gap-2.5">
+          <Input
+            class="w-full"
+            bind:value={customName}
+            placeholder="z.B. Trailrun, Ultramarathon …"
+            onkeydown={(e) => e.key === "Enter" && confirmCustom()}
+          />
+          {#if customName.trim()}
             <Button
               color="primary"
-              class="font-semibold text-[var(--on-accent)]"
-              disabled={!customName.trim()}
+              class="w-full font-semibold text-[var(--on-accent)]"
               onclick={confirmCustom}
             >
               Weiter
             </Button>
-          </div>
-        {/if}
+          {/if}
+        </div>
       </div>
 
       <div class="page" bind:this={pageEls[1]}>
