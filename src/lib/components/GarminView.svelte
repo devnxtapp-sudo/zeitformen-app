@@ -99,7 +99,10 @@
         if (!day || day.isRest) continue;
         if (isCompleted(goal, a.date)) continue;
         const metrics = metricsFor(a);
-        updateLogEntry(goal.id, a.date, { metrics, note: a.name || "" }, dk);
+        const patch = { metrics, note: a.name || "" };
+        if (a.hrZoneTimes) patch.hrZones = a.hrZoneTimes;
+        if (a.type) patch.actType = a.type;
+        updateLogEntry(goal.id, a.date, patch, dk);
         imported++;
       }
       result =

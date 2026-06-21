@@ -92,6 +92,76 @@
   });
   const HM_BG = ["var(--surface-3)", "rgba(34,197,94,0.3)", "rgba(34,197,94,0.55)", "#22c55e"];
 
+  // ---- real intervals.icu-derived data (from synced log metrics) ----
+  function metricNum(e, re) {
+    for (const [k, v] of Object.entries(e.metrics ?? {})) {
+      if (re.test(k)) {
+        const n = Number(String(v).replace(",", ".").replace(/[^\d.]/g, ""));
+        if (Number.isFinite(n)) return n;
+      }
+    }
+    return null;
+  }
+  const durOf = (e) => metricNum(e, /dauer/i);
+  const distOf = (e) => metricNum(e, /distanz/i);
+  const isStrength = (l) => /kraft|strength|gym|körper|bein|push|pull/i.test(l || "");
+  function entriesOf(monday) {
+    const wk = weekDatesFrom(monday);
+    const dates = new Set(Object.values(wk));
+    const out = [];
+    for (const [k, e] of Object.entries(goal.log ?? {})) if (dates.has(k.split("#")[0])) out.push(e);
+    return out;
+  }
+  // weekly Ø pace (min/km) from synced runs
+  let realPace = $derived(
+    weeks8.map((w) => {
+      const ps = [];
+      for (const e of entriesOf(w.monday)) {
+        const d = distOf(e), t = durOf(e);
+        if (d > 0 && t > 0) { const p = t / d; if (p > 2 && p < 12) ps.push(p); }
+      }
+      return ps.length ? Math.round((ps.reduce((a, b) => a + b, 0) / ps.length) * 100) / 100 : null;
+    }),
+  );
+  let hasPace = $derived(realPace.filter((v) => v != null).length >= 2);
+  // HF-zone distribution (seconds → %) from synced hrZones; Kraft = strength duration
+  let realZones = $derived.by(() => {
+    const z = [0, 0, 0, 0];
+    let any = false;
+    for (const e of Object.values(goal.log ?? {})) {
+      if (Array.isArray(e.hrZones) && e.hrZones.length) {
+        any = true;
+        const a = e.hrZones.map((x) => Number(x) || 0);
+        z[0] += (a[0] || 0) + (a[1] || 0);
+        z[1] += a[2] || 0;
+        z[2] += a.slice(3).reduce((s, x) => s + x, 0);
+      } else if (isStrength(e.typeLabel)) {
+        const t = durOf(e);
+        if (t) z[3] += t * 60;
+      }
+    }
+    const total = z.reduce((s, x) => s + x, 0);
+    if (!any || total <= 0) return null;
+    return z.map((s) => Math.round((s / total) * 100));
+  });
+  // volume (h) by training type, last 4 weeks
+  let realModality = $derived.by(() => {
+    const byType = new Map();
+    let any = false;
+    for (const w of weeks8.slice(-4)) {
+      for (const e of entriesOf(w.monday)) {
+        const t = durOf(e);
+        if (!t) continue;
+        any = true;
+        const label = e.typeLabel || "Training", color = e.typeColor || "#64748b";
+        if (!byType.has(label)) byType.set(label, { label, color, min: 0 });
+        byType.get(label).min += t;
+      }
+    }
+    if (!any) return null;
+    return [...byType.values()].map((s) => ({ label: s.label, color: s.color, hours: Math.round((s.min / 60) * 10) / 10 }));
+  });
+
   // ---- per-exercise progression (real) ----
   let days = $derived(loggedDays(goal));
   let selectedDay = $state("");
@@ -169,7 +239,40 @@
     { emoji: "🏃", name: "1 km Pace", sub: "vor 1 Woche", value: "4:02/km", delta: "↓ 0:08", badge: "PR" },
   ];
 
-  let chartKey = $derived(weekCounts.join(",") + "|" + selectedDay + selectedExercise + metric);
+  // ---- chosen (real if synced, else demo placeholder) ----
+  const ZONE_LABELS = [
+    { label: "Zone 1–2", color: "var(--c-success)" },
+    { label: "Zone 3", color: "var(--c-streak)" },
+    { label: "Zone 4–5", color: "#ef4444" },
+    { label: "Kraft", color: "var(--c-purple)" },
+  ];
+  let zonePct = $derived(realZones ?? [55, 25, 12, 8]);
+  let zoneBars = $derived(ZONE_LABELS.map((z, i) => ({ ...z, pct: zonePct[i] ?? 0 })));
+  let zoneDonutShown = $derived({ type: "doughnut", data: { datasets: [{ data: zonePct, backgroundColor: ["#22c55e", "#f97316", "#ef4444", "#a78bfa"], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: false, cutout: "70%", plugins: { legend: { display: false }, tooltip: { enabled: false } } } });
+  let zoneSub = $derived(realZones ? "Zeit pro HF-Zone · intervals.icu" : "Demo · via intervals.icu");
+
+  let paceShown = $derived(hasPace ? {
+    type: "line",
+    data: { labels: weekLabels, datasets: [{ label: "Ø Pace", data: realPace, borderColor: "#22c55e", backgroundColor: "rgba(34,197,94,0.08)", borderWidth: 2.5, pointBackgroundColor: "#22c55e", pointRadius: 4, tension: 0.4, fill: true, spanGaps: true }] },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { ...TIP, callbacks: { label: (ctx) => { const v = ctx.raw; if (v == null) return ""; const m = Math.floor(v), s = Math.round((v - m) * 60); return ` ${m}:${String(s).padStart(2, "0")} min/km`; } } } }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, reverse: true, ticks: { callback: (v) => { const m = Math.floor(v), s = Math.round((v - m) * 60); return `${m}:${String(s).padStart(2, "0")}`; } } } } },
+  } : paceCfg);
+  let paceSub = $derived(hasPace ? "Ø Pace pro Woche · intervals.icu" : "Demo · via intervals.icu");
+
+  let modalLegend = $derived(realModality ?? [
+    { label: "Laufen", color: "var(--c-streak)", hours: 10.2 },
+    { label: "Kraft", color: "var(--c-purple)", hours: 5.8 },
+    { label: "Schwimmen", color: "var(--c-cyan)", hours: 3.6 },
+    { label: "Rad", color: "var(--accent)", hours: 2.8 },
+  ]);
+  let modalShown = $derived(realModality ? {
+    type: "bar",
+    data: { labels: realModality.map((m) => m.label), datasets: [{ data: realModality.map((m) => m.hours), backgroundColor: realModality.map((m) => m.color), borderRadius: 4, borderSkipped: false }] },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: TIP }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true } } },
+  } : modalCfg);
+  let modalSub = $derived(realModality ? "Stunden je Typ · letzte 4 Wochen" : "Demo · nach Modalität");
+
+  let dataSig = $derived((hasPace ? "p" : "") + (realZones ? "z" : "") + (realModality ? "m" : ""));
+  let chartKey = $derived(weekCounts.join(",") + "|" + selectedDay + selectedExercise + metric + "|" + dataSig);
   const periods = ["7 Tage", "4 Wochen", "3 Monate", "Gesamt"];
   let period = $state("4 Wochen");
 </script>
@@ -246,18 +349,18 @@
   <div class="grid-3">
     <div class="card">
       <div class="card-head">
-        <div><div class="card-title">Lauf-Pace Entwicklung</div><div class="card-sub">Demo · via intervals.icu</div></div>
+        <div><div class="card-title">Lauf-Pace Entwicklung</div><div class="card-sub">{paceSub}</div></div>
         <span style="background:rgba(34,197,94,0.12);color:var(--c-success);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid rgba(34,197,94,0.2)">↓ Verbesserung</span>
       </div>
-      <div class="chart-wrap-sm"><canvas use:chartjs={paceCfg} height="120"></canvas></div>
+      <div class="chart-wrap-sm">{#key dataSig}<canvas use:chartjs={paceShown} height="120"></canvas>{/key}</div>
     </div>
 
     <div class="card">
-      <div class="card-head" style="padding-bottom:14px"><div><div class="card-title">Zonenverteilung</div><div class="card-sub">Demo · via intervals.icu</div></div></div>
+      <div class="card-head" style="padding-bottom:14px"><div><div class="card-title">Zonenverteilung</div><div class="card-sub">{zoneSub}</div></div></div>
       <div style="padding:0 20px 6px;display:flex;align-items:center;gap:16px">
-        <canvas use:chartjs={zoneCfg} width="80" height="80" style="flex-shrink:0"></canvas>
+        {#key dataSig}<canvas use:chartjs={zoneDonutShown} width="80" height="80" style="flex-shrink:0"></canvas>{/key}
         <div class="zone-row" style="flex:1">
-          {#each zones as z (z.label)}
+          {#each zoneBars as z (z.label)}
             <div class="zone-item">
               <div class="zone-label" style="color:{z.color}">{z.label}</div>
               <div class="zone-bar-wrap"><div class="zone-bar-fill" style="width:{z.pct}%;background:{z.color}"></div></div>
@@ -324,13 +427,12 @@
     </div>
 
     <div class="card">
-      <div class="card-head" style="padding-bottom:12px"><div><div class="card-title">Trainingsaufteilung</div><div class="card-sub">Demo · nach Modalität</div></div></div>
-      <div class="chart-wrap-sm" style="padding-top:8px"><canvas use:chartjs={modalCfg} height="160"></canvas></div>
+      <div class="card-head" style="padding-bottom:12px"><div><div class="card-title">Trainingsaufteilung</div><div class="card-sub">{modalSub}</div></div></div>
+      <div class="chart-wrap-sm" style="padding-top:8px">{#key dataSig}<canvas use:chartjs={modalShown} height="160"></canvas>{/key}</div>
       <div style="padding:0 20px 16px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <span class="ml-leg"><i style="background:var(--c-streak)"></i>Laufen — 10.2 h</span>
-        <span class="ml-leg"><i style="background:var(--c-purple)"></i>Kraft — 5.8 h</span>
-        <span class="ml-leg"><i style="background:var(--c-cyan)"></i>Schwimmen — 3.6 h</span>
-        <span class="ml-leg"><i style="background:var(--accent)"></i>Rad — 2.8 h</span>
+        {#each modalLegend as m (m.label)}
+          <span class="ml-leg"><i style="background:{m.color}"></i>{m.label} — {m.hours} h</span>
+        {/each}
       </div>
     </div>
   </div>

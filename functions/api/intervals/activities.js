@@ -23,6 +23,10 @@ function normalize(a) {
     distanceKm: distanceM != null ? Math.round((distanceM / 1000) * 100) / 100 : null,
     hr: num(a.average_heartrate),
     watts: num(a.icu_average_watts ?? a.average_watts),
+    // Sekunden je HF-Zone (für die Zonenverteilung in der Statistik)
+    hrZoneTimes: Array.isArray(a.icu_hr_zone_times)
+      ? a.icu_hr_zone_times.map((s) => num(s) ?? 0)
+      : null,
   };
 }
 
