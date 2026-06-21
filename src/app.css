@@ -34,18 +34,22 @@
   --color-swim: #9aa0a6;
   --color-rest: #6b7178;
 
-  /* Flowbite admin-dashboard orange-red — Flowbite's default `primary` scale */
-  --color-primary-50: #fff5f2;
-  --color-primary-100: #fff1ee;
-  --color-primary-200: #ffe4de;
-  --color-primary-300: #ffd5cc;
-  --color-primary-400: #ffbcad;
-  --color-primary-500: #fe795d;
-  --color-primary-600: #ef562f;
-  --color-primary-700: #eb4f27;
-  --color-primary-800: #cc4522;
-  --color-primary-900: #a5371b;
-  --color-primary-950: #7d2914;
+  /* blue primary (dashboard look) — drives Flowbite's `primary` scale */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary-950: #172554;
+
+  /* semantic dashboard accents */
+  --color-success: #22c55e; /* completed / volume (green) */
+  --color-streak: #f59e0b; /* streak (orange) */
 }
 
 :root {
@@ -70,12 +74,14 @@
   --c-swim: #9aa0a6;
   --c-rest: #6b7178;
 
-  /* orange-red accent (Flowbite admin-dashboard) */
-  --accent: #ef562f; /* primary-600 — links / filled buttons */
-  --accent-strong: #eb4f27; /* primary-700 — hover / pressed */
-  --accent-rgb: 239, 86, 47; /* for rgba() tints */
-  --on-accent: #ffffff; /* readable text/icon on a filled orange surface */
-  --glow: none; /* neon glow removed for the flat dashboard look */
+  /* blue accent (dashboard look) */
+  --accent: #3b82f6; /* primary-500 — links / filled buttons */
+  --accent-strong: #2563eb; /* primary-600 — hover / pressed */
+  --accent-rgb: 59, 130, 246; /* for rgba() tints */
+  --on-accent: #ffffff; /* readable text/icon on a filled blue surface */
+  --glow: none; /* flat dashboard look */
+  --c-success: #22c55e;
+  --c-streak: #f59e0b;
 
   --radius: 14px;
   --radius-sm: 9px;

@@ -147,3 +147,108 @@ export function exerciseProgress(goal, name, metric, dayKey = null) {
   points.sort((a, b) => (a.date < b.date ? -1 : 1));
   return points;
 }
+
+// ---- Dashboard helpers -------------------------------------------------
+
+function typeOf(goal, id) {
+  return (goal?.types ?? []).find((t) => t.id === id) ?? null;
+}
+
+// Per-weekday overview for the dashboard week card + weekplan chips.
+// status: "done" | "today" | "planned" | "rest".
+export function weekOverview(goal, week = {}, todayKey = null) {
+  const days = WEEKDAYS.map(({ key, short }) => {
+    const d = goal?.days?.[key] ?? {};
+    const t = d.typeId ? typeOf(goal, d.typeId) : null;
+    const done = !!goal?.log?.[week[key]];
+    const isToday = key === todayKey;
+    let status = "rest";
+    if (!d.isRest) status = done ? "done" : isToday ? "today" : "planned";
+    return {
+      key,
+      short: short.toUpperCase(),
+      label: d.isRest ? "Frei" : t?.label ?? d.title ?? "Training",
+      color: t?.color ?? null,
+      isRest: !!d.isRest,
+      isToday,
+      done,
+      status,
+    };
+  });
+  const planned = days.filter((d) => !d.isRest).length;
+  const done = days.filter((d) => !d.isRest && d.done).length;
+  return { days, planned, done, pct: planned ? Math.round((done / planned) * 100) : 0 };
+}
+
+const DAY_MS = 86400000;
+
+// Consecutive-day streak (logged sessions). current ends today or yesterday;
+// best is the longest run ever. Returns { current, best }.
+export function dayStreak(goal, todayStr) {
+  const set = new Set(Object.keys(goal?.log ?? {}).map(baseDate));
+  if (!set.size) return { current: 0, best: 0 };
+  const sorted = [...set].sort();
+  let best = 0,
+    run = 0,
+    prev = null;
+  for (const ds of sorted) {
+    const d = parseYmd(ds).getTime();
+    run = prev != null && d - prev === DAY_MS ? run + 1 : 1;
+    if (run > best) best = run;
+    prev = d;
+  }
+  let cur = 0;
+  let d = parseYmd(todayStr);
+  if (!set.has(ymd(d))) d = new Date(d.getTime() - DAY_MS); // allow "yesterday"
+  while (set.has(ymd(d))) {
+    cur++;
+    d = new Date(d.getTime() - DAY_MS);
+  }
+  return { current: cur, best: Math.max(best, cur) };
+}
+
+// Best-effort planned minutes for one day: parse meta ("35 min", "1.5 h",
+// "60–120 min" → upper bound), else sum interval minutes, else null.
+function sessionMinutes(day) {
+  const meta = String(day?.meta ?? "");
+  const range = meta.match(/(\d+)\s*[–-]\s*(\d+)\s*min/i);
+  if (range) return Number(range[2]);
+  const one = meta.match(/(\d+)\s*min/i);
+  if (one) return Number(one[1]);
+  const h = meta.match(/(\d+(?:[.,]\d+)?)\s*h\b/i);
+  if (h) return Math.round(Number(h[1].replace(",", ".")) * 60);
+  let sum = 0;
+  for (const iv of day?.session?.intervals ?? []) {
+    if (/min/i.test(iv.amountUnit || "")) sum += (Number(iv.repeat) || 1) * (Number(iv.amount) || 0);
+  }
+  return sum || null;
+}
+
+// Estimated weekly training volume split by type (best-effort; 60 min fallback
+// per session with no parseable duration). { hours, segments:[{label,color,pct}] }.
+export function weeklyLoad(goal) {
+  const byType = new Map();
+  let totalMin = 0;
+  let estimated = false;
+  for (const { key } of WEEKDAYS) {
+    const d = goal?.days?.[key];
+    if (!d || d.isRest) continue;
+    let min = sessionMinutes(d);
+    if (min == null) {
+      min = 60;
+      estimated = true;
+    }
+    totalMin += min;
+    const t = typeOf(goal, d.typeId);
+    const id = t?.id ?? "other";
+    if (!byType.has(id))
+      byType.set(id, { label: t?.label ?? d.title ?? "Training", color: t?.color ?? "#9ca3af", min: 0 });
+    byType.get(id).min += min;
+  }
+  const segments = [...byType.values()].map((s) => ({
+    label: s.label,
+    color: s.color,
+    pct: totalMin ? Math.round((s.min / totalMin) * 100) : 0,
+  }));
+  return { hours: Math.round((totalMin / 60) * 10) / 10, totalMin, segments, estimated };
+}
