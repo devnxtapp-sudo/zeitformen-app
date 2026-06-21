@@ -12,9 +12,7 @@
   } from "./lib/store.svelte.js";
   import { weekDates, todayKey } from "./lib/dateutil.js";
   import Dashboard from "./lib/components/Dashboard.svelte";
-  import WeekProgress from "./lib/components/WeekProgress.svelte";
-  import WeekGrid from "./lib/components/WeekGrid.svelte";
-  import SessionDetail from "./lib/components/SessionDetail.svelte";
+  import WeekPlan from "./lib/components/WeekPlan.svelte";
   import DayEditor from "./lib/components/DayEditor.svelte";
   import GoalEditor from "./lib/components/GoalEditor.svelte";
   import CalendarView from "./lib/components/CalendarView.svelte";
@@ -232,56 +230,15 @@
     </div>
     <StatsView {goal} />
   {:else if app.view === "week" && goal}
-    <div class="subpage-head">
-      <button class="back-btn" onclick={() => { if (app.editMode) toggleEdit(); setView("dashboard"); }} aria-label="Zurück">‹</button>
-      <h2>Wochenplan</h2>
-    </div>
-
-    {#if !app.editMode}
-      <WeekProgress {goal} {week} />
-    {/if}
-
-    {#if !app.editMode && (goal.targetGoal || goal.category || goal.description)}
-      <div class="mb-[18px] flex items-start justify-between gap-4 max-[560px]:flex-col">
-        <div>
-          {#if goal.targetGoal || goal.category}
-            <div class="mt-2.5 inline-flex max-w-full items-stretch overflow-hidden rounded-full border border-line bg-card">
-              {#if goal.category}
-                <span class="inline-flex items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-ink">{goal.category}</span>
-              {/if}
-              {#if goal.targetGoal}
-                <span class="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 text-sm font-bold text-[var(--accent)] {goal.category ? 'border-l border-line' : ''}">
-                  <span class="flex-none text-[13px]">◎</span>
-                  <span class="overflow-hidden text-ellipsis">{goal.targetGoal}</span>
-                </span>
-              {/if}
-            </div>
-          {/if}
-          {#if goal.description}
-            <p class="muted mt-2.5 max-w-[560px] text-[14.5px]">{goal.description}</p>
-          {/if}
-        </div>
-      </div>
-    {/if}
-
-    <WeekGrid
+    <WeekPlan
       {goal}
+      {week}
+      {today}
+      editMode={app.editMode}
       selectedDay={app.selectedDay}
       onselect={selectDay}
       onedit={(k) => (editingDay = k)}
-      editMode={app.editMode}
-      {week}
-      {today}
-      ontoggle={(dateStr, dayKey) => toggleCompletion(goal.id, dateStr, dayKey)}
-    />
-
-    <SessionDetail
-      {goal}
-      dayKey={app.selectedDay}
-      onedit={(k) => (editingDay = k)}
-      editMode={app.editMode}
       onlog={!app.editMode ? (dateStr, dayKey) => openLog(dateStr, dayKey) : undefined}
-      weekDate={week[app.selectedDay]}
     />
 
     {#if goal.footerNote}
