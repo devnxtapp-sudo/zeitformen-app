@@ -291,6 +291,7 @@
     <Dashboard
       {goal}
       ongotoplan={() => setView("week")}
+      onnav={(v) => setView(v)}
     />
   {:else}
     <section class="mb-[18px]">

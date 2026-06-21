@@ -14,17 +14,20 @@
   --font-sans:
     "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* surfaces + ink — Flowbite slate palette (gray-900/800/700) */
-  --color-surface: #111827;
-  --color-surface-elev: #1f2937;
-  --color-card: #1f2937;
-  --color-card-hover: #374151;
-  --color-line: #374151;
-  --color-line-strong: #4b5563;
-  --color-ink: #f9fafb;
-  --color-ink-muted: #9ca3af;
-  --color-ink-dim: #6b7280;
+  /* surfaces + ink — RXZone dashboard palette */
+  --color-surface: #0f1117;
+  --color-surface-elev: #161b25;
+  --color-surface-2: #1c2333;
+  --color-surface-3: #222b3a;
+  --color-card: #161b25;
+  --color-card-hover: #1c2333;
+  --color-line: rgba(255, 255, 255, 0.07);
+  --color-line-strong: rgba(255, 255, 255, 0.11);
+  --color-ink: #e2e8f0;
+  --color-ink-muted: #64748b;
+  --color-ink-dim: #334155;
 
   /* training-type accents */
   --color-kraft: #f0a830;
@@ -48,23 +51,27 @@
   --color-primary-950: #172554;
 
   /* semantic dashboard accents */
-  --color-success: #22c55e; /* completed / volume (green) */
-  --color-streak: #f59e0b; /* streak (orange) */
+  --color-success: #22c55e;
+  --color-streak: #f97316;
+  --color-cyan: #06b6d4;
+  --color-purple: #a78bfa;
 }
 
 :root {
-  /* surfaces — Flowbite slate palette */
-  --bg: #111827;
-  --bg-elev: #1f2937;
-  --card: #1f2937;
-  --card-hover: #374151;
-  --border: #374151;
-  --border-strong: #4b5563;
+  /* surfaces — RXZone dashboard palette */
+  --bg: #0f1117;
+  --bg-elev: #161b25;
+  --surface-2: #1c2333;
+  --surface-3: #222b3a;
+  --card: #161b25;
+  --card-hover: #1c2333;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.11);
 
   /* text */
-  --text: #f9fafb;
-  --text-muted: #9ca3af;
-  --text-dim: #6b7280;
+  --text: #e2e8f0;
+  --text-muted: #64748b;
+  --text-dim: #334155;
 
   /* training type accents */
   --c-kraft: #f0a830;
@@ -81,7 +88,9 @@
   --on-accent: #ffffff; /* readable text/icon on a filled blue surface */
   --glow: none; /* flat dashboard look */
   --c-success: #22c55e;
-  --c-streak: #f59e0b;
+  --c-streak: #f97316;
+  --c-cyan: #06b6d4;
+  --c-purple: #a78bfa;
 
   --radius: 14px;
   --radius-sm: 9px;
@@ -90,6 +99,7 @@
   --shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
 * {
