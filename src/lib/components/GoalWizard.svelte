@@ -1,7 +1,7 @@
 <script>
   import Modal from "./Modal.svelte";
   import { Button, Input, Select } from "flowbite-svelte";
-  import { goalFromSport, DAY_KEYS, emptyExtraSession } from "../seed.js";
+  import { goalFromSport, DAY_KEYS, emptyExtraSession, uid } from "../seed.js";
   import { COMPETITIONS, SPORTS } from "../sports.js";
   import { addPreparedGoal } from "../store.svelte.js";
 
@@ -31,6 +31,22 @@
   let customName = $state("");
   let base = $state(null);
   let types = $state([]); // [{ id, label, color }]
+
+  // eigene Trainingstypen hinzufügen (freier Text, z. B. "Unterkörper")
+  let addingType = $state(false);
+  let newTypeName = $state("");
+  const NEW_TYPE_COLORS = [
+    "#ef562f", "#f0a830", "#5fb87a", "#22d3ee",
+    "#a779e9", "#ec4899", "#14b8a6", "#9ca3af",
+  ];
+  function addType() {
+    const name = newTypeName.trim();
+    if (!name) return;
+    const color = NEW_TYPE_COLORS[types.length % NEW_TYPE_COLORS.length];
+    types = [...types, { id: uid(), label: name, color }];
+    newTypeName = "";
+    addingType = false;
+  }
 
   // Die ersten `count` Wochentage sind Trainingstage (später verschiebbar).
   let selectedKeys = $derived(DAY_KEYS.slice(0, count));
@@ -125,6 +141,8 @@
     void customName;
     void types;
     void sessionTick;
+    void addingType;
+    void newTypeName;
     const el = pageEls[index];
     if (el) vpHeight = el.offsetHeight;
   });
@@ -240,9 +258,36 @@
       </div>
 
       <div class="page" bind:this={pageEls[2]}>
-        <div class="mb-4">
+        <div class="mb-4 flex items-start justify-between gap-3">
           <h4 class="text-lg font-semibold text-ink">Wähle deine Trainingstypen</h4>
+          {#if !addingType}
+            <button
+              type="button"
+              class="flex-none px-1 py-0.5 text-xs font-semibold text-primary-400"
+              onclick={() => (addingType = true)}
+            >
+              + Eigener Typ
+            </button>
+          {/if}
         </div>
+        {#if addingType}
+          <div class="mb-3.5 flex gap-2.5">
+            <Input
+              class="flex-1"
+              bind:value={newTypeName}
+              placeholder="Eigener Typ, z. B. Unterkörper"
+              onkeydown={(e) => e.key === "Enter" && addType()}
+            />
+            <Button
+              color="primary"
+              class="font-semibold text-[var(--on-accent)]"
+              disabled={!newTypeName.trim()}
+              onclick={addType}
+            >
+              Hinzufügen
+            </Button>
+          </div>
+        {/if}
         <div class="flex flex-col gap-3.5">
           {#each selectedKeys as key (key)}
             <div class="flex flex-col gap-2">

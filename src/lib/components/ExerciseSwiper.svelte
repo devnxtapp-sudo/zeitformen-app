@@ -43,22 +43,35 @@
     return "";
   }
 
-  // pro Übung eingegebene Werte (Index -> {sets:[{feld:wert}], note}); ein
-  // Eingabe-Satz je geplanter Wiederholung.
+  // pro Übung eingegebene Werte (Index -> {sets:[{feld:wert}], note}). Initial
+  // ein Eingabe-Satz je geplanter Wiederholung; Sätze sind frei erweiterbar.
   let values = $state({});
+
+  function emptySet() {
+    const f = {};
+    for (const k of logFields) f[k] = "";
+    return f;
+  }
+
   $effect(() => {
     for (const ex of exercises) {
       if (!values[ex.id]) {
         const sets = [];
-        for (let i = 0; i < ex.setCount; i++) {
-          const f = {};
-          for (const k of logFields) f[k] = "";
-          sets.push(f);
-        }
+        for (let i = 0; i < ex.setCount; i++) sets.push(emptySet());
         values[ex.id] = { sets, note: lastNoteFor(ex.label) };
       }
     }
   });
+
+  // einen Eingabe-Satz hinzufügen / entfernen (mind. einer bleibt)
+  function addSet(exId) {
+    const v = values[exId];
+    if (v) v.sets = [...v.sets, emptySet()];
+  }
+  function removeSet(exId, si) {
+    const v = values[exId];
+    if (v && v.sets.length > 1) v.sets = v.sets.filter((_, i) => i !== si);
+  }
 
   let index = $state(0);
   let dragging = $state(false);
@@ -77,8 +90,8 @@
   }
 
   function onPointerDown(e) {
-    // nicht wischen, wenn in einem Eingabefeld gestartet wird
-    if (e.target.closest("input")) return;
+    // nicht wischen, wenn in einem Eingabefeld oder auf einem Button gestartet wird
+    if (e.target.closest("input, button")) return;
     dragging = true;
     startX = e.clientX;
     dragDX = 0;
@@ -168,9 +181,17 @@
             {#if values[ex.id]}
               {#each values[ex.id].sets as set, si (si)}
                 <div class="set">
-                  {#if values[ex.id].sets.length > 1}
+                  <div class="set-head">
                     <span class="set-label">Satz {si + 1}</span>
-                  {/if}
+                    {#if values[ex.id].sets.length > 1}
+                      <button
+                        type="button"
+                        class="set-rm"
+                        onclick={() => removeSet(ex.id, si)}
+                        aria-label={`Satz ${si + 1} entfernen`}
+                      >✕</button>
+                    {/if}
+                  </div>
                   <div class="inputs">
                     {#each logFields as f (f)}
                       <label class="inp">
@@ -186,6 +207,9 @@
                   </div>
                 </div>
               {/each}
+              <button type="button" class="add-set" onclick={() => addSet(ex.id)}>
+                + Satz
+              </button>
               <label class="ex-note">
                 <span class="ex-note-label">Notiz</span>
                 <textarea
@@ -330,12 +354,50 @@
     flex-direction: column;
     gap: 6px;
   }
+  .set-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
   .set-label {
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-muted);
     font-weight: 700;
+  }
+  .set-rm {
+    border: none;
+    background: none;
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1;
+    padding: 4px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+  }
+  .set-rm:hover {
+    color: #ff6b6f;
+    background: rgba(229, 72, 77, 0.1);
+  }
+  .add-set {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.1);
+    border: 1px solid rgba(var(--accent-rgb), 0.35);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+  .add-set:hover {
+    background: rgba(var(--accent-rgb), 0.18);
   }
   .inputs {
     display: grid;
