@@ -126,7 +126,7 @@
     />
 
     <!-- Content column -->
-    <div class="mx-auto min-w-0 max-w-6xl flex-1 px-4 pt-[18px] pb-16 lg:px-8">
+    <div class="min-w-0 flex-1 px-4 pt-[18px] pb-16 lg:px-5">
   <header class="mb-[22px] flex flex-wrap items-center justify-between gap-3">
     <div class="flex min-w-0 flex-wrap items-center gap-2.5">
       <!-- Mobile hamburger opens the off-canvas drawer (hidden on desktop). -->
