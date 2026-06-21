@@ -3,7 +3,7 @@
   import Modal from "./Modal.svelte";
   import { DAY_LABELS, MODALITIES, modalityById, emptyExtraSession } from "../seed.js";
   import { updateDay, typeById } from "../store.svelte.js";
-  import { Button, Input, Select, Textarea, Label } from "flowbite-svelte";
+  import { Button, Input, Select, Textarea, Label, Toggle } from "flowbite-svelte";
 
   let { goal, dayKey, onclose } = $props();
 
@@ -46,12 +46,27 @@
   let curRest = $derived(activeSlot === 0 && draft.isRest);
 
   let modality = $derived(modalityById(cur.session.modality));
-  let planFields = $derived(modality?.plan ?? []);
-  let amountUnits = $derived(modality?.amountUnits ?? ["min"]);
   let isStrength = $derived(cur.session.modality === "strength");
+  // Ohne gewählte Modalität: einfache Übungsliste (Name + Sätze + Wdh + kg).
+  let freeform = $derived(!cur.session.modality);
+  let exStrength = $derived(isStrength || freeform);
+  let planFields = $derived(modality?.plan ?? ["amount", "weight"]);
+  let amountUnits = $derived(modality?.amountUnits ?? ["Wdh"]);
 
   function pickModality(id) {
     cur.session.modality = cur.session.modality === id ? null : id;
+  }
+
+  // Tag zwischen Ruhetag und Trainingstag umschalten (nur Primär-Session).
+  function setRest(v) {
+    draft.isRest = v;
+    if (v) {
+      draft.title = "Ruhetag";
+      draft.meta = "Ruhetag";
+    } else if (draft.title === "Ruhetag") {
+      draft.title = "";
+      draft.meta = "";
+    }
   }
 
   function addSession() {
@@ -68,12 +83,11 @@
   }
 
   function addInterval() {
-    const m = modalityById(cur.session.modality);
     cur.session.intervals.push({
       name: "",
       repeat: 1,
       amount: "",
-      amountUnit: m?.amountUnits?.[0] ?? "min",
+      amountUnit: amountUnits[0] ?? "Wdh",
       weight: "",
       rest: "",
       restUnit: "s",
@@ -105,6 +119,12 @@
 </script>
 
 <Modal title={`${DAY_LABELS[dayKey]} bearbeiten`} {onclose}>
+  {#if activeSlot === 0}
+    <label class="mb-3.5 flex items-center justify-between gap-3 rounded-xl border border-line bg-card px-4 py-3">
+      <span class="text-sm font-semibold text-ink">Ruhetag</span>
+      <Toggle checked={draft.isRest} onchange={(e) => setRest(e.target.checked)} />
+    </label>
+  {/if}
   {#if !draft.isRest}
     <div class="mb-3.5 flex flex-wrap gap-2">
       <button
@@ -207,18 +227,19 @@
           placeholder="z.B. 80–85 % HFmax · Schwellentempo"
         />
       </div>
+    {/if}
 
-      <div>
+    <div>
         <div class="mb-2 flex items-center justify-between">
-          <span class="text-xs font-semibold text-ink-muted">{isStrength ? "Übungen" : "Intervalle"}</span>
+          <span class="text-xs font-semibold text-ink-muted">{exStrength ? "Übungen" : "Intervalle"}</span>
           <Button size="sm" color="alternative" onclick={addInterval}>
-            {isStrength ? "+ Übung" : "+ Intervall"}
+            {exStrength ? "+ Übung" : "+ Intervall"}
           </Button>
         </div>
 
         {#each cur.session.intervals as iv, i (i)}
           <div class="mb-2.5 flex flex-wrap items-end gap-2 rounded-lg border border-line bg-card p-3">
-            {#if isStrength}
+            {#if exStrength}
               <Input
                 class="basis-full font-semibold"
                 bind:value={iv.name}
@@ -226,13 +247,13 @@
               />
             {/if}
             <label class="flex min-w-0 flex-[1_1_56px] flex-col gap-1">
-              <span class="text-[10.5px] font-bold uppercase tracking-wide text-ink-muted">{modality.id === "strength" ? "Sätze" : "Anzahl"}</span>
+              <span class="text-[10.5px] font-bold uppercase tracking-wide text-ink-muted">{exStrength ? "Sätze" : "Anzahl"}</span>
               <Input type="number" inputmode="numeric" min="1" bind:value={iv.repeat} placeholder="1" />
             </label>
             <span class="self-center pb-2.5 font-bold text-ink-muted">×</span>
             {#if planFields.includes("amount")}
               <label class="flex min-w-0 flex-[1_1_56px] flex-col gap-1">
-                <span class="text-[10.5px] font-bold uppercase tracking-wide text-ink-muted">{modality.id === "strength" ? "Wdh" : "Menge"}</span>
+                <span class="text-[10.5px] font-bold uppercase tracking-wide text-ink-muted">{exStrength ? "Wdh" : "Menge"}</span>
                 <Input type="number" inputmode="decimal" bind:value={iv.amount} placeholder="–" />
               </label>
               <label class="flex min-w-0 flex-[0_0_72px] flex-col gap-1">
@@ -272,8 +293,7 @@
             >✕</Button>
           </div>
         {/each}
-      </div>
-    {/if}
+    </div>
 
     <div class="mb-3.5 mt-3.5">
       <Label for="d-bonus" class="mb-1.5 block text-xs font-semibold text-ink-muted">Bonus / Hinweis</Label>

@@ -9,10 +9,14 @@
 
   let modality = $derived(modalityById(day?.session?.modality));
   let intervals = $derived(day?.session?.intervals ?? []);
-  let useIntervals = $derived(!!(modality && intervals.length));
+  // Strukturierte Übungen/Intervalle anzeigen, sobald welche existieren — auch
+  // ohne gesetzte Modalität (dann mit Standard-Feldern reps/weight).
+  let useIntervals = $derived(intervals.length > 0);
 
   // Welche Ist-Felder die Karte zeigt – aus der Modalität, sonst reps/weight.
-  let logFields = $derived(useIntervals ? modality.log : ["reps", "weight"]);
+  let logFields = $derived(
+    useIntervals ? (modality?.log ?? ["reps", "weight"]) : ["reps", "weight"],
+  );
 
   // setCount = wie viele Sätze/Wiederholungen das Intervall hat (z.B. "3 × 10
   // Wdh" -> 3 Eingabe-Sätze). Legacy-Items haben immer einen.
