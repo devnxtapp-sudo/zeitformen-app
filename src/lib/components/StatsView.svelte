@@ -1,437 +1,423 @@
 <script>
   import {
     computeStats,
+    weekOverview,
+    dayStreak,
+    weeklyLoad,
     exerciseNames,
     exerciseProgress,
     loggedDays,
     PROGRESS_METRICS,
   } from "../stats.js";
-  import { parseYmd } from "../dateutil.js";
+  import { weekDates, todayKey, parseYmd, ymd, lastNWeekMondays, weekDatesFrom, dayKeyOf } from "../dateutil.js";
 
   let { goal } = $props();
 
+  const week = weekDates();
+  const today = todayKey();
   let stats = $derived(computeStats(goal));
+  let overview = $derived(weekOverview(goal, week, dayKeyOf(today)));
+  let streak = $derived(dayStreak(goal, today));
+  let load = $derived(weeklyLoad(goal));
 
-  function weekLabel(monday) {
-    const d = parseYmd(monday);
-    return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+  function isoWeek(d) {
+    const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const n = (x.getUTCDay() + 6) % 7;
+    x.setUTCDate(x.getUTCDate() - n + 3);
+    const f = new Date(Date.UTC(x.getUTCFullYear(), 0, 4));
+    return 1 + Math.round(((x - f) / 86400000 - 3 + ((f.getUTCDay() + 6) % 7)) / 7);
   }
 
-  // Flowbite admin-dashboard dark theme defaults shared by both charts.
-  const CHART_BASE = {
-    fontFamily: "Inter, sans-serif",
-    toolbar: { show: false },
-    background: "transparent",
-    animations: { enabled: true },
-  };
-  const AXIS_LABEL = { style: { colors: "#9ca3af", fontFamily: "Inter, sans-serif" } };
+  let weeks8 = $derived(stats.weekly.slice(-8));
+  let weekLabels = $derived(weeks8.map((w) => "KW " + isoWeek(parseYmd(w.monday))));
+  let weekCounts = $derived(weeks8.map((w) => w.count));
+  let targetSeries = $derived(weeks8.map(() => overview.planned || 0));
 
-  // Svelte action: lazy-load ApexCharts (own chunk, only fetched when a chart
-  // view is opened), then mount an instance and keep it in sync with `options`.
-  function apexChart(node, options) {
-    let chart = null;
-    let current = options;
-    let destroyed = false;
-    import("apexcharts").then(({ default: ApexCharts }) => {
-      if (destroyed) return;
-      chart = new ApexCharts(node, current);
-      chart.render();
+  // ---- KPIs (real) ----
+  let unitsDelta = $derived.by(() => {
+    if (weekCounts.length < 2) return 0;
+    const a = weekCounts[weekCounts.length - 2], b = weekCounts[weekCounts.length - 1];
+    return b - a;
+  });
+
+  // ---- recent activities (real, from log) ----
+  function emojiFor(label) {
+    const s = (label || "").toLowerCase();
+    if (/schwimm|swim/.test(s)) return "🏊";
+    if (/rad|bike|cycl/.test(s)) return "🚴";
+    if (/kraft|strength|gym|körper|bein/.test(s)) return "🏋️";
+    if (/lauf|run|threshold|zone|tempo|vo2/.test(s)) return "🏃";
+    return "🔥";
+  }
+  let activities = $derived.by(() => {
+    const log = goal.log ?? {};
+    return Object.entries(log)
+      .map(([k, e]) => ({ date: k.split("#")[0], ...e }))
+      .filter((e) => e.title || e.typeLabel || e.exercises?.length || e.metrics)
+      .sort((a, b) => (a.date < b.date ? 1 : -1))
+      .slice(0, 6)
+      .map((e) => {
+        const stat = [];
+        for (const [, v] of Object.entries(e.metrics ?? {})) if (v != null && v !== "") stat.push(String(v));
+        const sets = (e.exercises ?? []).reduce((n, ex) => n + (ex.sets?.length ?? 0), 0);
+        if (sets) stat.push(`${sets} Sätze`);
+        return {
+          title: e.title || e.typeLabel || "Training",
+          type: e.typeLabel || "",
+          color: e.typeColor || "#64748b",
+          emoji: emojiFor(e.typeLabel || e.title),
+          date: parseYmd(e.date).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" }),
+          stats: stat.slice(0, 3),
+        };
+      });
+  });
+
+  // ---- heatmap (real): 12 weeks × 7 days ----
+  let heatmap = $derived.by(() => {
+    const counts = new Map();
+    for (const k of Object.keys(goal.log ?? {})) {
+      const d = k.split("#")[0];
+      counts.set(d, (counts.get(d) ?? 0) + 1);
+    }
+    const mondays = lastNWeekMondays(12, parseYmd(today));
+    return mondays.map((mon) => {
+      const days = weekDatesFrom(mon);
+      const cells = ["mo", "di", "mi", "do", "fr", "sa", "so"].map((dk) => {
+        const c = counts.get(days[dk]) ?? 0;
+        return c >= 3 ? 3 : c;
+      });
+      const m = parseYmd(mon).toLocaleDateString("de-DE", { month: "short" });
+      return { month: m, cells };
     });
-    return {
-      update(next) {
-        current = next;
-        if (chart) chart.updateOptions(next, true, true);
-      },
-      destroy() {
-        destroyed = true;
-        if (chart) chart.destroy();
-      },
-    };
-  }
+  });
+  const HM_BG = ["var(--surface-3)", "rgba(34,197,94,0.3)", "rgba(34,197,94,0.55)", "#22c55e"];
 
-  // ---- per-exercise progression ----
-  let days = $derived(loggedDays(goal)); // weekdays present in the log
-  let selectedDay = $state(""); // "" = Alle Tage, else dayKey "mo".."so"
+  // ---- per-exercise progression (real) ----
+  let days = $derived(loggedDays(goal));
+  let selectedDay = $state("");
   let dayFilter = $derived(selectedDay || null);
   let exercises = $derived(exerciseNames(goal, dayFilter));
   let selectedExercise = $state(null);
   let metric = $state("topWeight");
-
-  // default the selection to the first available exercise (re-runs when the
-  // training-day filter narrows the list)
   $effect(() => {
-    if (exercises.length && !exercises.includes(selectedExercise)) {
-      selectedExercise = exercises[0];
-    } else if (!exercises.length) {
-      selectedExercise = null;
-    }
+    if (exercises.length && !exercises.includes(selectedExercise)) selectedExercise = exercises[0];
+    else if (!exercises.length) selectedExercise = null;
   });
-
-  let progress = $derived(
-    selectedExercise
-      ? exerciseProgress(goal, selectedExercise, metric, dayFilter)
-      : [],
-  );
+  let progress = $derived(selectedExercise ? exerciseProgress(goal, selectedExercise, metric, dayFilter) : []);
   let metricMeta = $derived(PROGRESS_METRICS.find((m) => m.id === metric));
 
-  // summary values derived from the progress series (kept for the meta header)
-  let chart = $derived.by(() => {
-    const pts = progress;
-    if (pts.length === 0) return null;
-    const values = pts.map((p) => p.value);
-    return {
-      min: Math.min(...values),
-      max: Math.max(...values),
-      first: values[0],
-      last: values[values.length - 1],
-    };
-  });
-
-  function shortDate(d) {
-    return parseYmd(d).toLocaleDateString("de-DE", {
-      day: "2-digit",
-      month: "2-digit",
-    });
+  // ---- Chart.js (lazy) ----
+  let ChartLib = null;
+  function chartjs(node, config) {
+    let c = null, killed = false;
+    (async () => {
+      if (!ChartLib) {
+        ChartLib = (await import("chart.js/auto")).default;
+        ChartLib.defaults.color = "#64748b";
+        ChartLib.defaults.font.family = "Inter";
+        ChartLib.defaults.font.size = 11;
+      }
+      if (killed) return;
+      c = new ChartLib(node, config);
+    })();
+    return { destroy() { killed = true; c?.destroy(); } };
   }
+  const GRID = "rgba(255,255,255,0.05)";
+  const TIP = { backgroundColor: "#1c2333", borderColor: "rgba(255,255,255,0.1)", borderWidth: 1, padding: 10 };
 
-  let delta = $derived(
-    chart ? Math.round((chart.last - chart.first) * 10) / 10 : 0,
-  );
-
-  // ---- ApexCharts options (Flowbite admin-dashboard dark theme) ----
-
-  // Weekly training count — rounded bar columns.
-  let weeklyOptions = $derived({
-    chart: { ...CHART_BASE, type: "bar", height: 260 },
-    theme: { mode: "dark" },
-    series: [
-      { name: "Einheiten", data: stats.weekly.map((w) => w.count) },
-    ],
-    xaxis: {
-      categories: stats.weekly.map((w) => weekLabel(w.monday)),
-      labels: AXIS_LABEL,
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-    },
-    yaxis: {
-      labels: {
-        ...AXIS_LABEL,
-        formatter: (v) => Math.round(v),
-      },
-    },
-    colors: ["#ef562f"],
-    plotOptions: {
-      bar: { borderRadius: 6, columnWidth: "55%", borderRadiusApplication: "end" },
-    },
-    dataLabels: { enabled: false },
-    grid: {
-      borderColor: "#374151",
-      strokeDashArray: 4,
-      padding: { left: 4, right: 4 },
-    },
-    legend: { show: false },
-    tooltip: { theme: "dark", y: { formatter: (v) => `${Math.round(v)} Einheiten` } },
+  let volCfg = $derived({
+    type: "bar",
+    data: { labels: weekLabels, datasets: [
+      { label: "Einheiten", data: weekCounts, backgroundColor: weekCounts.map((_, i) => (i === weekCounts.length - 1 ? "rgba(59,130,246,0.85)" : "rgba(59,130,246,0.35)")), borderRadius: 4, borderSkipped: false, order: 2 },
+      { label: "Ziel", data: targetSeries, type: "line", borderColor: "rgba(6,182,212,0.6)", borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0, tension: 0.4, order: 1 },
+    ] },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: TIP }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, ticks: { precision: 0 } } } },
+  });
+  let progCfg = $derived({
+    type: "line",
+    data: { labels: progress.map((p) => parseYmd(p.date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })), datasets: [
+      { label: metricMeta?.label, data: progress.map((p) => p.value), borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,0.1)", borderWidth: 2.5, pointBackgroundColor: "#3b82f6", pointRadius: 4, tension: 0.4, fill: true },
+    ] },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: TIP }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false } } } },
   });
 
-  // Per-exercise progression — area trend (like the dashboard revenue chart).
-  let progressOptions = $derived({
-    chart: { ...CHART_BASE, type: "area", height: 260 },
-    theme: { mode: "dark" },
-    series: [
-      {
-        name: metricMeta?.label ?? "Wert",
-        data: progress.map((p) => p.value),
-      },
-    ],
-    xaxis: {
-      categories: progress.map((p) => shortDate(p.date)),
-      labels: { ...AXIS_LABEL, hideOverlappingLabels: true, rotate: 0 },
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-      tooltip: { enabled: false },
-    },
-    yaxis: {
-      labels: {
-        ...AXIS_LABEL,
-        formatter: (v) =>
-          metricMeta?.unit ? `${Math.round(v)} ${metricMeta.unit}` : Math.round(v),
-      },
-    },
-    colors: ["#fe795d", "#ef562f"],
-    fill: {
-      type: "gradient",
-      gradient: { opacityFrom: 0.45, opacityTo: 0, shade: "dark" },
-    },
-    stroke: { curve: "smooth", width: 3 },
-    markers: { size: progress.length === 1 ? 5 : 0, colors: ["#fe795d"] },
-    dataLabels: { enabled: false },
-    grid: {
-      borderColor: "#374151",
-      strokeDashArray: 4,
-      padding: { left: 4, right: 4 },
-    },
-    legend: { show: false },
-    tooltip: {
-      theme: "dark",
-      y: {
-        formatter: (v) =>
-          metricMeta?.unit ? `${v} ${metricMeta.unit}` : `${v}`,
-      },
-    },
-  });
+  // ---- placeholder charts (demo data — kein echtes Tracking vorhanden) ----
+  const demoWeeks = ["KW 18", "KW 19", "KW 20", "KW 21", "KW 22", "KW 23", "KW 24", "KW 25"];
+  const zoneCfg = { type: "doughnut", data: { datasets: [{ data: [55, 25, 12, 8], backgroundColor: ["#22c55e", "#f97316", "#ef4444", "#a78bfa"], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: false, cutout: "70%", plugins: { legend: { display: false }, tooltip: { enabled: false } } } };
+  const modalCfg = { type: "bar", data: { labels: ["KW 22", "KW 23", "KW 24", "KW 25"], datasets: [
+    { label: "Laufen", data: [2.8, 2.5, 2.6, 2.3], backgroundColor: "rgba(249,115,22,0.75)", borderRadius: 3, borderSkipped: false },
+    { label: "Kraft", data: [1.5, 1.4, 1.5, 1.4], backgroundColor: "rgba(167,139,250,0.75)", borderRadius: 3, borderSkipped: false },
+    { label: "Schwimmen", data: [0.9, 0.8, 1.0, 0.9], backgroundColor: "rgba(6,182,212,0.75)", borderRadius: 3, borderSkipped: false },
+    { label: "Rad", data: [0.7, 0.7, 0.7, 0.7], backgroundColor: "rgba(59,130,246,0.75)", borderRadius: 3, borderSkipped: false },
+  ] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: TIP }, scales: { x: { stacked: true, grid: { color: GRID }, border: { display: false } }, y: { stacked: true, grid: { color: GRID }, border: { display: false }, beginAtZero: true } } } };
+  const paceCfg = {
+    type: "line",
+    data: { labels: demoWeeks, datasets: [{ label: "Ø Pace (min/km)", data: [6.45, 6.38, 6.31, 6.28, 6.2, 6.15, 6.1, 6.05], borderColor: "#22c55e", backgroundColor: "rgba(34,197,94,0.08)", borderWidth: 2.5, pointBackgroundColor: "#22c55e", pointRadius: 4, tension: 0.4, fill: true }] },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { ...TIP, callbacks: { label: (ctx) => { const v = ctx.raw, m = Math.floor(v), s = Math.round((v - m) * 60); return ` ${m}:${String(s).padStart(2, "0")} min/km`; } } } }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, reverse: true, min: 5.8, max: 6.6, ticks: { callback: (v) => { const m = Math.floor(v), s = Math.round((v - m) * 60); return `${m}:${String(s).padStart(2, "0")}`; } } } } },
+  };
+
+  const zones = [
+    { label: "Zone 1–2", pct: 55, color: "var(--c-success)" },
+    { label: "Zone 3", pct: 25, color: "var(--c-streak)" },
+    { label: "Zone 4–5", pct: 12, color: "#ef4444" },
+    { label: "Kraft", pct: 8, color: "var(--c-purple)" },
+  ];
+  const prs = [
+    { emoji: "🏃", name: "5 km Lauf", sub: "vor 2 Wochen", value: "22:14", delta: "↓ 0:38 min", badge: "PR" },
+    { emoji: "🏊", name: "100m Kraul", sub: "vor 1 Woche", value: "1:48", delta: "↓ 3 sek", badge: "NEU" },
+    { emoji: "🏋️", name: "Back Squat", sub: "vor 3 Wochen", value: "107.5 kg", delta: "↑ 2.5 kg", badge: "PR" },
+    { emoji: "🏃", name: "1 km Pace", sub: "vor 1 Woche", value: "4:02/km", delta: "↓ 0:08", badge: "PR" },
+  ];
+
+  let chartKey = $derived(weekCounts.join(",") + "|" + selectedDay + selectedExercise + metric);
+  const periods = ["7 Tage", "4 Wochen", "3 Monate", "Gesamt"];
+  let period = $state("4 Wochen");
 </script>
 
 <div class="stats">
-  <div class="cards">
-    <div class="stat-card">
-      <span class="s-num">{stats.total}</span>
-      <span class="s-lbl">Einheiten insgesamt</span>
+  <div class="page-header">
+    <div>
+      <div class="page-title">Statistik</div>
+      <div class="page-sub">{goal.name} · Stand: {parseYmd(today).toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" })}</div>
     </div>
-    <div class="stat-card">
-      <span class="s-num">{stats.streak}</span>
-      <span class="s-lbl">Wochen-Streak</span>
-    </div>
-    <div class="stat-card">
-      <span class="s-num">{stats.last30}</span>
-      <span class="s-lbl">letzte 30 Tage</span>
+    <div class="period-tabs">
+      {#each periods as p (p)}
+        <div class="period-tab" class:active={period === p} onclick={() => (period = p)}>{p}</div>
+      {/each}
     </div>
   </div>
 
-  <section class="panel">
-    <h3>Wochen-Trend</h3>
-    <span class="sub muted">letzte 8 Wochen</span>
-    <div class="rounded-xl border border-line bg-card p-4">
-      <div class="apex" use:apexChart={weeklyOptions}></div>
+  <!-- KPIs (real) -->
+  <div class="grid-4">
+    <div class="kpi-card kpi-blue">
+      <div class="kpi-label">Einheiten</div>
+      <div class="kpi-value">{stats.last30}</div>
+      <div class="kpi-sub">letzte 30 Tage</div>
+      {#if unitsDelta !== 0}<div class="kpi-delta {unitsDelta > 0 ? 'delta-up' : 'delta-down'}">{unitsDelta > 0 ? "▲" : "▼"} {Math.abs(unitsDelta)} vs. Vorwoche</div>{/if}
     </div>
-  </section>
+    <div class="kpi-card kpi-green">
+      <div class="kpi-label">Volumen</div>
+      <div class="kpi-value">{load.hours} h</div>
+      <div class="kpi-sub">diese Woche{#if load.estimated} · gesch.{/if}</div>
+    </div>
+    <div class="kpi-card kpi-orange">
+      <div class="kpi-label">Completion Rate</div>
+      <div class="kpi-value">{overview.pct}%</div>
+      <div class="kpi-sub">{overview.done}/{overview.planned} diese Woche</div>
+    </div>
+    <div class="kpi-card kpi-purple">
+      <div class="kpi-label">Streak</div>
+      <div class="kpi-value">{streak.current} 🔥</div>
+      <div class="kpi-sub">Tage in Folge</div>
+      {#if streak.current > 0 && streak.current >= streak.best}<div class="kpi-delta" style="color:var(--c-streak)">Persönlicher Rekord</div>{:else if streak.best > 0}<div class="kpi-sub">Rekord {streak.best}</div>{/if}
+    </div>
+  </div>
 
-  {#if exercises.length}
-    <section class="panel">
-      <h3>Übungs-Fortschritt</h3>
-      <span class="sub muted">Verlauf einer Übung über die Zeit</span>
+  <!-- Volumen + Aktivitäten -->
+  <div class="grid-main-side">
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">Trainingsvolumen</div><div class="card-sub">Erledigte Einheiten pro Woche + Ziel</div></div>
+        <div class="legend"><span class="lg"><i style="background:var(--accent)"></i>Erledigt</span><span class="lg"><i style="background:var(--c-cyan);opacity:.6"></i>Ziel</span></div>
+      </div>
+      <div class="chart-wrap">{#key chartKey}<canvas use:chartjs={volCfg} height="130"></canvas>{/key}</div>
+    </div>
 
-      <div class="ex-controls">
-        {#if days.length > 1}
-          <select class="ex-select" bind:value={selectedDay} aria-label="Trainingstag">
-            <option value="">Alle Tage</option>
-            {#each days as d (d.key)}
-              <option value={d.key}>{d.label}</option>
-            {/each}
-          </select>
-        {/if}
-        <select class="ex-select" bind:value={selectedExercise} aria-label="Übung">
-          {#each exercises as name (name)}
-            <option value={name}>{name}</option>
-          {/each}
-        </select>
-        <div class="metric-toggle">
-          {#each PROGRESS_METRICS as m (m.id)}
-            <button
-              class="mt-btn"
-              class:active={metric === m.id}
-              onclick={() => (metric = m.id)}
-            >
-              {m.label}
-            </button>
+    <div class="card">
+      <div class="card-head" style="padding-bottom:12px"><div class="card-title">Letzte Aktivitäten</div></div>
+      <div class="activity-list">
+        {#each activities as a (a.title + a.date)}
+          <div class="activity-item">
+            <div class="activity-icon" style="background:{a.color}22">{a.emoji}</div>
+            <div style="flex:1;min-width:0">
+              <div class="activity-title">{a.title}</div>
+              <div class="activity-meta">{a.type}</div>
+              {#if a.stats.length}<div class="activity-stats">{#each a.stats as s}<div class="activity-stat"><span>{s}</span></div>{/each}</div>{/if}
+            </div>
+            <div class="activity-time">{a.date}</div>
+          </div>
+        {/each}
+        {#if !activities.length}<p class="empty">Noch keine erfassten Einheiten.</p>{/if}
+      </div>
+    </div>
+  </div>
+
+  <!-- Pace (Demo) + Zonen (Demo) + PRs (Demo) -->
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">Lauf-Pace Entwicklung</div><div class="card-sub">Demo · via intervals.icu</div></div>
+        <span style="background:rgba(34,197,94,0.12);color:var(--c-success);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid rgba(34,197,94,0.2)">↓ Verbesserung</span>
+      </div>
+      <div class="chart-wrap-sm"><canvas use:chartjs={paceCfg} height="120"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" style="padding-bottom:14px"><div><div class="card-title">Zonenverteilung</div><div class="card-sub">Demo · via intervals.icu</div></div></div>
+      <div style="padding:0 20px 6px;display:flex;align-items:center;gap:16px">
+        <canvas use:chartjs={zoneCfg} width="80" height="80" style="flex-shrink:0"></canvas>
+        <div class="zone-row" style="flex:1">
+          {#each zones as z (z.label)}
+            <div class="zone-item">
+              <div class="zone-label" style="color:{z.color}">{z.label}</div>
+              <div class="zone-bar-wrap"><div class="zone-bar-fill" style="width:{z.pct}%;background:{z.color}"></div></div>
+              <div class="zone-pct">{z.pct}%</div>
+            </div>
           {/each}
         </div>
       </div>
+      <div style="padding:8px 20px 16px;font-size:11px;color:var(--text-muted)">80/20-Regel: <span style="color:var(--c-success);font-weight:700">gut eingehalten</span></div>
+    </div>
 
-      {#if chart}
-        <div class="chart-meta">
-          <span class="cm-current">
-            {chart.last}{metricMeta.unit ? " " + metricMeta.unit : ""}
-          </span>
-          {#if progress.length > 1}
-            <span class="cm-delta" class:up={delta > 0} class:down={delta < 0}>
-              {delta > 0 ? "▲" : delta < 0 ? "▼" : "•"}
-              {Math.abs(delta)}{metricMeta.unit ? " " + metricMeta.unit : ""}
-            </span>
-          {/if}
-        </div>
-        <div class="rounded-xl border border-line bg-card p-4">
-          {#key selectedDay + "::" + selectedExercise + "::" + metric}
-            <div class="apex" use:apexChart={progressOptions}></div>
-          {/key}
-        </div>
-      {:else}
-        <p class="muted">Für diese Übung sind noch keine Werte erfasst.</p>
-      {/if}
-    </section>
-  {/if}
-
-  <section class="panel">
-    <h3>Verteilung nach Typ</h3>
-    {#if stats.byType.length}
-      <div class="types">
-        {#each stats.byType as t (t.id)}
-          {@const pct = stats.total ? Math.round((t.count / stats.total) * 100) : 0}
-          <div class="type-row">
-            <div class="type-head">
-              <span class="swatch" style="background: {t.color}"></span>
-              <span class="t-label">{t.label}</span>
-              <span class="t-count">{t.count} · {pct}%</span>
-            </div>
-            <div class="t-bar">
-              <div class="t-fill" style="width: {pct}%; background: {t.color}"></div>
-            </div>
+    <div class="card">
+      <div class="card-head" style="padding-bottom:0"><div class="card-title">Persönliche Bestleistungen</div></div>
+      <div class="pr-list">
+        {#each prs as p (p.name)}
+          <div class="pr-item">
+            <div class="pr-icon" style="background:var(--surface-3)">{p.emoji}</div>
+            <div style="flex:1"><div class="pr-name">{p.name}</div><div class="pr-sub">{p.sub}</div></div>
+            <div><div class="pr-value">{p.value}</div><div class="pr-delta delta-up">{p.delta}</div></div>
+            <span class="pr-badge {p.badge === 'NEU' ? 'badge-new' : 'badge-pr'}">{p.badge}</span>
           </div>
         {/each}
       </div>
+    </div>
+  </div>
+
+  <!-- Übungs-Fortschritt (real) -->
+  <div class="card">
+    <div class="card-head"><div><div class="card-title">Übungs-Fortschritt</div><div class="card-sub">Verlauf nach Trainingstag + Übung</div></div></div>
+    {#if exercises.length}
+      <div class="ex-controls">
+        {#if days.length > 1}
+          <select class="ex-select" bind:value={selectedDay}><option value="">Alle Tage</option>{#each days as d (d.key)}<option value={d.key}>{d.label}</option>{/each}</select>
+        {/if}
+        <select class="ex-select" bind:value={selectedExercise}>{#each exercises as n (n)}<option value={n}>{n}</option>{/each}</select>
+      </div>
+      <div class="metric-toggle">{#each PROGRESS_METRICS as m (m.id)}<button class="mt-btn" class:active={metric === m.id} onclick={() => (metric = m.id)}>{m.label}</button>{/each}</div>
+      {#if progress.length}
+        <div class="chart-wrap">{#key chartKey}<canvas use:chartjs={progCfg} height="90"></canvas>{/key}</div>
+      {:else}
+        <p class="empty">Keine Werte für diese Übung.</p>
+      {/if}
     {:else}
-      <p class="muted">Noch keine erledigten Einheiten.</p>
+      <p class="empty">Noch keine Übungen mit Sätzen geloggt — dokumentiere Sätze im Training.</p>
     {/if}
-  </section>
+  </div>
+
+  <!-- Heatmap (real) + Modalität (Demo) -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head" style="padding-bottom:14px">
+        <div><div class="card-title">Trainingsaktivität</div><div class="card-sub">Letzte 12 Wochen</div></div>
+        <div class="hm-legend">weniger {#each HM_BG as c}<i style="background:{c}"></i>{/each} mehr</div>
+      </div>
+      <div style="padding:0 20px 20px;display:flex;gap:3px">
+        {#each heatmap as col, ci (ci)}
+          <div style="display:flex;flex-direction:column;gap:3px;flex:1">
+            {#each col.cells as lvl, di (di)}
+              <div class="hm-cell" style="background:{HM_BG[lvl]}" title={col.month}></div>
+            {/each}
+          </div>
+        {/each}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" style="padding-bottom:12px"><div><div class="card-title">Trainingsaufteilung</div><div class="card-sub">Demo · nach Modalität</div></div></div>
+      <div class="chart-wrap-sm" style="padding-top:8px"><canvas use:chartjs={modalCfg} height="160"></canvas></div>
+      <div style="padding:0 20px 16px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <span class="ml-leg"><i style="background:var(--c-streak)"></i>Laufen — 10.2 h</span>
+        <span class="ml-leg"><i style="background:var(--c-purple)"></i>Kraft — 5.8 h</span>
+        <span class="ml-leg"><i style="background:var(--c-cyan)"></i>Schwimmen — 3.6 h</span>
+        <span class="ml-leg"><i style="background:var(--accent)"></i>Rad — 2.8 h</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <style>
-  .stats {
-    margin-bottom: 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-  .stat-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    align-items: flex-start;
-  }
-  .s-num {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--accent);
-    line-height: 1;
-    text-shadow: var(--glow);
-  }
-  .s-lbl {
-    font-size: 12px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .panel {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px;
-  }
-  .panel h3 {
-    font-size: 15px;
-    margin-bottom: 2px;
-  }
-  .sub {
-    font-size: 12px;
-    display: block;
-    margin-bottom: 16px;
-  }
-  .apex {
-    min-height: 260px;
-  }
-  .ex-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 14px;
-  }
-  .ex-select {
-    width: 100%;
-  }
-  .metric-toggle {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .mt-btn {
-    flex: 1 1 auto;
-    padding: 7px 10px;
-    font-size: 12px;
-    font-weight: 600;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text-muted);
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .mt-btn.active {
-    background: rgba(var(--accent-rgb), 0.12);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-  .chart-meta {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    margin-bottom: 8px;
-  }
-  .cm-current {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--text);
-    line-height: 1;
-  }
-  .cm-delta {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-  .cm-delta.up {
-    color: var(--c-zone2, #5fb87a);
-  }
-  .cm-delta.down {
-    color: var(--c-danger, #e5534b);
-  }
-  .types {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .type-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-  .swatch {
-    width: 11px;
-    height: 11px;
-    border-radius: 3px;
-    flex: 0 0 auto;
-  }
-  .t-label {
-    font-size: 13.5px;
-    font-weight: 600;
-  }
-  .t-count {
-    margin-left: auto;
-    font-size: 12.5px;
-    color: var(--text-muted);
-  }
-  .t-bar {
-    height: 8px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    overflow: hidden;
-  }
-  .t-fill {
-    height: 100%;
-    border-radius: 999px;
-    transition: width 0.3s ease;
-  }
-  @media (max-width: 480px) {
-    .cards {
-      grid-template-columns: 1fr;
-    }
-  }
+  .stats { display: flex; flex-direction: column; gap: 16px; }
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .page-title { font-size: 20px; font-weight: 800; color: var(--text); }
+  .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+  .period-tabs { display: flex; gap: 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; }
+  .period-tab { padding: 5px 14px; border-radius: 5px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
+  .period-tab.active { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-main-side { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+  @media (max-width: 1100px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } .grid-3, .grid-2, .grid-main-side { grid-template-columns: 1fr; } }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .card-head { padding: 16px 20px 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--text); }
+  .card-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .legend { display: flex; gap: 12px; }
+  .lg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
+  .lg i { width: 10px; height: 3px; border-radius: 2px; }
+  .chart-wrap { padding: 16px 20px 20px; }
+  .chart-wrap-sm { padding: 12px 16px 16px; }
+  .empty { padding: 16px 20px; font-size: 13px; color: var(--text-dim); }
+
+  .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; position: relative; overflow: hidden; }
+  .kpi-card::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .kpi-blue::after { background: linear-gradient(90deg, var(--accent), transparent); }
+  .kpi-green::after { background: linear-gradient(90deg, var(--c-success), transparent); }
+  .kpi-orange::after { background: linear-gradient(90deg, var(--c-streak), transparent); }
+  .kpi-purple::after { background: linear-gradient(90deg, var(--c-purple), transparent); }
+  .kpi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); margin-bottom: 8px; }
+  .kpi-value { font-size: 28px; font-weight: 800; line-height: 1; font-feature-settings: "tnum"; }
+  .kpi-blue .kpi-value { color: var(--accent); }
+  .kpi-green .kpi-value { color: var(--c-success); }
+  .kpi-orange .kpi-value { color: var(--c-streak); }
+  .kpi-purple .kpi-value { color: var(--c-purple); }
+  .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+  .kpi-delta { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; margin-top: 4px; }
+  .delta-up { color: var(--c-success); }
+  .delta-down { color: #ef4444; }
+
+  .activity-list { display: flex; flex-direction: column; }
+  .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-icon { width: 34px; height: 34px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+  .activity-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .activity-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .activity-stats { display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap; }
+  .activity-stat { font-size: 11px; color: var(--text-muted); font-family: var(--mono); }
+  .activity-stat span { color: var(--text); font-weight: 600; }
+  .activity-time { font-size: 11px; color: var(--text-dim); white-space: nowrap; margin-left: auto; flex-shrink: 0; }
+
+  .ex-controls { display: flex; gap: 8px; padding: 12px 20px 0; flex-wrap: wrap; }
+  .ex-select { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 12.5px; font-family: var(--font); }
+  .metric-toggle { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px 0; }
+  .mt-btn { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); border-radius: 999px; padding: 4px 11px; font-size: 11.5px; font-weight: 600; cursor: pointer; font-family: var(--font); }
+  .mt-btn.active { background: rgba(var(--accent-rgb), 0.15); border-color: rgba(var(--accent-rgb), 0.4); color: var(--accent); }
+
+  .zone-row { display: flex; flex-direction: column; gap: 8px; }
+  .zone-item { display: flex; align-items: center; gap: 10px; }
+  .zone-label { font-size: 11px; font-weight: 600; width: 64px; flex-shrink: 0; }
+  .zone-bar-wrap { flex: 1; height: 8px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
+  .zone-bar-fill { height: 100%; border-radius: 999px; }
+  .zone-pct { font-size: 11px; font-weight: 700; color: var(--text); font-family: var(--mono); width: 34px; text-align: right; flex-shrink: 0; }
+
+  .pr-list { display: flex; flex-direction: column; }
+  .pr-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; border-bottom: 1px solid var(--border); }
+  .pr-item:last-child { border-bottom: none; }
+  .pr-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .pr-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .pr-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .pr-value { font-size: 14px; font-weight: 800; color: var(--text); font-family: var(--mono); text-align: right; }
+  .pr-delta { font-size: 10px; font-weight: 700; margin-top: 1px; text-align: right; }
+  .pr-badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+  .badge-pr { background: rgba(234,179,8,0.15); color: #eab308; border: 1px solid rgba(234,179,8,0.25); }
+  .badge-new { background: rgba(34,197,94,0.12); color: var(--c-success); border: 1px solid rgba(34,197,94,0.2); }
+
+  .hm-legend { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-dim); }
+  .hm-legend i { width: 10px; height: 10px; border-radius: 2px; }
+  .hm-cell { height: 11px; border-radius: 2px; }
+  .ml-leg { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text-muted); }
+  .ml-leg i { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 </style>
