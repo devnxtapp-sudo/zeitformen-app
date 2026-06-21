@@ -86,6 +86,8 @@
     return `${itemBase} ${active ? itemActive : itemIdle}`;
   }
   const iconClass = "w-[22px] flex-none text-center text-[17px]";
+  const sectionClass =
+    "px-[18px] pt-1 pb-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-dim";
 </script>
 
 <svelte:window
@@ -96,28 +98,9 @@
 
 {#snippet navItems()}
   <nav class="flex flex-col gap-1 px-2">
+    <!-- TRAINING -->
     <div class="flex flex-col gap-1 py-2">
-      {#if ontoggleedit}
-        <button class={navClass(editMode)} onclick={() => { ontoggleedit(); dismiss(); }}>
-          <span class="{iconClass} {editMode ? '' : 'text-ink-muted'}" aria-hidden="true">✎</span>
-          <span>{editMode ? "Bearbeiten beenden" : "Trainingsplan bearbeiten"}</span>
-        </button>
-      {/if}
-      {#if onsettings}
-        <button class={navClass(settingsActive)} onclick={() => { onsettings(); dismiss(); }}>
-          <span class="{iconClass} {settingsActive ? '' : 'text-ink-muted'}" aria-hidden="true">⚙</span>
-          <span>Ziel-Einstellungen</span>
-        </button>
-      {/if}
-      {#if oncreate}
-        <button class={navClass(false)} onclick={() => { oncreate(); dismiss(); }}>
-          <span class="{iconClass} text-ink-muted" aria-hidden="true">＋</span>
-          <span>Neues Training</span>
-        </button>
-      {/if}
-    </div>
-
-    <div class="flex flex-col gap-1 border-t border-line py-2">
+      <span class={sectionClass}>TRAINING</span>
       {#if onhome}
         <button class={navClass(view === "dashboard")} onclick={() => { onhome(); dismiss(); }}>
           <span class="{iconClass} {view === 'dashboard' ? '' : 'text-ink-muted'}" aria-hidden="true">◆</span>
@@ -130,51 +113,34 @@
           <span>Wochenplan</span>
         </button>
       {/if}
-      {#if oncalendar}
-        <button class={navClass(view === "calendar")} onclick={() => { oncalendar(); dismiss(); }}>
-          <span class="{iconClass} {view === 'calendar' ? '' : 'text-ink-muted'}" aria-hidden="true">▦</span>
-          <span>Kalender</span>
-        </button>
-      {/if}
-      {#if onstats}
-        <button class={navClass(view === "stats")} onclick={() => { onstats(); dismiss(); }}>
-          <span class="{iconClass} {view === 'stats' ? '' : 'text-ink-muted'}" aria-hidden="true">▲</span>
-          <span>Statistik</span>
-        </button>
-      {/if}
-      {#if onbody}
-        <button class={navClass(view === "body")} onclick={() => { onbody(); dismiss(); }}>
-          <span class="{iconClass} {view === 'body' ? '' : 'text-ink-muted'}" aria-hidden="true">◉</span>
-          <span>Körperanalyse</span>
-        </button>
-      {/if}
-      {#if onpace}
-        <button class={navClass(view === "pace")} onclick={() => { onpace(); dismiss(); }}>
-          <span class="{iconClass} {view === 'pace' ? '' : 'text-ink-muted'}" aria-hidden="true">◷</span>
-          <span>Pace-Rechner</span>
-        </button>
-      {/if}
-      {#if ontimer}
-        <button class={navClass(view === "timer")} onclick={() => { ontimer(); dismiss(); }}>
-          <span class="{iconClass} {view === 'timer' ? '' : 'text-ink-muted'}" aria-hidden="true">◴</span>
-          <span>Intervall-Timer</span>
-        </button>
-      {/if}
-      {#if onnutrition}
-        <button class={navClass(view === "nutrition")} onclick={() => { onnutrition(); dismiss(); }}>
-          <span class="{iconClass} {view === 'nutrition' ? '' : 'text-ink-muted'}" aria-hidden="true">▢</span>
-          <span>Ernährungsplan</span>
+      {#if oncreate}
+        <button class={navClass(false)} onclick={() => { oncreate(); dismiss(); }}>
+          <span class="{iconClass} text-ink-muted" aria-hidden="true">＋</span>
+          <span>Neues Training</span>
         </button>
       {/if}
     </div>
 
-    {#if onracenutrition || onpacklist}
+    <!-- PLANUNG -->
+    {#if ontoggleedit || oncalendar || onracenutrition || onpacklist}
       <div class="flex flex-col gap-1 border-t border-line py-2">
-        <span class="px-[18px] pt-1 pb-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-dim">Wettkampftag</span>
+        <span class={sectionClass}>PLANUNG</span>
+        {#if ontoggleedit}
+          <button class={navClass(editMode)} onclick={() => { ontoggleedit(); dismiss(); }}>
+            <span class="{iconClass} {editMode ? '' : 'text-ink-muted'}" aria-hidden="true">✎</span>
+            <span>{editMode ? "Bearbeiten beenden" : "Training bearbeiten"}</span>
+          </button>
+        {/if}
+        {#if oncalendar}
+          <button class={navClass(view === "calendar")} onclick={() => { oncalendar(); dismiss(); }}>
+            <span class="{iconClass} {view === 'calendar' ? '' : 'text-ink-muted'}" aria-hidden="true">▦</span>
+            <span>Kalender</span>
+          </button>
+        {/if}
         {#if onracenutrition}
           <button class={navClass(view === "racenutrition")} onclick={() => { onracenutrition(); dismiss(); }}>
             <span class="{iconClass} {view === 'racenutrition' ? '' : 'text-ink-muted'}" aria-hidden="true">◇</span>
-            <span>Nutrition-Strategie</span>
+            <span>Nutrition</span>
           </button>
         {/if}
         {#if onpacklist}
@@ -186,7 +152,59 @@
       </div>
     {/if}
 
+    <!-- ANALYSE -->
+    {#if onstats || onbody}
+      <div class="flex flex-col gap-1 border-t border-line py-2">
+        <span class={sectionClass}>ANALYSE</span>
+        {#if onstats}
+          <button class={navClass(view === "stats")} onclick={() => { onstats(); dismiss(); }}>
+            <span class="{iconClass} {view === 'stats' ? '' : 'text-ink-muted'}" aria-hidden="true">▲</span>
+            <span>Statistik</span>
+          </button>
+        {/if}
+        {#if onbody}
+          <button class={navClass(view === "body")} onclick={() => { onbody(); dismiss(); }}>
+            <span class="{iconClass} {view === 'body' ? '' : 'text-ink-muted'}" aria-hidden="true">◉</span>
+            <span>Körperanalyse</span>
+          </button>
+        {/if}
+      </div>
+    {/if}
+
+    <!-- TOOLS -->
+    {#if onpace || ontimer || onnutrition}
+      <div class="flex flex-col gap-1 border-t border-line py-2">
+        <span class={sectionClass}>TOOLS</span>
+        {#if onpace}
+          <button class={navClass(view === "pace")} onclick={() => { onpace(); dismiss(); }}>
+            <span class="{iconClass} {view === 'pace' ? '' : 'text-ink-muted'}" aria-hidden="true">◷</span>
+            <span>Pace-Rechner</span>
+          </button>
+        {/if}
+        {#if ontimer}
+          <button class={navClass(view === "timer")} onclick={() => { ontimer(); dismiss(); }}>
+            <span class="{iconClass} {view === 'timer' ? '' : 'text-ink-muted'}" aria-hidden="true">◴</span>
+            <span>Intervall-Timer</span>
+          </button>
+        {/if}
+        {#if onnutrition}
+          <button class={navClass(view === "nutrition")} onclick={() => { onnutrition(); dismiss(); }}>
+            <span class="{iconClass} {view === 'nutrition' ? '' : 'text-ink-muted'}" aria-hidden="true">▢</span>
+            <span>Ernährungsplan</span>
+          </button>
+        {/if}
+      </div>
+    {/if}
+
+    <!-- SYSTEM -->
     <div class="flex flex-col gap-1 border-t border-line py-2">
+      <span class={sectionClass}>SYSTEM</span>
+      {#if onsettings}
+        <button class={navClass(settingsActive)} onclick={() => { onsettings(); dismiss(); }}>
+          <span class="{iconClass} {settingsActive ? '' : 'text-ink-muted'}" aria-hidden="true">◎</span>
+          <span>Ziel-Einstellungen</span>
+        </button>
+      {/if}
       {#if onappsettings}
         <button class={navClass(view === "account" || view === "garmin")} onclick={() => onappsettings()}>
           <span class="{iconClass} {view === 'account' || view === 'garmin' ? '' : 'text-ink-muted'}" aria-hidden="true">⚙</span>
