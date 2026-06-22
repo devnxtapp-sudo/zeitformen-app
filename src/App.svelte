@@ -30,6 +30,7 @@
   import PaceCalc from "./lib/components/PaceCalc.svelte";
   import IntervalTimer from "./lib/components/IntervalTimer.svelte";
   import AuthScreen from "./lib/components/AuthScreen.svelte";
+  import TopSearch from "./lib/components/TopSearch.svelte";
   import { auth, checkSession } from "./lib/auth.svelte.js";
 
   // load local state first, then resolve session + sync. The .catch guard makes
@@ -51,6 +52,7 @@
   let creatingGoal = $state(false);
   let profileOpen = $state(false);
   let settingsOpen = $state(false);
+  let bellOpen = $state(false);
 
   // Wizard done -> jump to the week view in edit mode so the user fills the plan.
   function onWizardCreated() {
@@ -149,44 +151,21 @@
           {/each}
         </select>
       {/if}
+      {#if goal}<TopSearch {goal} onselect={(v) => setView(v)} />{/if}
+    </div>
+
+    <div class="flex flex-none items-center gap-2.5">
       {#if goal?.targetDate && countdown !== null}
         <span
           class="inline-flex h-[34px] flex-none items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-card px-[13px] text-[13.5px] font-bold {countdown < 0 ? 'text-ink-muted' : 'text-[var(--accent)]'}"
           title={`${fmtDate(goal.targetDate)} · bis zum Ziel`}
         >
-          <svg
-            class="flex-none"
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <line
-              x1="5"
-              y1="2.5"
-              x2="5"
-              y2="21.5"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
+          <svg class="flex-none" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="5" y1="2.5" x2="5" y2="21.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
             <g fill="currentColor">
-              <rect x="6" y="3" width="4" height="3" />
-              <rect x="14" y="3" width="4" height="3" />
-              <rect x="10" y="6" width="4" height="3" />
-              <rect x="6" y="9" width="4" height="3" />
-              <rect x="14" y="9" width="4" height="3" />
+              <rect x="6" y="3" width="4" height="3" /><rect x="14" y="3" width="4" height="3" /><rect x="10" y="6" width="4" height="3" /><rect x="6" y="9" width="4" height="3" /><rect x="14" y="9" width="4" height="3" />
             </g>
-            <rect
-              x="6"
-              y="3"
-              width="12"
-              height="9"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1"
-              opacity="0.5"
-            />
+            <rect x="6" y="3" width="12" height="9" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5" />
           </svg>
           {#if countdown > 0}
             <span class="[text-shadow:var(--glow)]">{countdown}</span>
@@ -198,6 +177,31 @@
           {/if}
         </span>
       {/if}
+
+      <div class="relative">
+        <button
+          class="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-[7px] border border-line bg-card text-ink-muted hover:border-line-strong hover:text-ink"
+          onclick={() => (bellOpen = !bellOpen)}
+          aria-label="Benachrichtigungen"
+          title="Benachrichtigungen"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
+        </button>
+        {#if bellOpen}
+          <div class="absolute right-0 top-[calc(100%+6px)] z-50 whitespace-nowrap rounded-lg border border-line bg-card px-3 py-2 text-xs text-ink-muted shadow-[0_12px_32px_rgba(0,0,0,0.45)]">
+            Keine neuen Benachrichtigungen
+          </div>
+        {/if}
+      </div>
+
+      <button
+        class="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-[7px] border border-line bg-card text-ink-muted hover:border-line-strong hover:text-ink"
+        onclick={() => setView("account")}
+        aria-label="Konto & Einstellungen"
+        title="Konto & Einstellungen"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 1 0-16 0" /></svg>
+      </button>
     </div>
   </header>
 
