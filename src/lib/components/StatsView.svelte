@@ -12,7 +12,7 @@
   } from "../stats.js";
   import { weekDates, todayKey, parseYmd, ymd, lastNWeekMondays, weekDatesFrom, dayKeyOf } from "../dateutil.js";
 
-  let { goal } = $props();
+  let { goal, initialExercise = null } = $props();
 
   const week = weekDates();
   const today = todayKey();
@@ -170,6 +170,16 @@
   let exercises = $derived(exerciseNames(goal, dayFilter));
   let selectedExercise = $state(null);
   let metric = $state("topWeight");
+  let progEl = $state(null);
+  let appliedInit = "";
+  // preselect an exercise that arrived via the global search (once per value)
+  $effect(() => {
+    if (initialExercise && initialExercise !== appliedInit && exercises.includes(initialExercise)) {
+      appliedInit = initialExercise;
+      selectedExercise = initialExercise;
+      requestAnimationFrame(() => progEl?.scrollIntoView({ behavior: "smooth", block: "center" }));
+    }
+  });
   $effect(() => {
     if (exercises.length && !exercises.includes(selectedExercise)) selectedExercise = exercises[0];
     else if (!exercises.length) selectedExercise = null;
@@ -392,7 +402,7 @@
   </div>
 
   <!-- Übungs-Fortschritt (real) -->
-  <div class="card">
+  <div class="card" bind:this={progEl}>
     <div class="card-head"><div><div class="card-title">Übungs-Fortschritt</div><div class="card-sub">Verlauf nach Trainingstag + Übung</div></div></div>
     {#if exercises.length}
       <div class="ex-controls">

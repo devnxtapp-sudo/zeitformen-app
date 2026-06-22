@@ -53,6 +53,7 @@
   let profileOpen = $state(false);
   let settingsOpen = $state(false);
   let bellOpen = $state(false);
+  let statsExercise = $state(null); // search-driven exercise preselect for StatsView
 
   // Wizard done -> jump to the week view in edit mode so the user fills the plan.
   function onWizardCreated() {
@@ -151,7 +152,7 @@
           {/each}
         </select>
       {/if}
-      {#if goal}<TopSearch {goal} onselect={(v) => setView(v)} />{/if}
+      {#if goal}<TopSearch {goal} onselect={(v, payload) => { statsExercise = payload?.exercise ?? null; setView(v); }} />{/if}
     </div>
 
     <div class="flex flex-none items-center gap-2.5">
@@ -232,7 +233,7 @@
       <button class="back-btn" onclick={() => setView("dashboard")} aria-label="Zurück">‹</button>
       <h2>Statistik</h2>
     </div>
-    <StatsView {goal} />
+    <StatsView {goal} initialExercise={statsExercise} />
   {:else if app.view === "week" && goal}
     <WeekPlan
       {goal}

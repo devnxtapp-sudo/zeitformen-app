@@ -30,7 +30,7 @@
     }
     for (const name of exerciseNames(goal)) {
       if (name.toLowerCase().includes(query))
-        out.push({ group: "Übungen", label: name, view: "stats" });
+        out.push({ group: "Übungen", label: name, view: "stats", exercise: name });
     }
     const seen = new Set();
     for (const wd of WEEKDAYS) {
@@ -53,7 +53,7 @@
 
   function choose(r) {
     if (!r) return;
-    onselect?.(r.view);
+    onselect?.(r.view, r.exercise ? { exercise: r.exercise } : null);
     q = "";
     open = false;
   }
