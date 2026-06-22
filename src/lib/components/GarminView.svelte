@@ -1,7 +1,7 @@
 <script>
   import { api } from "../api.js";
   import { activeGoal, updateLogEntry, isCompleted } from "../store.svelte.js";
-  import { weekDates, dayKeyOf } from "../dateutil.js";
+  import { weekDates, dayKeyOf, parseYmd, ymd } from "../dateutil.js";
   import { Button, Input, Label, Helper } from "flowbite-svelte";
 
   let { onback } = $props();
@@ -125,6 +125,116 @@
       busy = false;
     }
   }
+
+  // ---- full history import (all past activities, any day) ----
+  let histBusy = $state(false);
+  let histProgress = $state("");
+  let histError = $state("");
+  let histResult = $state("");
+
+  // German label + colour from an activity type — used for days without a plan.
+  function actTypeMeta(type) {
+    const t = String(type || "").toLowerCase();
+    if (/run/.test(t)) return { label: "Lauf", color: "#5fb87a" };
+    if (/ride|bike|cycl|virtual/.test(t)) return { label: "Radfahren", color: "#3b82f6" };
+    if (/swim/.test(t)) return { label: "Schwimmen", color: "#06b6d4" };
+    if (/weight|strength|workout/.test(t)) return { label: "Kraft", color: "#f0a830" };
+    if (/walk|hike/.test(t)) return { label: "Gehen", color: "#a78bfa" };
+    if (/row/.test(t)) return { label: "Rudern", color: "#22d3ee" };
+    return { label: type || "Training", color: "#9aa0a6" };
+  }
+
+  function shiftYmd(dateStr, { months = 0, days = 0 }) {
+    const d = parseYmd(dateStr);
+    if (months) d.setMonth(d.getMonth() + months);
+    if (days) d.setDate(d.getDate() + days);
+    return ymd(d);
+  }
+
+  // Reuse the slot already holding this activity (idempotent re-import), else the
+  // lowest free slot — so multiple activities on one day don't clobber each other.
+  function slotForActivity(g, a) {
+    const log = g.log ?? {};
+    const used = new Set();
+    for (let s = 0; s < 40; s++) {
+      const e = log[s > 0 ? `${a.date}#${s}` : a.date];
+      if (!e) continue;
+      if (e.actId === a.id) return s;
+      used.add(s);
+    }
+    let s = 0;
+    while (used.has(s)) s++;
+    return s;
+  }
+
+  async function importActivity(a) {
+    const dk = dayKeyOf(a.date);
+    const slot = slotForActivity(goal, a);
+    const patch = { metrics: metricsFor(a), note: a.name || "", actId: a.id };
+    if (a.hrZoneTimes) patch.hrZones = a.hrZoneTimes;
+    if (a.type) patch.actType = a.type;
+    if (a.durationSec != null) patch.durationSec = a.durationSec;
+    // unplanned / rest day → give the entry a label from the sport
+    const planned = goal.days?.[dk];
+    if (!planned || planned.isRest || !planned.typeId) {
+      const m = actTypeMeta(a.type);
+      patch.typeLabel = m.label;
+      patch.typeColor = m.color;
+    }
+    if (/run/i.test(a.type || "") && a.distanceKm > 0) {
+      try {
+        const { bestEfforts } = await api.intervalsBestEfforts(a.id);
+        if (bestEfforts && Object.keys(bestEfforts).length) patch.bestEfforts = bestEfforts;
+      } catch {
+        /* best efforts are optional */
+      }
+    }
+    updateLogEntry(goal.id, a.date, patch, dk, slot);
+  }
+
+  async function importHistory() {
+    histError = "";
+    histResult = "";
+    if (!goal) {
+      histError = "Kein aktives Ziel.";
+      return;
+    }
+    histBusy = true;
+    let imported = 0;
+    let runs = 0;
+    try {
+      let newest = ymd(new Date());
+      const FLOOR = "2008-01-01";
+      let emptyStreak = 0;
+      // walk backwards in 6-month windows until the history runs dry
+      while (emptyStreak < 3) {
+        let oldest = shiftYmd(newest, { months: -6 });
+        if (oldest < FLOOR) oldest = FLOOR;
+        const { activities } = await api.intervalsActivities(oldest, newest);
+        const list = (activities || []).filter((a) => a.date && a.date >= oldest && a.date <= newest);
+        if (!list.length) {
+          emptyStreak++;
+        } else {
+          emptyStreak = 0;
+          list.sort((a, b) => (a.date < b.date ? 1 : -1));
+          for (const a of list) {
+            await importActivity(a);
+            imported++;
+            if (/run/i.test(a.type || "")) runs++;
+            histProgress = `${imported} importiert … (bis ${oldest})`;
+          }
+        }
+        if (oldest === FLOOR) break;
+        newest = shiftYmd(oldest, { days: -1 });
+      }
+      histResult = `${imported} Aktivitäten importiert (${runs} Läufe mit Bestzeiten).`;
+    } catch (e) {
+      histError = (e.message || "Import fehlgeschlagen.") + " Bereits importierte Einheiten bleiben erhalten.";
+    } finally {
+      histBusy = false;
+      histProgress = "";
+    }
+  }
 </script>
 
 <div class="subpage-head">
@@ -155,10 +265,17 @@
       Verbunden — Athlete-ID <strong>{status.athleteId}</strong>
     </div>
 
-    <Button color="primary" class="mt-2.5 w-full font-semibold text-[var(--on-accent)]" onclick={syncWeek} disabled={busy}>
+    <Button color="primary" class="mt-2.5 w-full font-semibold text-[var(--on-accent)]" onclick={syncWeek} disabled={busy || histBusy}>
       {busy ? "Synchronisiere …" : "Diese Woche synchronisieren"}
     </Button>
-    <Button color="alternative" class="mt-2.5 w-full border-transparent bg-transparent" onclick={disconnect} disabled={busy}>
+    <Button color="alternative" class="mt-2.5 w-full" onclick={importHistory} disabled={busy || histBusy}>
+      {histBusy ? (histProgress || "Importiere …") : "Alle vergangenen Aktivitäten importieren"}
+    </Button>
+    <p class="mt-1.5 text-xs leading-relaxed text-ink-dim">
+      Holt deine gesamte intervals.icu-Historie (auch ungeplante Tage) inkl. Teilstrecken-Bestzeiten.
+      Kann je nach Umfang etwas dauern; mehrfaches Ausführen erzeugt keine Duplikate.
+    </p>
+    <Button color="alternative" class="mt-2.5 w-full border-transparent bg-transparent" onclick={disconnect} disabled={busy || histBusy}>
       Verbindung trennen
     </Button>
   {:else}
@@ -177,4 +294,6 @@
 
   {#if error}<Helper class="mt-3.5 text-sm" color="red">{error}</Helper>{/if}
   {#if result}<Helper class="mt-3.5 text-sm text-zone2">{result}</Helper>{/if}
+  {#if histError}<Helper class="mt-3.5 text-sm" color="red">{histError}</Helper>{/if}
+  {#if histResult}<Helper class="mt-3.5 text-sm text-zone2">{histResult}</Helper>{/if}
 </section>
