@@ -33,4 +33,8 @@ const app = mount(App, {
   target: document.getElementById('app'),
 })
 
+// App mounted fine → clear the one-shot self-heal guard from index.html so a
+// future stale-shell can recover again.
+try { sessionStorage.removeItem('rxz-healed') } catch { /* ignore */ }
+
 export default app

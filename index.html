@@ -32,6 +32,33 @@
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      // Self-heal: if a stale service worker serves an outdated shell that
+      // references deleted asset chunks, the app never mounts (#app stays empty
+      // → blank page). Detect that and recover once by dropping SW + caches and
+      // reloading, so a new deploy can never leave the PWA permanently broken.
+      (function () {
+        setTimeout(function () {
+          var app = document.getElementById("app");
+          if (!app || app.childElementCount > 0) return;
+          if (sessionStorage.getItem("rxz-healed")) return;
+          sessionStorage.setItem("rxz-healed", "1");
+          var done = function () { location.reload(); };
+          var clearCaches = function () {
+            if (window.caches && caches.keys) {
+              caches.keys().then(function (ks) {
+                return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+              }).then(done, done);
+            } else { done(); }
+          };
+          if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+            navigator.serviceWorker.getRegistrations().then(function (rs) {
+              return Promise.all(rs.map(function (r) { return r.unregister(); }));
+            }).then(clearCaches, clearCaches);
+          } else { clearCaches(); }
+        }, 5000);
+      })();
+    </script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
