@@ -40,7 +40,13 @@
       (function () {
         setTimeout(function () {
           var app = document.getElementById("app");
-          if (!app || app.childElementCount > 0) return;
+          var mounted = app && app.childElementCount > 0;
+          var cssOk = false;
+          try {
+            cssOk = !!getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+          } catch (e) {}
+          // healthy = app mounted AND theme stylesheet applied
+          if (mounted && cssOk) return;
           if (sessionStorage.getItem("rxz-healed")) return;
           sessionStorage.setItem("rxz-healed", "1");
           var done = function () { location.reload(); };

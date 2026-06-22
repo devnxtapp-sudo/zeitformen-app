@@ -33,8 +33,13 @@ const app = mount(App, {
   target: document.getElementById('app'),
 })
 
-// App mounted fine → clear the one-shot self-heal guard from index.html so a
-// future stale-shell can recover again.
-try { sessionStorage.removeItem('rxz-healed') } catch { /* ignore */ }
+// Clear the one-shot self-heal guard only once the app is fully healthy
+// (mounted AND theme CSS applied), so a stale/unstyled shell can't trigger a
+// reload loop but a future stale-shell can still recover.
+try {
+  if (getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()) {
+    sessionStorage.removeItem('rxz-healed')
+  }
+} catch { /* ignore */ }
 
 export default app
