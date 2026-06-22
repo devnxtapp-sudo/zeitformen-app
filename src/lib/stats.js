@@ -153,11 +153,11 @@ export function exerciseProgress(goal, name, metric, dayKey = null) {
 // Endurance distance PRs come from synced intervals.icu activities (best time
 // for a standard distance among activities that essentially ARE that distance).
 const PR_DISTANCES = [
-  { km: 1, label: "1 km", tol: 0.08 },
-  { km: 5, label: "5 km", tol: 0.04 },
-  { km: 10, label: "10 km", tol: 0.04 },
-  { km: 21.0975, label: "Halbmarathon", tol: 0.03 },
-  { km: 42.195, label: "Marathon", tol: 0.03 },
+  { m: 1000, label: "1 km", tol: 0.08 },
+  { m: 5000, label: "5 km", tol: 0.04 },
+  { m: 10000, label: "10 km", tol: 0.04 },
+  { m: 21097, label: "Halbmarathon", tol: 0.03 },
+  { m: 42195, label: "Marathon", tol: 0.03 },
 ];
 
 function metricNumOf(e, re) {
@@ -215,23 +215,35 @@ export function personalRecords(goal, todayStr, limit = 6) {
   strength.sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
   recs.push(...strength.slice(0, 3));
 
-  // endurance: distance best-times from synced runs
-  const acts = [];
+  // endurance: distance best-times — intra-activity best efforts (from synced
+  // streams, keyed by exact metres) plus whole-activity matches as fallback.
+  const cand = new Map(); // metres -> [{ sec, date }]
+  const push = (m, sec, date) => {
+    if (!(sec > 0)) return;
+    if (!cand.has(m)) cand.set(m, []);
+    cand.get(m).push({ sec, date });
+  };
   for (const [date, e] of Object.entries(log)) {
+    const d = baseDate(date);
+    if (e.bestEfforts && typeof e.bestEfforts === "object") {
+      for (const dd of PR_DISTANCES) push(dd.m, Number(e.bestEfforts[dd.m]), d);
+    }
     const km = metricNumOf(e, /distanz/i);
     const sec = Number(e.durationSec) || (metricNumOf(e, /dauer/i) ?? 0) * 60;
-    if (!(km > 0) || !(sec > 0)) continue;
     const t = String(e.actType ?? "").toLowerCase();
-    if (t && !/run/.test(t)) continue; // unknown type → assume run
-    acts.push({ date: baseDate(date), km, sec });
+    if (km > 0 && sec > 0 && (!t || /run/.test(t))) {
+      for (const dd of PR_DISTANCES) {
+        if (Math.abs(km * 1000 - dd.m) <= dd.m * dd.tol) push(dd.m, sec, d);
+      }
+    }
   }
-  for (const d of PR_DISTANCES) {
-    const m = acts.filter((a) => Math.abs(a.km - d.km) <= d.km * d.tol).sort((x, y) => x.sec - y.sec);
-    if (!m.length) continue;
+  for (const dd of PR_DISTANCES) {
+    const list = (cand.get(dd.m) ?? []).sort((a, b) => a.sec - b.sec);
+    if (!list.length) continue;
     recs.push({
-      kind: "run", emoji: "🏃", name: d.label, date: m[0].date,
-      value: fmtDuration(m[0].sec),
-      delta: m[1] && m[1].sec > m[0].sec ? `↓ ${fmtGap(m[1].sec - m[0].sec)}` : null,
+      kind: "run", emoji: "🏃", name: dd.label, date: list[0].date,
+      value: fmtDuration(list[0].sec),
+      delta: list[1] && list[1].sec > list[0].sec ? `↓ ${fmtGap(list[1].sec - list[0].sec)}` : null,
     });
   }
 

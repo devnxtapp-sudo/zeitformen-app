@@ -49,4 +49,6 @@ export const api = {
   intervalsDisconnect: () => call("intervals", { method: "DELETE" }),
   intervalsActivities: (oldest, newest) =>
     call(`intervals/activities?oldest=${encodeURIComponent(oldest)}&newest=${encodeURIComponent(newest)}`),
+  intervalsBestEfforts: (id) =>
+    call(`intervals/best-efforts?id=${encodeURIComponent(id)}`),
 };

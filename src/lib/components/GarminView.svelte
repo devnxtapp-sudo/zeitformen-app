@@ -103,6 +103,15 @@
         if (a.hrZoneTimes) patch.hrZones = a.hrZoneTimes;
         if (a.type) patch.actType = a.type;
         if (a.durationSec != null) patch.durationSec = a.durationSec;
+        // intra-activity distance best efforts (optional; only for runs)
+        if (a.id && /run/i.test(a.type || "") && a.distanceKm > 0) {
+          try {
+            const { bestEfforts } = await api.intervalsBestEfforts(a.id);
+            if (bestEfforts && Object.keys(bestEfforts).length) patch.bestEfforts = bestEfforts;
+          } catch {
+            /* best efforts are optional — ignore failures */
+          }
+        }
         updateLogEntry(goal.id, a.date, patch, dk);
         imported++;
       }
