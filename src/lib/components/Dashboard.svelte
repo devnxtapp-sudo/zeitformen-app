@@ -127,6 +127,63 @@
   let compCfg = $derived({ type: "line", data: { labels: weekLabels, datasets: [{ data: compSeries, borderColor: "#22c55e", backgroundColor: "rgba(34,197,94,0.1)", borderWidth: 2, pointRadius: 0, tension: 0.4, fill: true }] }, options: miniOpts });
 
   let chartKey = $derived(weekCounts.join(",") + "|" + last7.join(","));
+
+  // --- recent activities feed (real, from synced intervals.icu data) ---
+  function metricOf(e, re) {
+    for (const [k, v] of Object.entries(e?.metrics ?? {})) {
+      if (re.test(k)) {
+        const n = Number(String(v).replace(",", ".").replace(/[^\d.]/g, ""));
+        if (Number.isFinite(n)) return n;
+      }
+    }
+    return null;
+  }
+  function sportMeta(type) {
+    const t = String(type || "").toLowerCase();
+    if (/run/.test(t)) return { label: "Lauf", color: "var(--c-streak)", emoji: "🏃" };
+    if (/ride|bike|cycl|virtual/.test(t)) return { label: "Rad", color: "var(--accent)", emoji: "🚴" };
+    if (/swim/.test(t)) return { label: "Schwimmen", color: "var(--c-cyan)", emoji: "🏊" };
+    if (/weight|strength|workout/.test(t)) return { label: "Kraft", color: "#f0a830", emoji: "🏋️" };
+    if (/walk|hike/.test(t)) return { label: "Gehen", color: "var(--c-purple)", emoji: "🚶" };
+    return { label: type || "", color: "var(--c-cyan)", emoji: "🔥" };
+  }
+  function fmtDur(sec) {
+    sec = Math.round(sec);
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    const p = (n) => String(n).padStart(2, "0");
+    return h > 0 ? `${h}:${p(m)}:${p(s)}` : `${m}:${p(s)}`;
+  }
+  function fmtPace(minPerKm) {
+    const m = Math.floor(minPerKm), s = Math.round((minPerKm - m) * 60);
+    return `${m}:${String(s).padStart(2, "0")}/km`;
+  }
+  let activities = $derived.by(() => {
+    const log = goal.log ?? {};
+    return Object.entries(log)
+      .map(([k, e]) => ({ key: k, date: k.split("#")[0], ...e }))
+      .filter((e) => metricOf(e, /distanz/i) != null || e.durationSec != null || metricOf(e, /dauer/i) != null)
+      .sort((a, b) => (a.date < b.date ? 1 : -1))
+      .slice(0, 5)
+      .map((e) => {
+        const km = metricOf(e, /distanz/i);
+        const sec = Number(e.durationSec) || (metricOf(e, /dauer/i) ?? 0) * 60;
+        const hf = metricOf(e, /puls|hf/i);
+        const sp = sportMeta(e.actType);
+        return {
+          key: e.key,
+          name: e.note || e.typeLabel || sp.label || "Training",
+          type: sp.label || e.typeLabel || "",
+          color: e.typeColor || sp.color,
+          emoji: sp.emoji,
+          dateLabel: parseYmd(e.date).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long" }),
+          dist: km > 0 ? `${km} km` : null,
+          dur: sec > 0 ? fmtDur(sec) : null,
+          pace: km > 0 && sec > 0 ? fmtPace(sec / 60 / km) : null,
+          hf: hf > 0 ? `${Math.round(hf)} bpm` : null,
+          done: !!e.done,
+        };
+      });
+  });
 </script>
 
 <div class="dash">
@@ -275,6 +332,34 @@
       <div class="mini-chart">{#key chartKey}<canvas use:chartjs={compCfg}></canvas>{/key}</div>
     </div>
   </div>
+
+  <!-- Letzte Aktivitäten (Intervals.icu) -->
+  {#if activities.length}
+    <div class="card">
+      <div class="act-head">
+        <div>
+          <div class="card-title">Letzte Aktivitäten</div>
+          <div class="act-sub"><span class="iv-badge">↻ intervals.icu</span></div>
+        </div>
+        {#if onnav}<div class="card-action" onclick={() => onnav("stats")}>Alle Aktivitäten →</div>{/if}
+      </div>
+      {#each activities as a (a.key)}
+        <div class="act-item" class:clickable={!!onnav} onclick={() => onnav?.("stats")}>
+          <div class="act-icon" style="background:color-mix(in srgb, {a.color} 16%, transparent);color:{a.color}">{a.emoji}</div>
+          <div class="act-main">
+            <div class="session-name">{a.name}</div>
+            <div class="session-meta">{a.dateLabel}{#if a.type} · {a.type}{/if}</div>
+          </div>
+          <div class="act-stats">
+            {#if a.dist}<div class="act-stat"><div class="act-stat-v">{a.dist}</div>{#if a.dur}<div class="act-stat-l">{a.dur}</div>{/if}</div>{/if}
+            {#if a.pace}<div class="act-stat"><div class="act-stat-v" style="color:var(--c-streak)">{a.pace}</div><div class="act-stat-l">Ø Pace</div></div>{/if}
+            {#if a.hf}<div class="act-stat"><div class="act-stat-v" style="color:var(--red)">{a.hf}</div><div class="act-stat-l">Ø HF</div></div>{/if}
+            {#if a.done}<span class="act-done">✓ Erledigt</span>{/if}
+          </div>
+        </div>
+      {/each}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -358,4 +443,24 @@
   .mini-value { font-size: 26px; font-weight: 800; line-height: 1; font-feature-settings: "tnum"; }
   .mini-delta { margin-top: 4px; }
   .mini-chart { width: 100px; height: 52px; flex-shrink: 0; }
+
+  /* recent activities feed */
+  .act-head { padding: 14px 20px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .act-sub { margin-top: 5px; }
+  .iv-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: var(--c-cyan); background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2); border-radius: 999px; padding: 2px 8px; }
+  .act-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  .act-item:last-child { border-bottom: none; }
+  .act-item.clickable { cursor: pointer; }
+  .act-item.clickable:hover { background: var(--card-hover); }
+  .act-icon { width: 36px; height: 36px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; }
+  .act-main { flex: 1; min-width: 0; }
+  .act-stats { display: flex; gap: 16px; align-items: center; flex-shrink: 0; }
+  .act-stat { text-align: right; }
+  .act-stat-v { font-size: 13px; font-weight: 700; color: var(--text); font-family: var(--mono); }
+  .act-stat-l { font-size: 10px; color: var(--text-muted); }
+  .act-done { display: inline-flex; align-items: center; gap: 5px; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.2); border-radius: 999px; padding: 3px 10px; font-size: 10px; font-weight: 700; color: var(--c-success); white-space: nowrap; }
+  @media (max-width: 720px) {
+    .act-stats { gap: 10px; }
+    .act-stat:not(:first-child), .act-done { display: none; }
+  }
 </style>
