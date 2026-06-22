@@ -233,7 +233,7 @@
       <button class="back-btn" onclick={() => setView("dashboard")} aria-label="Zurück">‹</button>
       <h2>Statistik</h2>
     </div>
-    <StatsView {goal} initialExercise={statsExercise} />
+    <StatsView {goal} initialExercise={statsExercise} onsync={() => setView("garmin")} />
   {:else if app.view === "week" && goal}
     <WeekPlan
       {goal}

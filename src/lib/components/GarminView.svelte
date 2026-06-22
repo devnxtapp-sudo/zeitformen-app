@@ -75,6 +75,32 @@
     return m;
   }
 
+  // Build the log-entry patch for a synced activity (metrics + rich detail).
+  function activityPatch(a) {
+    const patch = { metrics: metricsFor(a), note: a.name || "" };
+    if (a.id != null) patch.actId = a.id;
+    if (a.hrZoneTimes) patch.hrZones = a.hrZoneTimes;
+    if (a.type) patch.actType = a.type;
+    if (a.durationSec != null) patch.durationSec = a.durationSec;
+    const iv = {};
+    const extra = { maxHr: a.maxHr, cadence: a.cadence, elevation: a.elevation, load: a.load, trimp: a.trimp, intensity: a.intensity, ctl: a.ctl, atl: a.atl, calories: a.calories };
+    for (const [k, v] of Object.entries(extra)) if (v != null) iv[k] = v;
+    if (Object.keys(iv).length) patch.iv = iv;
+    return patch;
+  }
+
+  // Fetch intra-activity best efforts for runs (optional; ignore failures).
+  async function addBestEfforts(patch, a) {
+    if (a.id && /run/i.test(a.type || "") && a.distanceKm > 0) {
+      try {
+        const { bestEfforts } = await api.intervalsBestEfforts(a.id);
+        if (bestEfforts && Object.keys(bestEfforts).length) patch.bestEfforts = bestEfforts;
+      } catch {
+        /* best efforts are optional */
+      }
+    }
+  }
+
   async function syncWeek() {
     error = "";
     result = "";
@@ -98,20 +124,8 @@
         // skip rest days, unplanned days and already-logged days
         if (!day || day.isRest) continue;
         if (isCompleted(goal, a.date)) continue;
-        const metrics = metricsFor(a);
-        const patch = { metrics, note: a.name || "" };
-        if (a.hrZoneTimes) patch.hrZones = a.hrZoneTimes;
-        if (a.type) patch.actType = a.type;
-        if (a.durationSec != null) patch.durationSec = a.durationSec;
-        // intra-activity distance best efforts (optional; only for runs)
-        if (a.id && /run/i.test(a.type || "") && a.distanceKm > 0) {
-          try {
-            const { bestEfforts } = await api.intervalsBestEfforts(a.id);
-            if (bestEfforts && Object.keys(bestEfforts).length) patch.bestEfforts = bestEfforts;
-          } catch {
-            /* best efforts are optional — ignore failures */
-          }
-        }
+        const patch = activityPatch(a);
+        await addBestEfforts(patch, a);
         updateLogEntry(goal.id, a.date, patch, dk);
         imported++;
       }
@@ -170,10 +184,7 @@
   async function importActivity(a) {
     const dk = dayKeyOf(a.date);
     const slot = slotForActivity(goal, a);
-    const patch = { metrics: metricsFor(a), note: a.name || "", actId: a.id };
-    if (a.hrZoneTimes) patch.hrZones = a.hrZoneTimes;
-    if (a.type) patch.actType = a.type;
-    if (a.durationSec != null) patch.durationSec = a.durationSec;
+    const patch = activityPatch(a);
     // unplanned / rest day → give the entry a label from the sport
     const planned = goal.days?.[dk];
     if (!planned || planned.isRest || !planned.typeId) {
@@ -181,14 +192,7 @@
       patch.typeLabel = m.label;
       patch.typeColor = m.color;
     }
-    if (/run/i.test(a.type || "") && a.distanceKm > 0) {
-      try {
-        const { bestEfforts } = await api.intervalsBestEfforts(a.id);
-        if (bestEfforts && Object.keys(bestEfforts).length) patch.bestEfforts = bestEfforts;
-      } catch {
-        /* best efforts are optional */
-      }
-    }
+    await addBestEfforts(patch, a);
     updateLogEntry(goal.id, a.date, patch, dk, slot);
   }
 

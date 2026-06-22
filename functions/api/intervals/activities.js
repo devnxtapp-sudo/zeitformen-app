@@ -23,7 +23,17 @@ function normalize(a) {
     durationSec: seconds,
     distanceKm: distanceM != null ? Math.round((distanceM / 1000) * 100) / 100 : null,
     hr: num(a.average_heartrate),
+    maxHr: num(a.max_heartrate),
     watts: num(a.icu_average_watts ?? a.average_watts),
+    // richer per-activity detail (graceful: null when intervals.icu omits it)
+    cadence: num(a.average_cadence),
+    elevation: num(a.total_elevation_gain ?? a.icu_elevation_gain),
+    load: num(a.icu_training_load),
+    trimp: num(a.icu_trimp ?? a.trimp),
+    intensity: num(a.icu_intensity),
+    ctl: num(a.icu_ctl),
+    atl: num(a.icu_atl),
+    calories: num(a.calories ?? a.icu_calories),
     // Sekunden je HF-Zone (für die Zonenverteilung in der Statistik)
     hrZoneTimes: Array.isArray(a.icu_hr_zone_times)
       ? a.icu_hr_zone_times.map((s) => num(s) ?? 0)

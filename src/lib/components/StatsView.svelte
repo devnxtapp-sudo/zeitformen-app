@@ -11,8 +11,9 @@
     PROGRESS_METRICS,
   } from "../stats.js";
   import { weekDates, todayKey, parseYmd, ymd, lastNWeekMondays, weekDatesFrom, dayKeyOf } from "../dateutil.js";
+  import ActivityRow from "./ActivityRow.svelte";
 
-  let { goal, initialExercise = null } = $props();
+  let { goal, initialExercise = null, onsync = null } = $props();
 
   const week = weekDates();
   const today = todayKey();
@@ -106,6 +107,50 @@
   const durOf = (e) => metricNum(e, /dauer/i);
   const distOf = (e) => metricNum(e, /distanz/i);
   const isStrength = (l) => /kraft|strength|gym|körper|bein|push|pull/i.test(l || "");
+
+  // ---- Aktivitäten list (expandable, real from synced data) ----
+  function sportMeta(type) {
+    const t = String(type || "").toLowerCase();
+    if (/run/.test(t)) return { color: "var(--c-streak)", emoji: "🏃" };
+    if (/ride|bike|cycl|virtual/.test(t)) return { color: "var(--accent)", emoji: "🚴" };
+    if (/swim/.test(t)) return { color: "var(--c-cyan)", emoji: "🏊" };
+    if (/weight|strength|workout/.test(t)) return { color: "#f0a830", emoji: "🏋️" };
+    if (/walk|hike/.test(t)) return { color: "var(--c-purple)", emoji: "🚶" };
+    return { color: "var(--c-cyan)", emoji: "🔥" };
+  }
+  let actList = $derived.by(() => {
+    const log = goal.log ?? {};
+    return Object.entries(log)
+      .map(([k, e]) => ({ k, date: k.split("#")[0], e }))
+      .filter(({ e }) => distOf(e) != null || e.durationSec != null || durOf(e) != null)
+      .sort((a, b) => (a.date < b.date ? 1 : -1))
+      .slice(0, 12)
+      .map(({ k, date, e }) => {
+        const iv = e.iv ?? {};
+        const sp = sportMeta(e.actType);
+        return {
+          key: k,
+          actId: e.actId ?? null,
+          name: e.note || e.typeLabel || "Training",
+          dateLabel: parseYmd(date).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long" }),
+          klasse: e.typeLabel || null,
+          color: e.typeColor || sp.color,
+          emoji: sp.emoji,
+          km: distOf(e),
+          durSec: Number(e.durationSec) || (durOf(e) ?? 0) * 60 || null,
+          hf: metricNum(e, /puls|hf/i),
+          maxHr: iv.maxHr ?? null,
+          cadence: iv.cadence ?? null,
+          elev: iv.elevation ?? null,
+          intensity: iv.intensity ?? null,
+          load: iv.load ?? null,
+          trimp: iv.trimp ?? null,
+          ctl: iv.ctl ?? null,
+          atl: iv.atl ?? null,
+          calories: iv.calories ?? null,
+        };
+      });
+  });
   function entriesOf(monday) {
     const wk = weekDatesFrom(monday);
     const dates = new Set(Object.values(wk));
@@ -450,10 +495,33 @@
       </div>
     </div>
   </div>
+
+  <!-- Aktivitäten (intervals.icu, ausklappbar) -->
+  <div class="card">
+    <div class="act-head">
+      <div>
+        <div class="card-title">Aktivitäten</div>
+        <div class="act-sub"><span class="iv-badge">↻ intervals.icu</span></div>
+      </div>
+      {#if onsync}<button class="sync-btn" onclick={() => onsync()}>↻ Synchronisieren</button>{/if}
+    </div>
+    {#if actList.length}
+      {#each actList as act (act.key)}
+        <ActivityRow activity={act} />
+      {/each}
+    {:else}
+      <p class="empty">Noch keine Aktivitäten — verbinde intervals.icu und synchronisiere.</p>
+    {/if}
+  </div>
 </div>
 
 <style>
   .stats { display: flex; flex-direction: column; gap: 16px; }
+  .act-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .act-sub { margin-top: 5px; }
+  .iv-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: var(--c-cyan); background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2); border-radius: 999px; padding: 2px 8px; }
+  .sync-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--c-cyan); cursor: pointer; font-family: var(--font); }
+  .sync-btn:hover { border-color: var(--c-cyan); }
   .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .page-title { font-size: 20px; font-weight: 800; color: var(--text); }
   .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }

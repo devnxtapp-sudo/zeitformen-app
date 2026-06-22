@@ -51,4 +51,6 @@ export const api = {
     call(`intervals/activities?oldest=${encodeURIComponent(oldest)}&newest=${encodeURIComponent(newest)}`),
   intervalsBestEfforts: (id) =>
     call(`intervals/best-efforts?id=${encodeURIComponent(id)}`),
+  intervalsSplits: (id) =>
+    call(`intervals/splits?id=${encodeURIComponent(id)}`),
 };
