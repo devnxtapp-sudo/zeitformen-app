@@ -152,6 +152,16 @@
   });
   const HM_BG = ["var(--surface-3)", "rgba(34,197,94,0.3)", "rgba(34,197,94,0.55)", "#22c55e"];
 
+  // click a heatmap cell → focus that day's activities below
+  let focusDate = $state(null);
+  let actEl = $state(null);
+  let focusLabel = $derived(focusDate ? parseYmd(focusDate).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long" }) : "");
+  function focusDay(cell) {
+    if (!cell?.count) return;
+    focusDate = cell.date;
+    requestAnimationFrame(() => actEl?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+
   // ---- Aktivitäten list (expandable, real from synced data) ----
   function sportMeta(type) {
     const t = String(type || "").toLowerCase();
@@ -164,11 +174,12 @@
   }
   let actList = $derived.by(() => {
     const log = goal.log ?? {};
-    return Object.entries(log)
-      .map(([k, e]) => ({ k, date: k.split("#")[0], e }))
-      .filter(({ date, e }) => inWin(date) && (distOf(e) != null || e.durationSec != null || durOf(e) != null))
-      .sort((a, b) => (a.date < b.date ? 1 : -1))
-      .slice(0, 12)
+    let rows = Object.entries(log).map(([k, e]) => ({ k, date: k.split("#")[0], e }));
+    if (focusDate) rows = rows.filter((r) => r.date === focusDate);
+    else rows = rows.filter(({ date, e }) => inWin(date) && (distOf(e) != null || e.durationSec != null || durOf(e) != null));
+    rows.sort((a, b) => (a.date < b.date ? 1 : -1));
+    if (!focusDate) rows = rows.slice(0, 12);
+    return rows
       .map(({ k, date, e }) => {
         const iv = e.iv ?? {};
         const sp = sportMeta(e.actType);
@@ -515,7 +526,7 @@
         {#each heatmap as col, ci (ci)}
           <div style="display:flex;flex-direction:column;gap:3px;flex:1">
             {#each col.cells as cell, di (di)}
-              <div class="hm-cell" style="background:{HM_BG[cell.lvl]}" title={cell.title}></div>
+              <div class="hm-cell" class:clickable={cell.count > 0} style="background:{HM_BG[cell.lvl]}" title={cell.title} onclick={() => focusDay(cell)}></div>
             {/each}
           </div>
         {/each}
@@ -534,17 +545,20 @@
   </div>
 
   <!-- Aktivitäten (intervals.icu, ausklappbar) -->
-  <div class="card">
+  <div class="card" bind:this={actEl}>
     <div class="act-head">
-      <div class="card-title">Aktivitäten</div>
-      {#if onsync}<button class="sync-btn" onclick={() => onsync()}>↻ Synchronisieren</button>{/if}
+      <div class="card-title">Aktivitäten{#if focusDate} · {focusLabel}{/if}</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        {#if focusDate}<button class="sync-btn" onclick={() => (focusDate = null)}>✕ Filter</button>{/if}
+        {#if onsync}<button class="sync-btn" onclick={() => onsync()}>↻ Synchronisieren</button>{/if}
+      </div>
     </div>
     {#if actList.length}
       {#each actList as act (act.key)}
         <ActivityRow activity={act} />
       {/each}
     {:else}
-      <p class="empty">Noch keine Aktivitäten — verbinde intervals.icu und synchronisiere.</p>
+      <p class="empty">{focusDate ? "Keine Aktivitäten an diesem Tag." : "Noch keine Aktivitäten — verbinde intervals.icu und synchronisiere."}</p>
     {/if}
   </div>
 </div>
@@ -634,6 +648,8 @@
   .hm-legend { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-dim); }
   .hm-legend i { width: 10px; height: 10px; border-radius: 2px; }
   .hm-cell { height: 11px; border-radius: 2px; }
+  .hm-cell.clickable { cursor: pointer; }
+  .hm-cell.clickable:hover { outline: 1px solid var(--text-muted); outline-offset: 1px; }
   .ml-leg { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text-muted); }
   .ml-leg i { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 </style>
