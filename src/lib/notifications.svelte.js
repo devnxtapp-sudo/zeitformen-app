@@ -57,8 +57,9 @@ function summarize(e) {
 }
 
 function dateLabel(d) {
-  const [y, mo, da] = String(d).split("-");
-  if (!da) return String(d);
+  // Activity keys can carry a "#N" suffix for multiple activities on one day.
+  const [y, mo, da] = String(d).split("#")[0].split("-");
+  if (!da) return String(d).split("#")[0];
   return `${da}.${mo}.${y.slice(2)}`;
 }
 
@@ -74,7 +75,7 @@ export function activityNotifications(goal, limit = 30) {
       id: String(e.actId),
       date,
       type,
-      title: `${typeLabel(type)} synchronisiert`,
+      title: typeLabel(type),
       sub: summ ? `${dateLabel(date)} · ${summ}` : dateLabel(date),
     });
   }
