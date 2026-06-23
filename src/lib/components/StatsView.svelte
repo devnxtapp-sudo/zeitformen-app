@@ -139,10 +139,12 @@
     }
     const mondays = lastNWeekMondays(12, parseYmd(today));
     return mondays.map((mon) => {
-      const days = weekDatesFrom(mon);
-      const cells = ["mo", "di", "mi", "do", "fr", "sa", "so"].map((dk) => {
-        const c = counts.get(days[dk]) ?? 0;
-        return c >= 3 ? 3 : c;
+      // weekDatesFrom returns an array of 7 date strings (Mon→Sun)
+      const cells = weekDatesFrom(mon).map((date) => {
+        const c = counts.get(date) ?? 0;
+        const label = parseYmd(date).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" });
+        const title = c ? `${label} · ${c} Einheit${c === 1 ? "" : "en"}` : `${label} · frei`;
+        return { lvl: c >= 3 ? 3 : c, date, count: c, title };
       });
       const m = parseYmd(mon).toLocaleDateString("de-DE", { month: "short" });
       return { month: m, cells };
@@ -512,8 +514,8 @@
       <div style="padding:0 20px 20px;display:flex;gap:3px">
         {#each heatmap as col, ci (ci)}
           <div style="display:flex;flex-direction:column;gap:3px;flex:1">
-            {#each col.cells as lvl, di (di)}
-              <div class="hm-cell" style="background:{HM_BG[lvl]}" title={col.month}></div>
+            {#each col.cells as cell, di (di)}
+              <div class="hm-cell" style="background:{HM_BG[cell.lvl]}" title={cell.title}></div>
             {/each}
           </div>
         {/each}
