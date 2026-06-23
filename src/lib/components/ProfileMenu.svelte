@@ -1,5 +1,20 @@
 <script>
   import { auth, logout } from "../auth.svelte.js";
+  import LayoutGrid from "@lucide/svelte/icons/layout-grid";
+  import Calendar from "@lucide/svelte/icons/calendar";
+  import CirclePlay from "@lucide/svelte/icons/circle-play";
+  import SquarePen from "@lucide/svelte/icons/square-pen";
+  import Star from "@lucide/svelte/icons/star";
+  import ClipboardCheck from "@lucide/svelte/icons/clipboard-check";
+  import ChartColumn from "@lucide/svelte/icons/chart-column";
+  import Heart from "@lucide/svelte/icons/heart";
+  import Gauge from "@lucide/svelte/icons/gauge";
+  import Timer from "@lucide/svelte/icons/timer";
+  import Coffee from "@lucide/svelte/icons/coffee";
+  import Sun from "@lucide/svelte/icons/sun";
+  import RefreshCw from "@lucide/svelte/icons/refresh-cw";
+  import Settings from "@lucide/svelte/icons/settings";
+  import LogOut from "@lucide/svelte/icons/log-out";
 
   let {
     onclose,
@@ -98,19 +113,19 @@
       <div class="sb-label">Training</div>
       {#if onhome}
         <button class="nav-item" class:active={view === "dashboard"} onclick={() => go(onhome)}>
-          <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+          <LayoutGrid class="ic" />
           <span class="nav-label">Dashboard</span>
         </button>
       {/if}
       {#if onplan}
         <button class="nav-item" class:active={view === "week"} onclick={() => go(onplan)}>
-          <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+          <Calendar class="ic" />
           <span class="nav-label">Wochenplan</span>
         </button>
       {/if}
       {#if oncreate}
         <button class="nav-item" onclick={() => go(oncreate)}>
-          <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><polygon points="10 8 16 12 10 16 10 8" /></svg>
+          <CirclePlay class="ic" />
           <span class="nav-label">Neues Training</span>
           <span class="nav-badge">+</span>
         </button>
@@ -122,25 +137,25 @@
         <div class="sb-label">Planung</div>
         {#if ontoggleedit}
           <button class="nav-item" class:active={editMode} onclick={() => go(ontoggleedit)}>
-            <svg class="ic" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+            <SquarePen class="ic" />
             <span class="nav-label">{editMode ? "Bearbeiten beenden" : "Training bearbeiten"}</span>
           </button>
         {/if}
         {#if oncalendar}
           <button class="nav-item" class:active={view === "calendar"} onclick={() => go(oncalendar)}>
-            <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+            <Calendar class="ic" />
             <span class="nav-label">Kalender</span>
           </button>
         {/if}
         {#if onracenutrition}
           <button class="nav-item" class:active={view === "racenutrition"} onclick={() => go(onracenutrition)}>
-            <svg class="ic" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+            <Star class="ic" />
             <span class="nav-label">Nutrition</span>
           </button>
         {/if}
         {#if onpacklist}
           <button class="nav-item" class:active={view === "packlist"} onclick={() => go(onpacklist)}>
-            <svg class="ic" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+            <ClipboardCheck class="ic" />
             <span class="nav-label">Packliste</span>
           </button>
         {/if}
@@ -152,13 +167,13 @@
         <div class="sb-label">Analyse</div>
         {#if onstats}
           <button class="nav-item" class:active={view === "stats"} onclick={() => go(onstats)}>
-            <svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
+            <ChartColumn class="ic" />
             <span class="nav-label">Statistik</span>
           </button>
         {/if}
         {#if onbody}
           <button class="nav-item" class:active={view === "body"} onclick={() => go(onbody)}>
-            <svg class="ic" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+            <Heart class="ic" />
             <span class="nav-label">Körperanalyse</span>
           </button>
         {/if}
@@ -170,19 +185,19 @@
         <div class="sb-label">Tools</div>
         {#if onpace}
           <button class="nav-item" class:active={view === "pace"} onclick={() => go(onpace)}>
-            <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+            <Gauge class="ic" />
             <span class="nav-label">Pace-Rechner</span>
           </button>
         {/if}
         {#if ontimer}
           <button class="nav-item" class:active={view === "timer"} onclick={() => go(ontimer)}>
-            <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+            <Timer class="ic" />
             <span class="nav-label">Intervall-Timer</span>
           </button>
         {/if}
         {#if onnutrition}
           <button class="nav-item" class:active={view === "nutrition"} onclick={() => go(onnutrition)}>
-            <svg class="ic" viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1" /><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" /><line x1="6" y1="1" x2="6" y2="4" /><line x1="10" y1="1" x2="10" y2="4" /><line x1="14" y1="1" x2="14" y2="4" /></svg>
+            <Coffee class="ic" />
             <span class="nav-label">Ernährungsplan</span>
           </button>
         {/if}
@@ -193,7 +208,7 @@
       <div class="sb-section">
         <div class="sb-label">System</div>
         <button class="nav-item" class:active={settingsActive} onclick={() => go(onsettings)}>
-          <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></svg>
+          <Sun class="ic" />
           <span class="nav-label">Ziel-Einstellungen</span>
         </button>
       </div>
@@ -206,17 +221,17 @@
     {#if userMenuOpen}
       <div class="user-menu">
         <button class="um-item" onclick={() => userAction(onsync)} disabled={syncing}>
-          <svg class="ic" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></svg>
+          <RefreshCw class="ic" />
           <span>Synchronisieren</span>
         </button>
         {#if onappsettings}
           <button class="um-item" onclick={() => userAction(onappsettings)}>
-            <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
+            <Settings class="ic" />
           <span>Einstellungen</span>
           </button>
         {/if}
         <button class="um-item danger" onclick={() => userAction(logout)}>
-          <svg class="ic" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+          <LogOut class="ic" />
           <span>Abmelden</span>
         </button>
       </div>
