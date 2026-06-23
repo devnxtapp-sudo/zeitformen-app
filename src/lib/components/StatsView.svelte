@@ -333,15 +333,8 @@
     { label: "Zone 4–5", pct: 12, color: "#ef4444" },
     { label: "Kraft", pct: 8, color: "var(--c-purple)" },
   ];
-  const prsDemo = [
-    { kind: "run", name: "5 km Lauf", sub: "vor 2 Wochen", value: "22:14", delta: "↓ 0:38 min", badge: "PR" },
-    { kind: "swim", name: "100m Kraul", sub: "vor 1 Woche", value: "1:48", delta: "↓ 3 sek", badge: "NEU" },
-    { kind: "strength", name: "Back Squat", sub: "vor 3 Wochen", value: "107.5 kg", delta: "↑ 2.5 kg", badge: "PR" },
-    { kind: "run", name: "1 km Pace", sub: "vor 1 Woche", value: "4:02/km", delta: "↓ 0:08", badge: "PR" },
-  ];
-  let realPRs = $derived(personalRecords(goal, today));
-  let prsShown = $derived(realPRs.length ? realPRs : prsDemo);
-  let prSub = $derived(realPRs.length ? "Kraft (Log) + Distanz (intervals.icu)" : "Demo · füllt sich mit Training & Sync");
+  let prsShown = $derived(personalRecords(goal, today));
+  let prSub = $derived(prsShown.length ? "Kraft (Log) + Distanz (intervals.icu)" : "Noch keine Bestleistungen");
 
   // ---- chosen (real if synced, else demo placeholder) ----
   const ZONE_LABELS = [
@@ -481,17 +474,21 @@
 
     <div class="card">
       <div class="card-head" style="padding-bottom:0"><div><div class="card-title">Persönliche Bestleistungen</div><div class="card-sub">{prSub}</div></div></div>
-      <div class="pr-list">
-        {#each prsShown as p (p.kind ? p.kind + p.name : p.name)}
-          {@const PI = sportIcon(p.kind)}
-          <div class="pr-item">
-            <div class="pr-icon" style="background:var(--surface-3)"><PI size={15} /></div>
-            <div style="flex:1"><div class="pr-name">{p.name}</div><div class="pr-sub">{p.sub}</div></div>
-            <div><div class="pr-value">{p.value}</div>{#if p.delta}<div class="pr-delta delta-up">{p.delta}</div>{/if}</div>
-            <span class="pr-badge {p.badge === 'NEU' ? 'badge-new' : 'badge-pr'}">{p.badge}</span>
-          </div>
-        {/each}
-      </div>
+      {#if prsShown.length}
+        <div class="pr-list">
+          {#each prsShown as p (p.kind ? p.kind + p.name : p.name)}
+            {@const PI = sportIcon(p.kind)}
+            <div class="pr-item">
+              <div class="pr-icon" style="background:var(--surface-3)"><PI size={15} /></div>
+              <div style="flex:1"><div class="pr-name">{p.name}</div><div class="pr-sub">{p.sub}</div></div>
+              <div><div class="pr-value">{p.value}</div>{#if p.delta}<div class="pr-delta delta-up">{p.delta}</div>{/if}</div>
+              <span class="pr-badge {p.badge === 'NEU' ? 'badge-new' : 'badge-pr'}">{p.badge}</span>
+            </div>
+          {/each}
+        </div>
+      {:else}
+        <p class="empty">Noch keine Bestleistungen — logge Kraft-Sätze (Gewicht) oder synchronisiere Läufe, dann erscheinen hier deine Rekorde.</p>
+      {/if}
     </div>
   </div>
 
