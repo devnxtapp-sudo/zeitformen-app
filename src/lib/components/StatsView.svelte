@@ -536,10 +536,7 @@
   <!-- Aktivitäten (intervals.icu, ausklappbar) -->
   <div class="card">
     <div class="act-head">
-      <div>
-        <div class="card-title">Aktivitäten</div>
-        <div class="act-sub"><span class="iv-badge">↻ intervals.icu</span></div>
-      </div>
+      <div class="card-title">Aktivitäten</div>
       {#if onsync}<button class="sync-btn" onclick={() => onsync()}>↻ Synchronisieren</button>{/if}
     </div>
     {#if actList.length}
@@ -555,8 +552,6 @@
 <style>
   .stats { display: flex; flex-direction: column; gap: 16px; }
   .act-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .act-sub { margin-top: 5px; }
-  .iv-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: var(--c-cyan); background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2); border-radius: 999px; padding: 2px 8px; }
   .sync-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--c-cyan); cursor: pointer; font-family: var(--font); }
   .sync-btn:hover { border-color: var(--c-cyan); }
   .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
