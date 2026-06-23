@@ -217,7 +217,11 @@
       return ps.length ? Math.round((ps.reduce((a, c) => a + c, 0) / ps.length) * 100) / 100 : null;
     }),
   );
-  let hasPace = $derived(realPace.filter((v) => v != null).length >= 2);
+  let hasPace = $derived(realPace.some((v) => v != null));
+  let paceImproving = $derived.by(() => {
+    const vals = realPace.filter((v) => v != null);
+    return vals.length >= 2 && vals[vals.length - 1] < vals[0];
+  });
   // HF-zone distribution (seconds → %) within the window; Kraft = strength duration
   let realZones = $derived.by(() => {
     const z = [0, 0, 0, 0];
@@ -316,7 +320,6 @@
   });
 
   // ---- placeholder charts (demo data — kein echtes Tracking vorhanden) ----
-  const demoWeeks = ["KW 18", "KW 19", "KW 20", "KW 21", "KW 22", "KW 23", "KW 24", "KW 25"];
   const zoneCfg = { type: "doughnut", data: { datasets: [{ data: [55, 25, 12, 8], backgroundColor: ["#22c55e", "#f97316", "#ef4444", "#a78bfa"], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: false, cutout: "70%", plugins: { legend: { display: false }, tooltip: { enabled: false } } } };
   const modalCfg = { type: "bar", data: { labels: ["KW 22", "KW 23", "KW 24", "KW 25"], datasets: [
     { label: "Laufen", data: [2.8, 2.5, 2.6, 2.3], backgroundColor: "rgba(249,115,22,0.75)", borderRadius: 3, borderSkipped: false },
@@ -324,12 +327,6 @@
     { label: "Schwimmen", data: [0.9, 0.8, 1.0, 0.9], backgroundColor: "rgba(6,182,212,0.75)", borderRadius: 3, borderSkipped: false },
     { label: "Rad", data: [0.7, 0.7, 0.7, 0.7], backgroundColor: "rgba(59,130,246,0.75)", borderRadius: 3, borderSkipped: false },
   ] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: TIP }, scales: { x: { stacked: true, grid: { color: GRID }, border: { display: false } }, y: { stacked: true, grid: { color: GRID }, border: { display: false }, beginAtZero: true } } } };
-  const paceCfg = {
-    type: "line",
-    data: { labels: demoWeeks, datasets: [{ label: "Ø Pace (min/km)", data: [6.45, 6.38, 6.31, 6.28, 6.2, 6.15, 6.1, 6.05], borderColor: "#22c55e", backgroundColor: "rgba(34,197,94,0.08)", borderWidth: 2.5, pointBackgroundColor: "#22c55e", pointRadius: 4, tension: 0.4, fill: true }] },
-    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { ...TIP, callbacks: { label: (ctx) => { const v = ctx.raw, m = Math.floor(v), s = Math.round((v - m) * 60); return ` ${m}:${String(s).padStart(2, "0")} min/km`; } } } }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, reverse: true, min: 5.8, max: 6.6, ticks: { callback: (v) => { const m = Math.floor(v), s = Math.round((v - m) * 60); return `${m}:${String(s).padStart(2, "0")}`; } } } } },
-  };
-
   const zones = [
     { label: "Zone 1–2", pct: 55, color: "var(--c-success)" },
     { label: "Zone 3", pct: 25, color: "var(--c-streak)" },
@@ -358,12 +355,12 @@
   let zoneDonutShown = $derived({ type: "doughnut", data: { datasets: [{ data: zonePct, backgroundColor: ["#22c55e", "#f97316", "#ef4444", "#a78bfa"], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: false, cutout: "70%", plugins: { legend: { display: false }, tooltip: { enabled: false } } } });
   let zoneSub = $derived(realZones ? "Zeit pro HF-Zone · intervals.icu" : "Demo · via intervals.icu");
 
-  let paceShown = $derived(hasPace ? {
+  let paceShown = $derived({
     type: "line",
     data: { labels: bucketLabels, datasets: [{ label: "Ø Pace", data: realPace, borderColor: "#22c55e", backgroundColor: "rgba(34,197,94,0.08)", borderWidth: 2.5, pointBackgroundColor: "#22c55e", pointRadius: 4, tension: 0.4, fill: true, spanGaps: true }] },
     options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { ...TIP, callbacks: { label: (ctx) => { const v = ctx.raw; if (v == null) return ""; const m = Math.floor(v), s = Math.round((v - m) * 60); return ` ${m}:${String(s).padStart(2, "0")} min/km`; } } } }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, reverse: true, ticks: { callback: (v) => { const m = Math.floor(v), s = Math.round((v - m) * 60); return `${m}:${String(s).padStart(2, "0")}`; } } } } },
-  } : paceCfg);
-  let paceSub = $derived(hasPace ? "Ø Pace pro Woche · intervals.icu" : "Demo · via intervals.icu");
+  });
+  let paceSub = $derived(hasPace ? "Ø Pace pro Woche · intervals.icu" : "Noch keine Lauf-Daten");
 
   let modalLegend = $derived(realModality ?? [
     { label: "Laufen", color: "var(--c-streak)", hours: 10.2 },
@@ -456,9 +453,13 @@
     <div class="card">
       <div class="card-head">
         <div><div class="card-title">Lauf-Pace Entwicklung</div><div class="card-sub">{paceSub}</div></div>
-        <span style="background:rgba(34,197,94,0.12);color:var(--c-success);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid rgba(34,197,94,0.2)">↓ Verbesserung</span>
+        {#if paceImproving}<span style="background:rgba(34,197,94,0.12);color:var(--c-success);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid rgba(34,197,94,0.2)">↓ Verbesserung</span>{/if}
       </div>
-      <div class="chart-wrap-sm">{#key dataSig}<canvas use:chartjs={paceShown} height="120"></canvas>{/key}</div>
+      {#if hasPace}
+        <div class="chart-wrap-sm">{#key chartKey}<canvas use:chartjs={paceShown} height="120"></canvas>{/key}</div>
+      {:else}
+        <p class="empty">Noch keine Lauf-Daten — synchronisiere Läufe mit Distanz + Zeit, dann erscheint hier dein Pace-Verlauf.</p>
+      {/if}
     </div>
 
     <div class="card">
