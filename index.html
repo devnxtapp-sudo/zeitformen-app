@@ -33,6 +33,18 @@
   <body>
     <div id="app"></div>
     <script>
+      // Apply saved theme before render to avoid a flash (default: dark).
+      (function () {
+        try {
+          var t = localStorage.getItem("rxz-theme") === "light" ? "light" : "dark";
+          var el = document.documentElement;
+          el.classList.toggle("dark", t !== "light");
+          el.classList.toggle("light", t === "light");
+          el.style.colorScheme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script>
       // Self-heal: if a stale service worker serves an outdated shell that
       // references deleted asset chunks, the app never mounts (#app stays empty
       // → blank page). Detect that and recover once by dropping SW + caches and

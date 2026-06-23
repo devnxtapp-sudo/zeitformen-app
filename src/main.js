@@ -2,6 +2,10 @@ import { mount } from 'svelte'
 import { registerSW } from 'virtual:pwa-register'
 import './app.css'
 import App from './App.svelte'
+import { theme, applyTheme } from './lib/theme.svelte.js'
+
+// Keep <html> theme class + meta in sync with the saved preference.
+applyTheme(theme.mode)
 
 // Register the service worker and poll for updates so a freshly deployed
 // bundle is picked up without waiting for a cold start. With autoUpdate the

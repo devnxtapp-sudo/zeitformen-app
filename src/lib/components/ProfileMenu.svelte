@@ -15,6 +15,8 @@
   import RefreshCw from "@lucide/svelte/icons/refresh-cw";
   import Settings from "@lucide/svelte/icons/settings";
   import LogOut from "@lucide/svelte/icons/log-out";
+  import Moon from "@lucide/svelte/icons/moon";
+  import { theme, toggleTheme } from "../theme.svelte.js";
 
   let {
     onclose,
@@ -223,6 +225,9 @@
         <button class="um-item" onclick={() => userAction(onsync)} disabled={syncing}>
           <RefreshCw class="ic" />
           <span>Synchronisieren</span>
+        </button>
+        <button class="um-item" onclick={() => toggleTheme()}>
+          {#if theme.mode === "light"}<Moon class="ic" /><span>Dunkler Modus</span>{:else}<Sun class="ic" /><span>Heller Modus</span>{/if}
         </button>
         {#if onappsettings}
           <button class="um-item" onclick={() => userAction(onappsettings)}>

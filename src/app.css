@@ -102,6 +102,35 @@
   --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
+/* ── Light theme: overrides both token sets when <html class="light"> ──
+   (accent + training/semantic colours stay; only surfaces/text/borders flip) */
+html.light {
+  --color-surface: #f8fafc;
+  --color-surface-elev: #ffffff;
+  --color-surface-2: #f1f5f9;
+  --color-surface-3: #e2e8f0;
+  --color-card: #ffffff;
+  --color-card-hover: #f1f5f9;
+  --color-line: rgba(0, 0, 0, 0.08);
+  --color-line-strong: rgba(0, 0, 0, 0.13);
+  --color-ink: #0f172a;
+  --color-ink-muted: #64748b;
+  --color-ink-dim: #94a3b8;
+
+  --bg: #f8fafc;
+  --bg-elev: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+  --card: #ffffff;
+  --card-hover: #f1f5f9;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.13);
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
 * {
   box-sizing: border-box;
 }
