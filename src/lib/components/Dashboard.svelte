@@ -1,5 +1,11 @@
 <script>
   import ExerciseSwiper from "./ExerciseSwiper.svelte";
+  import { sportIcon, STEP_ICONS } from "../icons.js";
+  import Moon from "@lucide/svelte/icons/moon";
+  import Flame from "@lucide/svelte/icons/flame";
+  import Play from "@lucide/svelte/icons/play";
+  import ArrowUp from "@lucide/svelte/icons/arrow-up";
+  import ArrowDown from "@lucide/svelte/icons/arrow-down";
   import { weekDates, todayKey, dayKeyOf, parseYmd, ymd } from "../dateutil.js";
   import {
     computeStats,
@@ -74,7 +80,6 @@
     if (todayDay?.session?.intensity) s.push({ label: "Intensität", value: todayDay.session.intensity });
     return s;
   });
-  const STEP_ICON = ["🔥", "⚡", "🧊", "🏃", "💪", "🚴"];
   let steps = $derived.by(() => {
     const blocks = (todayDay?.session?.blocks ?? []).filter((b) => b.title?.trim() || b.items?.length);
     if (blocks.length) return blocks.map((b) => ({ title: b.title || "Block", detail: (b.items ?? []).join(" · ") }));
@@ -174,7 +179,7 @@
           name: e.note || e.typeLabel || sp.label || "Training",
           type: sp.label || e.typeLabel || "",
           color: e.typeColor || sp.color,
-          emoji: sp.emoji,
+          actType: e.actType || sp.label,
           dateLabel: parseYmd(e.date).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long" }),
           dist: km > 0 ? `${km} km` : null,
           dur: sec > 0 ? fmtDur(sec) : null,
@@ -195,7 +200,7 @@
           <div class="big-num" style="font-size:26px">
             {load.hours}<span style="font-size:18px;color:var(--text-dim)"> h</span>
             <span class="delta {volDelta < 0 ? 'down' : 'up'}" style="font-size:13px;margin-left:6px">
-              {volDelta < 0 ? "▼" : "▲"} {Math.abs(volDelta)}%
+              {#if volDelta < 0}<ArrowDown size={12} />{:else}<ArrowUp size={12} />{/if} {Math.abs(volDelta)}%
             </span>
           </div>
           <div class="card-sub">Trainingsvolumen diese Woche{#if load.estimated} · geschätzt{/if}</div>
@@ -222,7 +227,7 @@
 
       {#if todayDay.isRest}
         <div class="rest-state">
-          <div style="font-size:40px">🌙</div>
+          <div style="color:var(--text-muted)"><Moon size={40} /></div>
           <div class="session-name" style="font-size:16px;margin-top:8px">Ruhetag</div>
           <div class="session-meta">Erholung ist Teil des Plans.</div>
         </div>
@@ -248,8 +253,9 @@
 
           {#if activeTab === "aufbau"}
             {#each steps as st, i (i)}
+              {@const SI = STEP_ICONS[i % STEP_ICONS.length]}
               <div class="session-item">
-                <div class="session-icon" style="background:var(--surface-3)">{STEP_ICON[i % STEP_ICON.length]}</div>
+                <div class="session-icon" style="background:var(--surface-3)"><SI size={16} /></div>
                 <div class="min-w-0">
                   <div class="session-name">{st.title}</div>
                   {#if st.detail}<div class="session-meta">{st.detail}</div>{/if}
@@ -266,7 +272,7 @@
 
         {#if !started}
           <button class="start-btn" onclick={() => (started = true)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+            <Play size={14} />
             Workout starten
           </button>
         {:else}
@@ -309,7 +315,7 @@
       <div class="mini-left">
         <div class="mini-label">Streak</div>
         <div class="mini-value" style="color:var(--c-streak)">{streak.current}</div>
-        <div class="mini-delta"><span class="delta warn" style="font-size:12px">🔥 {streak.current} {streak.current === 1 ? "Tag" : "Tage"} in Folge</span></div>
+        <div class="mini-delta"><span class="delta warn" style="font-size:12px"><Flame size={14} /> {streak.current} {streak.current === 1 ? "Tag" : "Tage"} in Folge</span></div>
       </div>
       <div class="mini-chart">{#key chartKey}<canvas use:chartjs={streakCfg}></canvas>{/key}</div>
     </div>
@@ -318,7 +324,7 @@
       <div class="mini-left">
         <div class="mini-label">Wochenlast</div>
         <div class="mini-value" style="color:var(--c-cyan)">{load.hours} h</div>
-        <div class="mini-delta"><span class="delta {volDelta < 0 ? 'down' : 'up'}">{volDelta < 0 ? "▼" : "▲"} {Math.abs(volDelta)}% vs. Vorwoche</span></div>
+        <div class="mini-delta"><span class="delta {volDelta < 0 ? 'down' : 'up'}">{#if volDelta < 0}<ArrowDown size={12} />{:else}<ArrowUp size={12} />{/if} {Math.abs(volDelta)}% vs. Vorwoche</span></div>
       </div>
       <div class="mini-chart">{#key chartKey}<canvas use:chartjs={loadMiniCfg}></canvas>{/key}</div>
     </div>
@@ -341,8 +347,9 @@
         {#if onnav}<div class="card-action" onclick={() => onnav("stats")}>Alle Aktivitäten →</div>{/if}
       </div>
       {#each activities as a (a.key)}
+        {@const AIcon = sportIcon(a.actType)}
         <div class="act-item" class:clickable={!!onnav} onclick={() => onnav?.("stats")}>
-          <div class="act-icon" style="background:color-mix(in srgb, {a.color} 16%, transparent);color:{a.color}">{a.emoji}</div>
+          <div class="act-icon" style="background:color-mix(in srgb, {a.color} 16%, transparent);color:{a.color}"><AIcon size={16} /></div>
           <div class="act-main">
             <div class="session-name">{a.name}</div>
             <div class="session-meta">{a.dateLabel}{#if a.type} · {a.type}{/if}</div>

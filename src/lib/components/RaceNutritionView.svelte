@@ -10,6 +10,17 @@
     deleteRaceItem,
   } from "../store.svelte.js";
 
+  import Zap from "@lucide/svelte/icons/zap";
+  import Clock from "@lucide/svelte/icons/clock";
+  import Droplet from "@lucide/svelte/icons/droplet";
+  import Shield from "@lucide/svelte/icons/shield";
+  import Coffee from "@lucide/svelte/icons/coffee";
+  import Activity from "@lucide/svelte/icons/activity";
+  import Plus from "@lucide/svelte/icons/plus";
+  import Trash2 from "@lucide/svelte/icons/trash-2";
+  import X from "@lucide/svelte/icons/x";
+  import Info from "@lucide/svelte/icons/info";
+
   let { onback } = $props();
 
   let plan = $derived(store.raceNutrition);
@@ -114,11 +125,11 @@
   <div class="race-bar">
     <span class="rb-label">Wettkampf</span>
     <button class="race-btn selected">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
+      <Zap size={15} />
       HYROX
     </button>
     <button class="race-btn placeholder" disabled title="Bald verfügbar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+      <Clock size={15} />
       Marathon
     </button>
     <div class="rb-divider"></div>
@@ -132,11 +143,11 @@
 
   <!-- Summary -->
   <div class="summary">
-    <div class="sum-card sc-carbs"><div class="sum-l">Gesamt Carbs</div><div class="sum-v">{totals.carbs}</div><div class="sum-u">g</div></div>
-    <div class="sum-card sc-fluid"><div class="sum-l">Flüssigkeit</div><div class="sum-v">{totals.fluid}</div><div class="sum-u">ml</div></div>
-    <div class="sum-card sc-sodium"><div class="sum-l">Natrium</div><div class="sum-v">{totals.sodium}</div><div class="sum-u">mg</div></div>
-    <div class="sum-card sc-caffeine"><div class="sum-l">Koffein</div><div class="sum-v">{totals.caffeine}</div><div class="sum-u">mg</div></div>
-    <div class="sum-card sc-rate"><div class="sum-l">Carbs/Stunde</div><div class="sum-v {rateClass}">{rate ?? "–"}</div><div class="sum-u">g/h</div><div class="sum-hint">Ziel: {target || "–"} g/h</div></div>
+    <div class="sum-card sc-carbs"><div class="sum-l"><Zap size={12} /> Gesamt Carbs</div><div class="sum-v">{totals.carbs}</div><div class="sum-u">g</div></div>
+    <div class="sum-card sc-fluid"><div class="sum-l"><Droplet size={12} /> Flüssigkeit</div><div class="sum-v">{totals.fluid}</div><div class="sum-u">ml</div></div>
+    <div class="sum-card sc-sodium"><div class="sum-l"><Shield size={12} /> Natrium</div><div class="sum-v">{totals.sodium}</div><div class="sum-u">mg</div></div>
+    <div class="sum-card sc-caffeine"><div class="sum-l"><Coffee size={12} /> Koffein</div><div class="sum-v">{totals.caffeine}</div><div class="sum-u">mg</div></div>
+    <div class="sum-card sc-rate"><div class="sum-l"><Activity size={12} /> Carbs/Stunde</div><div class="sum-v {rateClass}">{rate ?? "–"}</div><div class="sum-u">g/h</div><div class="sum-hint">Ziel: {target || "–"} g/h</div></div>
   </div>
 
   <!-- Phases -->
@@ -144,7 +155,7 @@
     <div class="phases-title">Phasen</div>
     <div class="phases-actions">
       <button class="btn-template-sm" onclick={loadTemplate}>HYROX-Vorlage laden</button>
-      <button class="btn-add-phase" onclick={() => addRacePhase()}>+ Phase hinzufügen</button>
+      <button class="btn-add-phase" onclick={() => addRacePhase()}><Plus size={14} /> Phase hinzufügen</button>
     </div>
   </div>
 
@@ -159,7 +170,7 @@
             <div class="dur-group">
               <input class="dur-input" type="number" min="0" step="0.5" value={phase.durationH} oninput={(e) => updateRacePhase(phase.id, { durationH: e.target.value })} />h
             </div>
-            <button class="icon-btn del" onclick={() => deleteRacePhase(phase.id)} aria-label="Phase löschen">✕</button>
+            <button class="icon-btn del" onclick={() => deleteRacePhase(phase.id)} aria-label="Phase löschen"><Trash2 size={14} /></button>
           </div>
 
           <div class="items">
@@ -171,7 +182,7 @@
                     {#if it.type && !TYPES.some((t) => t.id === it.type)}<option value={it.type}>{it.type}</option>{/if}
                   </select>
                   <input class="n-input" type="text" placeholder="Name / Produkt" value={it.name} oninput={(e) => updateRaceItem(phase.id, it.id, { name: e.target.value })} />
-                  <button class="icon-btn" onclick={() => deleteRaceItem(phase.id, it.id)} aria-label="Eintrag löschen">✕</button>
+                  <button class="icon-btn" onclick={() => deleteRaceItem(phase.id, it.id)} aria-label="Eintrag löschen"><X size={14} /></button>
                 </div>
                 <div class="nums">
                   <label class="num"><span>Menge</span><input type="number" min="0" value={it.qty} oninput={(e) => updateRaceItem(phase.id, it.id, { qty: e.target.value })} /></label>
@@ -182,7 +193,7 @@
                 </div>
               </div>
             {/each}
-            <button class="btn-add-item" onclick={() => addRaceItem(phase.id, {})}>+ Item hinzufügen</button>
+            <button class="btn-add-item" onclick={() => addRaceItem(phase.id, {})}><Plus size={13} /> Item hinzufügen</button>
           </div>
 
           <div class="subtotal">
@@ -201,7 +212,7 @@
 
   <!-- Tips -->
   <div class="tips">
-    <div class="tips-title">HYROX Nutrition-Richtwerte</div>
+    <div class="tips-title"><Info size={14} /> HYROX Nutrition-Richtwerte</div>
     <div class="tips-grid">
       {#each TIPS as t (t.html)}<div class="tip {t.cls}">{@html t.html}</div>{/each}
     </div>
@@ -252,7 +263,7 @@
 
   .summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
   .sum-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
-  .sum-l { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+  .sum-l { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
   .sum-v { font-size: 24px; font-weight: 700; font-family: var(--mono); line-height: 1.1; }
   .sum-u { font-size: 11px; color: var(--text-muted); }
   .sum-hint { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
@@ -267,7 +278,7 @@
 
   .phases-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .phases-title { font-size: 14px; font-weight: 700; color: var(--text); }
-  .btn-add-phase { padding: 7px 13px; border-radius: var(--r-sm); background: rgba(var(--accent-rgb), 0.15); color: var(--accent); border: 1px solid rgba(var(--accent-rgb), 0.25); font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font); }
+  .btn-add-phase { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: var(--r-sm); background: rgba(var(--accent-rgb), 0.15); color: var(--accent); border: 1px solid rgba(var(--accent-rgb), 0.25); font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font); }
   .btn-add-phase:hover { background: rgba(var(--accent-rgb), 0.25); }
 
   .phases-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
@@ -279,7 +290,7 @@
   .dur-group { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); }
   .dur-input { width: 40px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 11px; font-family: var(--mono); padding: 3px 5px; text-align: center; }
   .dur-input:focus { outline: none; border-color: var(--accent); }
-  .icon-btn { background: none; border: none; color: var(--text-faint); cursor: pointer; padding: 3px 5px; border-radius: 5px; font-size: 13px; line-height: 1; }
+  .icon-btn { display: inline-flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-faint); cursor: pointer; padding: 3px 5px; border-radius: 5px; line-height: 1; }
   .icon-btn:hover { color: var(--red); }
 
   .items { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
@@ -306,7 +317,7 @@
   .empty-line { font-size: 13px; color: var(--text-muted); padding: 6px 2px; }
 
   .tips { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 20px; }
-  .tips-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 10px; }
+  .tips-title { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 10px; }
   .tips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
   .tip { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px 12px; font-size: 11.5px; color: var(--text-muted); line-height: 1.5; }
   .tip :global(b) { color: var(--text); }

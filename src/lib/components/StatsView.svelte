@@ -11,6 +11,10 @@
   } from "../stats.js";
   import { weekDates, todayKey, parseYmd, ymd, lastNWeekMondays, weekDatesFrom, dayKeyOf } from "../dateutil.js";
   import ActivityRow from "./ActivityRow.svelte";
+  import { sportIcon } from "../icons.js";
+  import Flame from "@lucide/svelte/icons/flame";
+  import ArrowUp from "@lucide/svelte/icons/arrow-up";
+  import ArrowDown from "@lucide/svelte/icons/arrow-down";
 
   let { goal, initialExercise = null, onsync = null } = $props();
 
@@ -103,14 +107,6 @@
   });
 
   // ---- recent activities (real, from log) ----
-  function emojiFor(label) {
-    const s = (label || "").toLowerCase();
-    if (/schwimm|swim/.test(s)) return "🏊";
-    if (/rad|bike|cycl/.test(s)) return "🚴";
-    if (/kraft|strength|gym|körper|bein/.test(s)) return "🏋️";
-    if (/lauf|run|threshold|zone|tempo|vo2/.test(s)) return "🏃";
-    return "🔥";
-  }
   let activities = $derived.by(() => {
     const log = goal.log ?? {};
     return Object.entries(log)
@@ -127,7 +123,7 @@
           title: e.title || e.typeLabel || "Training",
           type: e.typeLabel || "",
           color: e.typeColor || "#64748b",
-          emoji: emojiFor(e.typeLabel || e.title),
+          actType: e.actType || e.typeLabel || e.title,
           date: parseYmd(e.date).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" }),
           stats: stat.slice(0, 3),
         };
@@ -181,7 +177,7 @@
           dateLabel: parseYmd(date).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long" }),
           klasse: e.typeLabel || null,
           color: e.typeColor || sp.color,
-          emoji: sp.emoji,
+          actType: e.actType || e.typeLabel || "",
           km: distOf(e),
           durSec: Number(e.durationSec) || (durOf(e) ?? 0) * 60 || null,
           hf: metricNum(e, /puls|hf/i),
@@ -328,10 +324,10 @@
     { label: "Kraft", pct: 8, color: "var(--c-purple)" },
   ];
   const prsDemo = [
-    { emoji: "🏃", name: "5 km Lauf", sub: "vor 2 Wochen", value: "22:14", delta: "↓ 0:38 min", badge: "PR" },
-    { emoji: "🏊", name: "100m Kraul", sub: "vor 1 Woche", value: "1:48", delta: "↓ 3 sek", badge: "NEU" },
-    { emoji: "🏋️", name: "Back Squat", sub: "vor 3 Wochen", value: "107.5 kg", delta: "↑ 2.5 kg", badge: "PR" },
-    { emoji: "🏃", name: "1 km Pace", sub: "vor 1 Woche", value: "4:02/km", delta: "↓ 0:08", badge: "PR" },
+    { kind: "run", name: "5 km Lauf", sub: "vor 2 Wochen", value: "22:14", delta: "↓ 0:38 min", badge: "PR" },
+    { kind: "swim", name: "100m Kraul", sub: "vor 1 Woche", value: "1:48", delta: "↓ 3 sek", badge: "NEU" },
+    { kind: "strength", name: "Back Squat", sub: "vor 3 Wochen", value: "107.5 kg", delta: "↑ 2.5 kg", badge: "PR" },
+    { kind: "run", name: "1 km Pace", sub: "vor 1 Woche", value: "4:02/km", delta: "↓ 0:08", badge: "PR" },
   ];
   let realPRs = $derived(personalRecords(goal, today));
   let prsShown = $derived(realPRs.length ? realPRs : prsDemo);
@@ -392,7 +388,7 @@
       <div class="kpi-label">Einheiten</div>
       <div class="kpi-value">{unitsInWindow}</div>
       <div class="kpi-sub">{periodSub}</div>
-      {#if unitsDelta !== 0}<div class="kpi-delta {unitsDelta > 0 ? 'delta-up' : 'delta-down'}">{unitsDelta > 0 ? "▲" : "▼"} {Math.abs(unitsDelta)} vs. Vorperiode</div>{/if}
+      {#if unitsDelta !== 0}<div class="kpi-delta {unitsDelta > 0 ? 'delta-up' : 'delta-down'}">{#if unitsDelta > 0}<ArrowUp size={11} />{:else}<ArrowDown size={11} />{/if} {Math.abs(unitsDelta)} vs. Vorperiode</div>{/if}
     </div>
     <div class="kpi-card kpi-green">
       <div class="kpi-label">Volumen</div>
@@ -406,7 +402,7 @@
     </div>
     <div class="kpi-card kpi-purple">
       <div class="kpi-label">Streak</div>
-      <div class="kpi-value">{streak.current} 🔥</div>
+      <div class="kpi-value" style="display:inline-flex;align-items:center;gap:8px">{streak.current} <Flame size={22} /></div>
       <div class="kpi-sub">Tage in Folge</div>
       {#if streak.current > 0 && streak.current >= streak.best}<div class="kpi-delta" style="color:var(--c-streak)">Persönlicher Rekord</div>{:else if streak.best > 0}<div class="kpi-sub">Rekord {streak.best}</div>{/if}
     </div>
@@ -426,8 +422,9 @@
       <div class="card-head" style="padding-bottom:12px"><div class="card-title">Letzte Aktivitäten</div></div>
       <div class="activity-list">
         {#each activities as a (a.title + a.date)}
+          {@const AI = sportIcon(a.actType)}
           <div class="activity-item">
-            <div class="activity-icon" style="background:{a.color}22">{a.emoji}</div>
+            <div class="activity-icon" style="background:{a.color}22;color:{a.color}"><AI size={15} /></div>
             <div style="flex:1;min-width:0">
               <div class="activity-title">{a.title}</div>
               <div class="activity-meta">{a.type}</div>
@@ -472,8 +469,9 @@
       <div class="card-head" style="padding-bottom:0"><div><div class="card-title">Persönliche Bestleistungen</div><div class="card-sub">{prSub}</div></div></div>
       <div class="pr-list">
         {#each prsShown as p (p.kind ? p.kind + p.name : p.name)}
+          {@const PI = sportIcon(p.kind)}
           <div class="pr-item">
-            <div class="pr-icon" style="background:var(--surface-3)">{p.emoji}</div>
+            <div class="pr-icon" style="background:var(--surface-3)"><PI size={15} /></div>
             <div style="flex:1"><div class="pr-name">{p.name}</div><div class="pr-sub">{p.sub}</div></div>
             <div><div class="pr-value">{p.value}</div>{#if p.delta}<div class="pr-delta delta-up">{p.delta}</div>{/if}</div>
             <span class="pr-badge {p.badge === 'NEU' ? 'badge-new' : 'badge-pr'}">{p.badge}</span>

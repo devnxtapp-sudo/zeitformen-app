@@ -1,7 +1,10 @@
 <script>
   import { api } from "../api.js";
 
+  import { sportIcon } from "../icons.js";
+
   let { activity: a } = $props();
+  let Icon = $derived(sportIcon(a.actType || a.klasse));
 
   let open = $state(false);
   let tab = $state("pace");
@@ -87,7 +90,7 @@
 
 <div class="act-row" class:open>
   <div class="act-summary" onclick={toggle} role="button" tabindex="0" onkeydown={(e) => (e.key === "Enter" || e.key === " ") && toggle()}>
-    <div class="act-icon" style="background:color-mix(in srgb, {a.color} 16%, transparent);color:{a.color}">{a.emoji}</div>
+    <div class="act-icon" style="background:color-mix(in srgb, {a.color} 16%, transparent);color:{a.color}"><Icon size={16} /></div>
     <div class="act-info">
       <div class="act-name">{a.name}</div>
       <div class="act-date">{a.dateLabel}{#if a.klasse} · {a.klasse}{/if}</div>
