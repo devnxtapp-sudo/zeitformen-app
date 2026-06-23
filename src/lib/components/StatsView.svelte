@@ -3,7 +3,6 @@
     computeStats,
     weekOverview,
     dayStreak,
-    weeklyLoad,
     exerciseNames,
     exerciseProgress,
     loggedDays,
@@ -20,7 +19,6 @@
   let stats = $derived(computeStats(goal));
   let overview = $derived(weekOverview(goal, week, dayKeyOf(today)));
   let streak = $derived(dayStreak(goal, today));
-  let load = $derived(weeklyLoad(goal));
 
   function isoWeek(d) {
     const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -30,16 +28,78 @@
     return 1 + Math.round(((x - f) / 86400000 - 3 + ((f.getUTCDay() + 6) % 7)) / 7);
   }
 
-  let weeks8 = $derived(stats.weekly.slice(-8));
-  let weekLabels = $derived(weeks8.map((w) => "KW " + isoWeek(parseYmd(w.monday))));
-  let weekCounts = $derived(weeks8.map((w) => w.count));
-  let targetSeries = $derived(weeks8.map(() => overview.planned || 0));
+  // log-metric helpers (used across the windowed aggregations below)
+  function metricNum(e, re) {
+    for (const [k, v] of Object.entries(e.metrics ?? {})) {
+      if (re.test(k)) {
+        const n = Number(String(v).replace(",", ".").replace(/[^\d.]/g, ""));
+        if (Number.isFinite(n)) return n;
+      }
+    }
+    return null;
+  }
+  const durOf = (e) => metricNum(e, /dauer/i);
+  const distOf = (e) => metricNum(e, /distanz/i);
+  const isStrength = (l) => /kraft|strength|gym|körper|bein|push|pull/i.test(l || "");
 
-  // ---- KPIs (real) ----
+  // ---- period selector → time window that drives the stats ----
+  const periods = ["7 Tage", "4 Wochen", "3 Monate", "Gesamt"];
+  let period = $state("4 Wochen");
+  let periodDays = $derived(period === "7 Tage" ? 7 : period === "4 Wochen" ? 28 : period === "3 Monate" ? 90 : null);
+  let winStart = $derived(periodDays ? ymd(new Date(parseYmd(today).getTime() - (periodDays - 1) * 86400000)) : null);
+  const inWin = (d) => !winStart || d >= winStart;
+  let periodSub = $derived(period === "Gesamt" ? "gesamt" : period === "7 Tage" ? "letzte 7 Tage" : period === "4 Wochen" ? "letzte 4 Wochen" : "letzte 3 Monate");
+
+  function entriesForDates(dates) {
+    const set = new Set(dates);
+    const out = [];
+    for (const [k, e] of Object.entries(goal.log ?? {})) if (set.has(k.split("#")[0])) out.push(e);
+    return out;
+  }
+  // chart buckets: 7 daily bars for "7 Tage", otherwise weekly across the window
+  let buckets = $derived.by(() => {
+    if (period === "7 Tage") {
+      const base = parseYmd(today).getTime();
+      return Array.from({ length: 7 }, (_, i) => {
+        const d = ymd(new Date(base - (6 - i) * 86400000));
+        return { label: parseYmd(d).toLocaleDateString("de-DE", { weekday: "short" }), dates: [d], weekly: false };
+      });
+    }
+    const n = period === "4 Wochen" ? 4 : period === "3 Monate" ? 13 : Math.max(1, stats.weekly.length);
+    return lastNWeekMondays(n, parseYmd(today)).map((mon) => ({
+      label: "KW " + isoWeek(parseYmd(mon)),
+      dates: Object.values(weekDatesFrom(mon)),
+      weekly: true,
+    }));
+  });
+  let bucketLabels = $derived(buckets.map((b) => b.label));
+  let bucketCounts = $derived(buckets.map((b) => entriesForDates(b.dates).length));
+  let targetSeries = $derived(buckets.map((b) => (b.weekly ? overview.planned || 0 : null)));
+
+  // ---- KPIs (windowed) ----
+  let unitsInWindow = $derived.by(() => {
+    let n = 0;
+    for (const k of Object.keys(goal.log ?? {})) if (inWin(k.split("#")[0])) n++;
+    return n;
+  });
+  let volumeInWindow = $derived.by(() => {
+    let sec = 0;
+    for (const [k, e] of Object.entries(goal.log ?? {})) {
+      if (!inWin(k.split("#")[0])) continue;
+      sec += Number(e.durationSec) || (durOf(e) ?? 0) * 60;
+    }
+    return Math.round((sec / 3600) * 10) / 10;
+  });
   let unitsDelta = $derived.by(() => {
-    if (weekCounts.length < 2) return 0;
-    const a = weekCounts[weekCounts.length - 2], b = weekCounts[weekCounts.length - 1];
-    return b - a;
+    if (!periodDays || !winStart) return 0;
+    const prevStart = ymd(new Date(parseYmd(winStart).getTime() - periodDays * 86400000));
+    let cur = 0, prev = 0;
+    for (const k of Object.keys(goal.log ?? {})) {
+      const d = k.split("#")[0];
+      if (d >= winStart) cur++;
+      else if (d >= prevStart) prev++;
+    }
+    return cur - prev;
   });
 
   // ---- recent activities (real, from log) ----
@@ -55,7 +115,7 @@
     const log = goal.log ?? {};
     return Object.entries(log)
       .map(([k, e]) => ({ date: k.split("#")[0], ...e }))
-      .filter((e) => e.title || e.typeLabel || e.exercises?.length || e.metrics)
+      .filter((e) => inWin(e.date) && (e.title || e.typeLabel || e.exercises?.length || e.metrics))
       .sort((a, b) => (a.date < b.date ? 1 : -1))
       .slice(0, 6)
       .map((e) => {
@@ -94,20 +154,6 @@
   });
   const HM_BG = ["var(--surface-3)", "rgba(34,197,94,0.3)", "rgba(34,197,94,0.55)", "#22c55e"];
 
-  // ---- real intervals.icu-derived data (from synced log metrics) ----
-  function metricNum(e, re) {
-    for (const [k, v] of Object.entries(e.metrics ?? {})) {
-      if (re.test(k)) {
-        const n = Number(String(v).replace(",", ".").replace(/[^\d.]/g, ""));
-        if (Number.isFinite(n)) return n;
-      }
-    }
-    return null;
-  }
-  const durOf = (e) => metricNum(e, /dauer/i);
-  const distOf = (e) => metricNum(e, /distanz/i);
-  const isStrength = (l) => /kraft|strength|gym|körper|bein|push|pull/i.test(l || "");
-
   // ---- Aktivitäten list (expandable, real from synced data) ----
   function sportMeta(type) {
     const t = String(type || "").toLowerCase();
@@ -122,7 +168,7 @@
     const log = goal.log ?? {};
     return Object.entries(log)
       .map(([k, e]) => ({ k, date: k.split("#")[0], e }))
-      .filter(({ e }) => distOf(e) != null || e.durationSec != null || durOf(e) != null)
+      .filter(({ date, e }) => inWin(date) && (distOf(e) != null || e.durationSec != null || durOf(e) != null))
       .sort((a, b) => (a.date < b.date ? 1 : -1))
       .slice(0, 12)
       .map(({ k, date, e }) => {
@@ -151,30 +197,24 @@
         };
       });
   });
-  function entriesOf(monday) {
-    const wk = weekDatesFrom(monday);
-    const dates = new Set(Object.values(wk));
-    const out = [];
-    for (const [k, e] of Object.entries(goal.log ?? {})) if (dates.has(k.split("#")[0])) out.push(e);
-    return out;
-  }
-  // weekly Ø pace (min/km) from synced runs
+  // Ø pace (min/km) per bucket from synced runs
   let realPace = $derived(
-    weeks8.map((w) => {
+    buckets.map((b) => {
       const ps = [];
-      for (const e of entriesOf(w.monday)) {
+      for (const e of entriesForDates(b.dates)) {
         const d = distOf(e), t = durOf(e);
         if (d > 0 && t > 0) { const p = t / d; if (p > 2 && p < 12) ps.push(p); }
       }
-      return ps.length ? Math.round((ps.reduce((a, b) => a + b, 0) / ps.length) * 100) / 100 : null;
+      return ps.length ? Math.round((ps.reduce((a, c) => a + c, 0) / ps.length) * 100) / 100 : null;
     }),
   );
   let hasPace = $derived(realPace.filter((v) => v != null).length >= 2);
-  // HF-zone distribution (seconds → %) from synced hrZones; Kraft = strength duration
+  // HF-zone distribution (seconds → %) within the window; Kraft = strength duration
   let realZones = $derived.by(() => {
     const z = [0, 0, 0, 0];
     let any = false;
-    for (const e of Object.values(goal.log ?? {})) {
+    for (const [k, e] of Object.entries(goal.log ?? {})) {
+      if (!inWin(k.split("#")[0])) continue;
       if (Array.isArray(e.hrZones) && e.hrZones.length) {
         any = true;
         const a = e.hrZones.map((x) => Number(x) || 0);
@@ -190,19 +230,18 @@
     if (!any || total <= 0) return null;
     return z.map((s) => Math.round((s / total) * 100));
   });
-  // volume (h) by training type, last 4 weeks
+  // volume (h) by training type within the window
   let realModality = $derived.by(() => {
     const byType = new Map();
     let any = false;
-    for (const w of weeks8.slice(-4)) {
-      for (const e of entriesOf(w.monday)) {
-        const t = durOf(e);
-        if (!t) continue;
-        any = true;
-        const label = e.typeLabel || "Training", color = e.typeColor || "#64748b";
-        if (!byType.has(label)) byType.set(label, { label, color, min: 0 });
-        byType.get(label).min += t;
-      }
+    for (const [k, e] of Object.entries(goal.log ?? {})) {
+      if (!inWin(k.split("#")[0])) continue;
+      const t = durOf(e);
+      if (!t) continue;
+      any = true;
+      const label = e.typeLabel || "Training", color = e.typeColor || "#64748b";
+      if (!byType.has(label)) byType.set(label, { label, color, min: 0 });
+      byType.get(label).min += t;
     }
     if (!any) return null;
     return [...byType.values()].map((s) => ({ label: s.label, color: s.color, hours: Math.round((s.min / 60) * 10) / 10 }));
@@ -253,8 +292,8 @@
 
   let volCfg = $derived({
     type: "bar",
-    data: { labels: weekLabels, datasets: [
-      { label: "Einheiten", data: weekCounts, backgroundColor: weekCounts.map((_, i) => (i === weekCounts.length - 1 ? "rgba(59,130,246,0.85)" : "rgba(59,130,246,0.35)")), borderRadius: 4, borderSkipped: false, order: 2 },
+    data: { labels: bucketLabels, datasets: [
+      { label: "Einheiten", data: bucketCounts, backgroundColor: bucketCounts.map((_, i) => (i === bucketCounts.length - 1 ? "rgba(59,130,246,0.85)" : "rgba(59,130,246,0.35)")), borderRadius: 4, borderSkipped: false, order: 2 },
       { label: "Ziel", data: targetSeries, type: "line", borderColor: "rgba(6,182,212,0.6)", borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0, tension: 0.4, order: 1 },
     ] },
     options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: TIP }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, ticks: { precision: 0 } } } },
@@ -312,7 +351,7 @@
 
   let paceShown = $derived(hasPace ? {
     type: "line",
-    data: { labels: weekLabels, datasets: [{ label: "Ø Pace", data: realPace, borderColor: "#22c55e", backgroundColor: "rgba(34,197,94,0.08)", borderWidth: 2.5, pointBackgroundColor: "#22c55e", pointRadius: 4, tension: 0.4, fill: true, spanGaps: true }] },
+    data: { labels: bucketLabels, datasets: [{ label: "Ø Pace", data: realPace, borderColor: "#22c55e", backgroundColor: "rgba(34,197,94,0.08)", borderWidth: 2.5, pointBackgroundColor: "#22c55e", pointRadius: 4, tension: 0.4, fill: true, spanGaps: true }] },
     options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { ...TIP, callbacks: { label: (ctx) => { const v = ctx.raw; if (v == null) return ""; const m = Math.floor(v), s = Math.round((v - m) * 60); return ` ${m}:${String(s).padStart(2, "0")} min/km`; } } } }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, reverse: true, ticks: { callback: (v) => { const m = Math.floor(v), s = Math.round((v - m) * 60); return `${m}:${String(s).padStart(2, "0")}`; } } } } },
   } : paceCfg);
   let paceSub = $derived(hasPace ? "Ø Pace pro Woche · intervals.icu" : "Demo · via intervals.icu");
@@ -331,9 +370,7 @@
   let modalSub = $derived(realModality ? "Stunden je Typ · letzte 4 Wochen" : "Demo · nach Modalität");
 
   let dataSig = $derived((hasPace ? "p" : "") + (realZones ? "z" : "") + (realModality ? "m" : ""));
-  let chartKey = $derived(weekCounts.join(",") + "|" + selectedDay + selectedExercise + metric + "|" + dataSig);
-  const periods = ["7 Tage", "4 Wochen", "3 Monate", "Gesamt"];
-  let period = $state("4 Wochen");
+  let chartKey = $derived(bucketCounts.join(",") + "|" + period + "|" + selectedDay + selectedExercise + metric + "|" + dataSig);
 </script>
 
 <div class="stats">
@@ -353,14 +390,14 @@
   <div class="grid-4">
     <div class="kpi-card kpi-blue">
       <div class="kpi-label">Einheiten</div>
-      <div class="kpi-value">{stats.last30}</div>
-      <div class="kpi-sub">letzte 30 Tage</div>
-      {#if unitsDelta !== 0}<div class="kpi-delta {unitsDelta > 0 ? 'delta-up' : 'delta-down'}">{unitsDelta > 0 ? "▲" : "▼"} {Math.abs(unitsDelta)} vs. Vorwoche</div>{/if}
+      <div class="kpi-value">{unitsInWindow}</div>
+      <div class="kpi-sub">{periodSub}</div>
+      {#if unitsDelta !== 0}<div class="kpi-delta {unitsDelta > 0 ? 'delta-up' : 'delta-down'}">{unitsDelta > 0 ? "▲" : "▼"} {Math.abs(unitsDelta)} vs. Vorperiode</div>{/if}
     </div>
     <div class="kpi-card kpi-green">
       <div class="kpi-label">Volumen</div>
-      <div class="kpi-value">{load.hours} h</div>
-      <div class="kpi-sub">diese Woche{#if load.estimated} · gesch.{/if}</div>
+      <div class="kpi-value">{volumeInWindow} h</div>
+      <div class="kpi-sub">{periodSub}</div>
     </div>
     <div class="kpi-card kpi-orange">
       <div class="kpi-label">Completion Rate</div>
