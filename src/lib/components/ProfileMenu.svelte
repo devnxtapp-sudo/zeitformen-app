@@ -16,9 +16,13 @@
   import Settings from "@lucide/svelte/icons/settings";
   import LogOut from "@lucide/svelte/icons/log-out";
   import Moon from "@lucide/svelte/icons/moon";
+  import Bell from "@lucide/svelte/icons/bell";
   import { theme, toggleTheme } from "../theme.svelte.js";
+  import { notif, activityNotifications, unreadCount, markAllSeen } from "../notifications.svelte.js";
+  import { sportIcon } from "../icons.js";
 
   let {
+    goal = null,
     onclose,
     onsync,
     syncing = false,
@@ -52,6 +56,18 @@
   let initial = $derived((name[0] || email[0] || "?").toUpperCase());
 
   let userMenuOpen = $state(false);
+  let notifOpen = $state(false);
+
+  let notes = $derived(activityNotifications(goal));
+  let unread = $derived(unreadCount(notes));
+
+  function toggleNotif() {
+    notifOpen = !notifOpen;
+    if (notifOpen) {
+      userMenuOpen = false;
+      markAllSeen(notes);
+    }
+  }
 
   // swipe-to-close (drawer variant only)
   let dragX = $state(0);
@@ -241,16 +257,46 @@
         </button>
       </div>
     {/if}
-    <button class="sb-user" class:open={userMenuOpen} onclick={() => (userMenuOpen = !userMenuOpen)} aria-haspopup="true" aria-expanded={userMenuOpen}>
-      <span class="user-avatar" class:syncing aria-hidden="true">
-        {#if picture}<img src={picture} alt="" referrerpolicy="no-referrer" />{:else}{initial}{/if}
-      </span>
-      <span class="user-info">
-        <span class="user-name">{name}</span>
-        <span class="user-sync {synced && !syncing ? 'ok' : ''}"><span class="sync-dot"></span>{syncing ? "Synchronisiert …" : synced ? "Synchronisiert" : "Nicht synchron"}</span>
-      </span>
-      <svg class="chev ic" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15" /></svg>
-    </button>
+    {#if notifOpen}
+      <div class="notif-pop">
+        <div class="notif-head">
+          <span>Benachrichtigungen</span>
+          <button class="notif-x" onclick={() => (notifOpen = false)} aria-label="Schließen">✕</button>
+        </div>
+        {#if notes.length}
+          <div class="notif-list">
+            {#each notes as n (n.id)}
+              {@const NI = sportIcon(n.type)}
+              <div class="notif-item">
+                <span class="notif-ic"><NI size={14} /></span>
+                <span class="notif-tx">
+                  <span class="notif-title">{n.title}</span>
+                  <span class="notif-sub">{n.sub}</span>
+                </span>
+              </div>
+            {/each}
+          </div>
+        {:else}
+          <div class="notif-empty">Keine Benachrichtigungen.<br />Synchronisierte Aktivitäten erscheinen hier.</div>
+        {/if}
+      </div>
+    {/if}
+    <div class="sb-bottom">
+      <button class="sb-user" class:open={userMenuOpen} onclick={() => { userMenuOpen = !userMenuOpen; if (userMenuOpen) notifOpen = false; }} aria-haspopup="true" aria-expanded={userMenuOpen}>
+        <span class="user-avatar" class:syncing aria-hidden="true">
+          {#if picture}<img src={picture} alt="" referrerpolicy="no-referrer" />{:else}{initial}{/if}
+        </span>
+        <span class="user-info">
+          <span class="user-name">{name}</span>
+          <span class="user-sync {synced && !syncing ? 'ok' : ''}"><span class="sync-dot"></span>{syncing ? "Synchronisiert …" : synced ? "Synchronisiert" : "Nicht synchron"}</span>
+        </span>
+        <svg class="chev ic" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15" /></svg>
+      </button>
+      <button class="sb-bell" class:has-unread={unread > 0} class:open={notifOpen} onclick={toggleNotif} aria-label="Benachrichtigungen" title="Benachrichtigungen">
+        <Bell size={17} />
+        {#if unread > 0}<span class="bell-dot">{unread > 9 ? "9+" : unread}</span>{/if}
+      </button>
+    </div>
   </div>
 {/snippet}
 
@@ -302,8 +348,9 @@
   .sb-spacer { flex: 1; }
 
   .sb-user-wrap { position: relative; border-top: 1px solid var(--border); }
+  .sb-bottom { display: flex; align-items: stretch; }
   .sb-user {
-    display: flex; align-items: center; gap: 10px; width: 100%;
+    display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
     padding: 12px 14px; border: none; background: none; cursor: pointer; font-family: var(--font);
     transition: background 0.12s;
   }
@@ -323,6 +370,46 @@
   .sync-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex: none; }
   .chev { width: 14px; height: 14px; opacity: 0.6; transition: transform 0.15s; }
   .sb-user.open .chev { transform: rotate(180deg); }
+
+  .sb-bell {
+    position: relative; flex: none; display: flex; align-items: center; justify-content: center;
+    width: 48px; border: none; border-left: 1px solid var(--border); background: none;
+    color: var(--text-muted); cursor: pointer; transition: background 0.12s, color 0.12s;
+  }
+  .sb-bell:hover { background: var(--surface-2); color: var(--text); }
+  .sb-bell.open { background: var(--surface-2); color: var(--text); }
+  .sb-bell.has-unread { color: var(--accent); }
+  .bell-dot {
+    position: absolute; top: 8px; right: 8px; min-width: 15px; height: 15px; padding: 0 3px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent); color: #fff; font-size: 9px; font-weight: 700; line-height: 1;
+    border-radius: 999px; border: 2px solid var(--card);
+  }
+
+  .notif-pop {
+    position: absolute; left: 10px; right: 10px; bottom: calc(100% + 4px);
+    background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 10px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); z-index: 6; overflow: hidden;
+  }
+  .notif-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; border-bottom: 1px solid var(--border);
+    font-size: 12px; font-weight: 700; color: var(--text);
+  }
+  .notif-x { border: none; background: none; color: var(--text-dim); font-size: 13px; cursor: pointer; padding: 2px 4px; }
+  .notif-x:hover { color: var(--text); }
+  .notif-list { max-height: 320px; overflow-y: auto; padding: 4px; }
+  .notif-item { display: flex; align-items: center; gap: 10px; padding: 8px 8px; border-radius: 7px; }
+  .notif-item:hover { background: var(--card-hover); }
+  .notif-ic {
+    width: 28px; height: 28px; flex: none; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--accent-rgb), 0.15); color: var(--accent);
+  }
+  .notif-tx { display: flex; flex-direction: column; min-width: 0; }
+  .notif-title { font-size: 12.5px; font-weight: 600; color: var(--text); }
+  .notif-sub { font-size: 11px; color: var(--text-muted); }
+  .notif-empty { padding: 18px 14px; font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.5; }
 
   .user-menu {
     position: absolute; left: 10px; right: 10px; bottom: calc(100% + 4px);

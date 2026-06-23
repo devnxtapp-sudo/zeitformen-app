@@ -31,7 +31,6 @@
   import IntervalTimer from "./lib/components/IntervalTimer.svelte";
   import AuthScreen from "./lib/components/AuthScreen.svelte";
   import TopSearch from "./lib/components/TopSearch.svelte";
-  import Bell from "@lucide/svelte/icons/bell";
   import User from "@lucide/svelte/icons/user";
   import { auth, checkSession } from "./lib/auth.svelte.js";
 
@@ -54,7 +53,6 @@
   let creatingGoal = $state(false);
   let profileOpen = $state(false);
   let settingsOpen = $state(false);
-  let bellOpen = $state(false);
   let statsExercise = $state(null); // search-driven exercise preselect for StatsView
 
   // Wizard done -> jump to the week view in edit mode so the user fills the plan.
@@ -106,6 +104,7 @@
     <!-- Desktop fixed sidebar (lg+) — always visible. -->
     <ProfileMenu
       variant="sidebar"
+      {goal}
       onsync={() => syncNow()}
       syncing={app.syncing}
       synced={app.synced}
@@ -180,22 +179,6 @@
           {/if}
         </span>
       {/if}
-
-      <div class="relative">
-        <button
-          class="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-[7px] border border-line bg-card text-ink-muted hover:border-line-strong hover:text-ink"
-          onclick={() => (bellOpen = !bellOpen)}
-          aria-label="Benachrichtigungen"
-          title="Benachrichtigungen"
-        >
-          <Bell size={15} />
-        </button>
-        {#if bellOpen}
-          <div class="absolute right-0 top-[calc(100%+6px)] z-50 whitespace-nowrap rounded-lg border border-line bg-card px-3 py-2 text-xs text-ink-muted shadow-[0_12px_32px_rgba(0,0,0,0.45)]">
-            Keine neuen Benachrichtigungen
-          </div>
-        {/if}
-      </div>
 
       <button
         class="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-[7px] border border-line bg-card text-ink-muted hover:border-line-strong hover:text-ink"
@@ -300,6 +283,7 @@
   {#if profileOpen && !settingsOpen}
     <ProfileMenu
       variant="drawer"
+      {goal}
       onclose={() => (profileOpen = false)}
       onsync={() => syncNow()}
       syncing={app.syncing}
