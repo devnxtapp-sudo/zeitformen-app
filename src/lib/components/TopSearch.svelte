@@ -113,7 +113,7 @@
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 7px;
-    padding: 7px 12px;
+    padding: 4px 11px;
     width: 220px;
     max-width: 46vw;
     color: var(--text-muted);
