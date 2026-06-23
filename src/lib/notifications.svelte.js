@@ -1,9 +1,10 @@
 // Notification feed derived from synced activities: one entry per activity
-// imported from intervals.icu. "Seen" ids are persisted per device so the bell
-// only lights up (blue) for activities the user hasn't looked at yet.
-const KEY = "rxz-seen-acts";
+// imported from intervals.icu. Dismissed ids are persisted per device, so once
+// the user marks everything as read the entries disappear for good (new syncs
+// still show up). The bell lights up (blue) while any entry is left.
+const KEY = "rxz-dismissed-acts";
 
-function readSeen() {
+function readSet() {
   try {
     return new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
   } catch {
@@ -11,11 +12,11 @@ function readSeen() {
   }
 }
 
-export const notif = $state({ seen: readSeen() });
+export const notif = $state({ dismissed: readSet() });
 
 function persist() {
   try {
-    localStorage.setItem(KEY, JSON.stringify([...notif.seen]));
+    localStorage.setItem(KEY, JSON.stringify([...notif.dismissed]));
   } catch {
     /* ignore */
   }
@@ -63,16 +64,19 @@ function dateLabel(d) {
   return `${da}.${mo}.${y.slice(2)}`;
 }
 
-// Build the notification list from a goal's synced activities (newest first).
+// Build the notification list from a goal's synced activities (newest first),
+// excluding any the user has already marked as read.
 export function activityNotifications(goal, limit = 30) {
   const log = goal?.log ?? {};
   const out = [];
   for (const [date, e] of Object.entries(log)) {
     if (!e || !e.actId) continue; // only intervals.icu-synced activities
+    const id = String(e.actId);
+    if (notif.dismissed.has(id)) continue;
     const type = e.actType || e.klasse || "";
     const summ = summarize(e);
     out.push({
-      id: String(e.actId),
+      id,
       date,
       type,
       title: typeLabel(type),
@@ -83,20 +87,17 @@ export function activityNotifications(goal, limit = 30) {
   return out.slice(0, limit);
 }
 
-export function unreadCount(list) {
-  return list.filter((n) => !notif.seen.has(n.id)).length;
-}
-
-export function markAllSeen(list) {
+// Mark every entry in the list as read so it disappears from the feed.
+export function dismissAll(list) {
   let changed = false;
   for (const n of list) {
-    if (!notif.seen.has(n.id)) {
-      notif.seen.add(n.id);
+    if (!notif.dismissed.has(n.id)) {
+      notif.dismissed.add(n.id);
       changed = true;
     }
   }
   if (changed) {
-    notif.seen = new Set(notif.seen);
+    notif.dismissed = new Set(notif.dismissed);
     persist();
   }
 }

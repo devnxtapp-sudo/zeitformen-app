@@ -18,7 +18,7 @@
   import Moon from "@lucide/svelte/icons/moon";
   import Bell from "@lucide/svelte/icons/bell";
   import { theme, toggleTheme } from "../theme.svelte.js";
-  import { notif, activityNotifications, unreadCount, markAllSeen } from "../notifications.svelte.js";
+  import { activityNotifications, dismissAll } from "../notifications.svelte.js";
   import { sportIcon } from "../icons.js";
 
   let {
@@ -59,14 +59,15 @@
   let notifOpen = $state(false);
 
   let notes = $derived(activityNotifications(goal));
-  let unread = $derived(unreadCount(notes));
+  let unread = $derived(notes.length);
 
   function toggleNotif() {
     notifOpen = !notifOpen;
-    if (notifOpen) {
-      userMenuOpen = false;
-      markAllSeen(notes);
-    }
+    if (notifOpen) userMenuOpen = false;
+  }
+
+  function markAllRead() {
+    dismissAll(notes);
   }
 
   // swipe-to-close (drawer variant only)
@@ -276,6 +277,7 @@
               </div>
             {/each}
           </div>
+          <button class="notif-readall" onclick={markAllRead}>Alle als gelesen markieren</button>
         {:else}
           <div class="notif-empty">Keine Benachrichtigungen.<br />Synchronisierte Aktivitäten erscheinen hier.</div>
         {/if}
@@ -410,6 +412,12 @@
   .notif-title { font-size: 12.5px; font-weight: 600; color: var(--text); }
   .notif-sub { font-size: 11px; color: var(--text-muted); }
   .notif-empty { padding: 18px 14px; font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.5; }
+  .notif-readall {
+    width: 100%; padding: 10px 12px; border: none; border-top: 1px solid var(--border);
+    background: none; color: var(--accent); font-size: 12px; font-weight: 600;
+    font-family: var(--font); cursor: pointer; transition: background 0.12s;
+  }
+  .notif-readall:hover { background: var(--card-hover); }
 
   .user-menu {
     position: absolute; left: 10px; right: 10px; bottom: calc(100% + 4px);
