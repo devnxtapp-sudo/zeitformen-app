@@ -69,8 +69,7 @@
 
   <div class="auth-card">
     <div class="auth-brand">
-      <img class="auth-logo" src="/logo.png" alt="" />
-      <div class="auth-word">rxZone</div>
+      <img class="auth-logo" src="/logo.png" alt="rxZone" />
       <div class="auth-tag">Entwickelt für Athleten</div>
     </div>
 
@@ -219,9 +218,8 @@
   }
 
   .auth-brand { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 18px; }
-  .auth-logo { width: 44px; height: 44px; border-radius: 11px; }
-  .auth-word { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; color: var(--text); margin-top: 4px; }
-  .auth-tag { font-size: 12.5px; font-weight: 600; color: var(--accent); }
+  .auth-logo { width: 48px; height: 48px; border-radius: 12px; }
+  .auth-tag { font-size: 12.5px; font-weight: 600; color: var(--accent); margin-top: 6px; }
 
   .auth-title { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; color: var(--text); text-align: center; }
   .auth-sub { margin-top: 4px; margin-bottom: 20px; font-size: 13.5px; color: var(--text-muted); text-align: center; }
