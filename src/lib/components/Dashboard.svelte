@@ -66,6 +66,11 @@
   // --- main volume chart: selectable period (like Statistik) ---
   const periods = ["7 Tage", "4 Wochen", "3 Monate", "Gesamt"];
   let period = $state("4 Wochen");
+  const MABBR = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+  function dayLabel(d) {
+    const x = parseYmd(d);
+    return String(x.getDate()).padStart(2, "0") + " " + MABBR[x.getMonth()];
+  }
   function countForDates(dates) {
     const set = new Set(dates);
     let n = 0;
@@ -77,7 +82,7 @@
       const base = parseYmd(today).getTime();
       return Array.from({ length: 7 }, (_, i) => {
         const d = ymd(new Date(base - (6 - i) * 86400000));
-        return { label: parseYmd(d).toLocaleDateString("de-DE", { weekday: "short" }), dates: [d], weekly: false };
+        return { label: dayLabel(d), dates: [d], weekly: false };
       });
     }
     const n = period === "4 Wochen" ? 4 : period === "3 Monate" ? 13 : Math.max(1, stats.weekly.length);
@@ -90,12 +95,6 @@
   let bucketLabels = $derived(buckets.map((b) => b.label));
   let bucketCounts = $derived(buckets.map((b) => countForDates(b.dates)));
   let targetSeries = $derived(buckets.map((b) => (b.weekly ? overview.planned || 0 : null)));
-  let periodFoot = $derived(
-    period === "Gesamt" ? "Gesamt · erledigte Einheiten"
-    : period === "7 Tage" ? "Letzte 7 Tage · erledigte Einheiten"
-    : period === "4 Wochen" ? "Letzte 4 Wochen · erledigte Einheiten"
-    : "Letzte 3 Monate · erledigte Einheiten",
-  );
 
   // today's distance + key stats + session steps
   let distance = $derived.by(() => {
@@ -156,7 +155,7 @@
     },
     options: {
       responsive: true, maintainAspectRatio: true,
-      plugins: { legend: { display: true, position: "bottom", labels: { boxWidth: 10, padding: 16, usePointStyle: true } }, tooltip: { backgroundColor: "#1c2333", borderColor: "rgba(255,255,255,0.1)", borderWidth: 1, padding: 10 } },
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: "#1c2333", borderColor: "rgba(255,255,255,0.1)", borderWidth: 1, padding: 10 } },
       scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, ticks: { precision: 0 } } },
     },
   });
@@ -248,8 +247,7 @@
       <div class="chart-wrap">
         {#key chartKey}<canvas use:chartjs={loadCfg} height="110"></canvas>{/key}
       </div>
-      <div class="card-foot">
-        <span class="foot-label">{periodFoot}</span>
+      <div class="card-foot foot-end">
         {#if onnav}<span class="foot-link" onclick={() => onnav("stats")}>Alle Statistiken →</span>{/if}
       </div>
     </div>
@@ -441,6 +439,7 @@
   .delta.warn { color: var(--orange); }
   .chart-wrap { padding: 16px 20px 20px; position: relative; }
   .card-foot { padding: 10px 20px 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-foot.foot-end { justify-content: flex-end; }
   .foot-label { font-size: 11px; color: var(--text-muted); }
   .foot-link { font-size: 11px; color: var(--accent); font-weight: 600; cursor: pointer; }
 
