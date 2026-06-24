@@ -78,7 +78,6 @@
   });
   let bucketLabels = $derived(buckets.map((b) => b.label));
   let bucketCounts = $derived(buckets.map((b) => entriesForDates(b.dates).length));
-  let targetSeries = $derived(buckets.map((b) => (b.weekly ? overview.planned || 0 : null)));
 
   // ---- KPIs (windowed) ----
   let unitsInWindow = $derived.by(() => {
@@ -306,8 +305,7 @@
   let volCfg = $derived({
     type: "bar",
     data: { labels: bucketLabels, datasets: [
-      { label: "Einheiten", data: bucketCounts, backgroundColor: bucketCounts.map((_, i) => (i === bucketCounts.length - 1 ? "rgba(59,130,246,0.85)" : "rgba(59,130,246,0.35)")), borderRadius: 4, borderSkipped: false, order: 2 },
-      { label: "Ziel", data: targetSeries, type: "line", borderColor: "rgba(6,182,212,0.6)", borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0, tension: 0.4, order: 1 },
+      { label: "Einheiten", data: bucketCounts, backgroundColor: bucketCounts.map((_, i) => (i === bucketCounts.length - 1 ? "rgba(59,130,246,0.85)" : "rgba(59,130,246,0.35)")), borderRadius: 4, borderSkipped: false },
     ] },
     options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: TIP }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, ticks: { precision: 0 } } } },
   });
