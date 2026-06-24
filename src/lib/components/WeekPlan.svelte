@@ -2,6 +2,7 @@
   import { parseYmd, todayKey, dayKeyOf } from "../dateutil.js";
   import { weeklyLoad, weekOverview } from "../stats.js";
   import { formatInterval } from "../seed.js";
+  import Moon from "@lucide/svelte/icons/moon";
 
   let { goal, week = {}, today, editMode = false, selectedDay, onselect, onedit, onlog } = $props();
 
@@ -144,8 +145,8 @@
             <div class="day-col-body">
               {#if st === "rest"}
                 <div class="session-block rest-block">
-                  <div style="font-size:22px;margin-bottom:6px">😴</div>
-                  <div class="sb-title" style="color:var(--text-dim);font-size:11px">Ruhetag</div>
+                  <Moon size={20} class="rest-ic" />
+                  <div class="sb-title" style="color:var(--text-dim);font-size:11px;margin-top:6px">Ruhetag</div>
                   <div class="sb-meta" style="margin-top:3px">Erholung</div>
                 </div>
               {:else}
@@ -174,7 +175,7 @@
     <div class="detail-panel">
       {#if !selDay || selDay.isRest}
         <div class="dp-header"><div class="dp-title">{selDay?.isRest ? "Ruhetag" : "Kein Tag gewählt"}</div><div class="dp-sub">{fmtFull(sel)}</div></div>
-        <div class="dp-rest">😴 Erholung ist Teil des Plans.</div>
+        <div class="dp-rest"><Moon size={15} /> Erholung ist Teil des Plans.</div>
       {:else}
         <div class="dp-header" style="background:linear-gradient(135deg, {tint(selType?.color ?? '#3b82f6', 0.1)}, transparent)">
           <span class="dp-badge" style="background:{tint(selType?.color ?? '#3b82f6', 0.15)};color:{selType?.color ?? '#3b82f6'}">{selType?.label ?? "Training"}</span>
@@ -257,7 +258,8 @@
 
   .day-col-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
   .session-block { border-radius: var(--r-sm); padding: 10px; display: flex; flex-direction: column; gap: 5px; border: 1px solid transparent; }
-  .rest-block { text-align: center; padding: 16px 8px; background: var(--surface-3); }
+  .rest-block { text-align: center; padding: 16px 8px; background: var(--surface-3); display: flex; flex-direction: column; align-items: center; }
+  .rest-block :global(.rest-ic) { color: var(--text-dim); }
   .sb-type { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }
   .sb-title { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.3; }
   .sb-meta { font-size: 10px; color: var(--text-muted); }
@@ -269,7 +271,7 @@
   .dp-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; padding: 3px 9px; border-radius: 999px; display: inline-block; margin-bottom: 8px; }
   .dp-title { font-size: 18px; font-weight: 800; color: var(--text); }
   .dp-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
-  .dp-rest { padding: 28px 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+  .dp-rest { padding: 28px 16px; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-muted); font-size: 13px; }
   .dp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
   .dp-stat { background: var(--card); padding: 12px 14px; }
   .dp-stat-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); }
