@@ -19,12 +19,17 @@
 
   let { goal, initialExercise = null, onsync = null, syncing = false } = $props();
 
-  // Sync icon spins exactly 3 turns over 3s on click (independent of sync time).
+  // Sync icon: spins 3 turns over 2s on click, then lights up green for 2s.
   let spinning = $state(false);
+  let flashing = $state(false);
   function doSync() {
-    if (spinning) return;
+    if (spinning || flashing) return;
     spinning = true;
-    setTimeout(() => (spinning = false), 2000);
+    setTimeout(() => {
+      spinning = false;
+      flashing = true;
+      setTimeout(() => (flashing = false), 2000);
+    }, 2000);
     onsync?.();
   }
 
@@ -555,7 +560,7 @@
       <div class="card-title">Aktivitäten{#if focusDate} · {focusLabel}{/if}</div>
       <div style="display:flex;gap:8px;align-items:center">
         {#if focusDate}<button class="sync-btn" onclick={() => (focusDate = null)}>✕ Filter</button>{/if}
-        {#if onsync}<button class="sync-btn icon-only" class:spinning disabled={spinning} onclick={doSync} aria-label="Synchronisieren" title="Synchronisieren"><RefreshCw size={15} /></button>{/if}
+        {#if onsync}<button class="sync-btn icon-only" class:spinning class:flashing disabled={spinning || flashing} onclick={doSync} aria-label="Synchronisieren" title="Synchronisieren"><RefreshCw size={15} /></button>{/if}
       </div>
     </div>
     {#if actList.length}
@@ -577,6 +582,12 @@
   .sync-btn:disabled { opacity: 0.7; cursor: default; }
   .sync-btn.spinning :global(svg) { animation: spin 0.667s linear 3; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .sync-btn.flashing { color: var(--c-success); border-color: var(--c-success); animation: sync-flash 2s ease; }
+  @keyframes sync-flash {
+    0% { box-shadow: 0 0 0 rgba(34, 197, 94, 0); background: var(--surface-2); }
+    18% { box-shadow: 0 0 14px rgba(34, 197, 94, 0.65); background: rgba(34, 197, 94, 0.16); }
+    100% { box-shadow: 0 0 0 rgba(34, 197, 94, 0); background: var(--surface-2); }
+  }
   .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .page-title { font-size: 22px; font-weight: 800; color: var(--text); }
   .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
