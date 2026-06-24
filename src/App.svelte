@@ -199,16 +199,8 @@
   {:else if app.view === "packlist"}
     <PacklistView onback={() => setView("dashboard")} />
   {:else if app.view === "calendar" && goal}
-    <div class="subpage-head">
-      <button class="back-btn" onclick={() => setView("dashboard")} aria-label="Zurück">‹</button>
-      <h2>Kalender</h2>
-    </div>
     <CalendarView {goal} onopen={openLog} />
   {:else if app.view === "stats" && goal}
-    <div class="subpage-head">
-      <button class="back-btn" onclick={() => setView("dashboard")} aria-label="Zurück">‹</button>
-      <h2>Statistik</h2>
-    </div>
     <StatsView {goal} initialExercise={statsExercise} onsync={() => setView("garmin")} />
   {:else if app.view === "week" && goal}
     <WeekPlan
