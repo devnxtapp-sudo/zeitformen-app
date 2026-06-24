@@ -307,7 +307,7 @@
     data: { labels: bucketLabels, datasets: [
       { label: "Einheiten", data: bucketCounts, backgroundColor: bucketCounts.map((_, i) => (i === bucketCounts.length - 1 ? "rgba(59,130,246,0.85)" : "rgba(59,130,246,0.35)")), borderRadius: 4, borderSkipped: false },
     ] },
-    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: TIP }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, ticks: { precision: 0 } } } },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: TIP }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, suggestedMax: 12, ticks: { precision: 0 } } } },
   });
   let progCfg = $derived({
     type: "line",
