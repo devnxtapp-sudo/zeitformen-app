@@ -237,7 +237,7 @@
               {#if volDelta < 0}<ArrowDown size={12} />{:else}<ArrowUp size={12} />{/if} {Math.abs(volDelta)}%
             </span>
           </div>
-          <div class="card-sub">Trainingsvolumen diese Woche{#if load.estimated} · geschätzt{/if}</div>
+          <div class="card-sub">Trainingsvolumen{#if load.estimated} · geschätzt{/if}</div>
         </div>
         <div class="dash-periods">
           {#each periods as p (p)}
