@@ -19,6 +19,15 @@
 
   let { goal, initialExercise = null, onsync = null, syncing = false } = $props();
 
+  // Sync icon spins exactly 3 turns over 3s on click (independent of sync time).
+  let spinning = $state(false);
+  function doSync() {
+    if (spinning) return;
+    spinning = true;
+    setTimeout(() => (spinning = false), 3000);
+    onsync?.();
+  }
+
   const week = weekDates();
   const today = todayKey();
   let stats = $derived(computeStats(goal));
@@ -546,7 +555,7 @@
       <div class="card-title">Aktivitäten{#if focusDate} · {focusLabel}{/if}</div>
       <div style="display:flex;gap:8px;align-items:center">
         {#if focusDate}<button class="sync-btn" onclick={() => (focusDate = null)}>✕ Filter</button>{/if}
-        {#if onsync}<button class="sync-btn icon-only" class:spinning={syncing} disabled={syncing} onclick={() => onsync()} aria-label="Synchronisieren" title="Synchronisieren"><RefreshCw size={15} /></button>{/if}
+        {#if onsync}<button class="sync-btn icon-only" class:spinning disabled={spinning} onclick={doSync} aria-label="Synchronisieren" title="Synchronisieren"><RefreshCw size={15} /></button>{/if}
       </div>
     </div>
     {#if actList.length}
@@ -566,7 +575,7 @@
   .sync-btn:hover { border-color: var(--c-cyan); }
   .sync-btn.icon-only { padding: 7px; }
   .sync-btn:disabled { opacity: 0.7; cursor: default; }
-  .sync-btn.spinning :global(svg) { animation: spin 0.8s linear infinite; }
+  .sync-btn.spinning :global(svg) { animation: spin 1s linear 3; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .page-title { font-size: 22px; font-weight: 800; color: var(--text); }
