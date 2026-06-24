@@ -213,7 +213,7 @@
 <style>
   .wp { --green: var(--c-success); --r: 10px; --r-sm: 7px; display: flex; flex-direction: column; gap: 16px; }
   .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-  .page-title { font-size: 20px; font-weight: 800; color: var(--text); }
+  .page-title { font-size: 22px; font-weight: 800; color: var(--text); }
   .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
   .week-nav-label { font-size: 13px; font-weight: 700; color: var(--text); padding: 6px 12px; border-radius: var(--r-sm); background: var(--card); border: 1px solid var(--border); }
 

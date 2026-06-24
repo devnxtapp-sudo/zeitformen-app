@@ -567,7 +567,7 @@
   .sync-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--c-cyan); cursor: pointer; font-family: var(--font); }
   .sync-btn:hover { border-color: var(--c-cyan); }
   .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-  .page-title { font-size: 20px; font-weight: 800; color: var(--text); }
+  .page-title { font-size: 22px; font-weight: 800; color: var(--text); }
   .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
   .period-tabs { display: flex; gap: 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; }
   .period-tab { padding: 5px 14px; border-radius: 5px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }

@@ -298,7 +298,9 @@
     justify-content: flex-end;
   }
   .head h2 {
-    font-size: 20px;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
   }
   .sub {
     font-size: 12px;

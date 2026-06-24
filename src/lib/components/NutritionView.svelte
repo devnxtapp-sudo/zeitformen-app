@@ -55,7 +55,7 @@
   <div class="flex items-start justify-between gap-3">
     <div class="flex items-center gap-2">
       <div>
-        <h2 class="text-xl font-bold">Ernährungsplan</h2>
+        <h2 class="text-[22px] text-ink" style="font-weight:800">Ernährungsplan</h2>
         <span class="mt-0.5 block text-xs text-ink-muted">Makro-Ziele &amp; Tagesplan</span>
       </div>
     </div>
