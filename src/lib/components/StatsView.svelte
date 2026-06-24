@@ -15,6 +15,7 @@
   import Flame from "@lucide/svelte/icons/flame";
   import ArrowUp from "@lucide/svelte/icons/arrow-up";
   import ArrowDown from "@lucide/svelte/icons/arrow-down";
+  import RefreshCw from "@lucide/svelte/icons/refresh-cw";
 
   let { goal, initialExercise = null, onsync = null } = $props();
 
@@ -545,7 +546,7 @@
       <div class="card-title">Aktivitäten{#if focusDate} · {focusLabel}{/if}</div>
       <div style="display:flex;gap:8px;align-items:center">
         {#if focusDate}<button class="sync-btn" onclick={() => (focusDate = null)}>✕ Filter</button>{/if}
-        {#if onsync}<button class="sync-btn" onclick={() => onsync()}>↻ Synchronisieren</button>{/if}
+        {#if onsync}<button class="sync-btn icon-only" onclick={() => onsync()} aria-label="Synchronisieren" title="Synchronisieren"><RefreshCw size={15} /></button>{/if}
       </div>
     </div>
     {#if actList.length}
@@ -563,6 +564,7 @@
   .act-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .sync-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--c-cyan); cursor: pointer; font-family: var(--font); }
   .sync-btn:hover { border-color: var(--c-cyan); }
+  .sync-btn.icon-only { padding: 7px; }
   .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .page-title { font-size: 22px; font-weight: 800; color: var(--text); }
   .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
