@@ -58,6 +58,7 @@
 
   // selected day detail
   let sel = $derived(selectedDay ?? todayDayKey);
+  let selIndex = $derived(DAYS.findIndex((d) => d.key === sel));
   let selDay = $derived(goal.days[sel]);
   let selType = $derived(typeOf(selDay?.typeId));
   function kmOf(day) {
@@ -127,9 +128,8 @@
     </div>
   </div>
 
-  <div class="layout">
-    <div class="layout-main">
-      <div class="days-grid">
+  <div class="planner">
+    <div class="days-grid">
         {#each DAYS as d (d.key)}
           {@const st = statusOf(d.key)}
           {@const sessions = sessionsOf(d.key)}
@@ -166,7 +166,10 @@
           </div>
         {/each}
       </div>
-    </div>
+
+    {#if selIndex >= 0}
+      <div class="connector"><div class="caret" style="grid-column: {selIndex + 1}"></div></div>
+    {/if}
 
     <div class="detail-panel">
       {#if !selDay || selDay.isRest}
@@ -226,11 +229,12 @@
   .prog-bar { height: 5px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
   .prog-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--green), var(--accent)); }
 
-  .layout { display: flex; gap: 16px; align-items: flex-start; }
-  .layout-main { flex: 1; min-width: 0; }
+  .planner { display: flex; flex-direction: column; }
   .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
-  @media (max-width: 1100px) { .days-grid { grid-template-columns: repeat(4, 1fr); } }
-  @media (max-width: 700px) { .days-grid { grid-template-columns: repeat(2, 1fr); } .layout { flex-direction: column; } .detail-panel { width: 100% !important; position: static !important; } }
+  .connector { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 8px; margin-bottom: -1px; position: relative; z-index: 1; }
+  .caret { justify-self: center; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 10px solid var(--accent); filter: drop-shadow(0 -2px 6px rgba(var(--accent-rgb), 0.25)); }
+  @media (max-width: 1100px) { .days-grid { grid-template-columns: repeat(4, 1fr); } .connector { display: none; } }
+  @media (max-width: 700px) { .days-grid { grid-template-columns: repeat(2, 1fr); } }
 
   .day-col { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: border-color 0.12s, box-shadow 0.12s; }
   .day-col:hover { border-color: var(--border-strong); }
@@ -260,13 +264,13 @@
   .done-check { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; color: var(--green); margin-top: auto; }
   .done-check-icon { width: 14px; height: 14px; border-radius: 50%; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
 
-  .detail-panel { width: 300px; flex-shrink: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; position: sticky; top: 16px; }
+  .detail-panel { width: 100%; background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--accent); border-radius: var(--r); overflow: hidden; }
   .dp-header { padding: 16px; border-bottom: 1px solid var(--border); }
   .dp-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; padding: 3px 9px; border-radius: 999px; display: inline-block; margin-bottom: 8px; }
   .dp-title { font-size: 18px; font-weight: 800; color: var(--text); }
   .dp-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
   .dp-rest { padding: 28px 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
-  .dp-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+  .dp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
   .dp-stat { background: var(--card); padding: 12px 14px; }
   .dp-stat-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); }
   .dp-stat-value { font-size: 15px; font-weight: 800; color: var(--text); font-family: var(--mono); margin-top: 2px; }
@@ -276,6 +280,6 @@
   .dp-block-num { width: 20px; height: 20px; border-radius: 50%; background: var(--surface-3); border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--text-muted); font-family: var(--mono); flex-shrink: 0; }
   .dp-block-name { font-size: 12px; font-weight: 600; color: var(--text); flex: 1; min-width: 0; }
   .dp-block-detail { font-size: 11px; color: var(--text-muted); font-family: var(--mono); text-align: right; }
-  .dp-start-btn { margin: 4px 16px 16px; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; font-family: var(--font); border: none; border-radius: var(--r-sm); padding: 11px; width: calc(100% - 32px); cursor: pointer; box-shadow: 0 3px 16px rgba(var(--accent-rgb), 0.3); transition: all 0.12s; }
+  .dp-start-btn { margin: 14px auto 16px; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; font-family: var(--font); border: none; border-radius: var(--r-sm); padding: 12px; width: min(360px, calc(100% - 32px)); cursor: pointer; box-shadow: 0 3px 16px rgba(var(--accent-rgb), 0.3); transition: all 0.12s; }
   .dp-start-btn:hover { background: var(--accent-strong); transform: translateY(-1px); }
 </style>
