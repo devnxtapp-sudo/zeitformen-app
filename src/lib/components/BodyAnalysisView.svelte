@@ -166,7 +166,6 @@
 <div class="body-analysis">
   <div class="head">
     <div class="head-title">
-      <button class="back-btn" onclick={() => onback?.()} aria-label="Zurück">‹</button>
       <div>
         <h2>Körperanalyse</h2>
         <span class="sub muted">Deine Körperwerte im Verlauf</span>

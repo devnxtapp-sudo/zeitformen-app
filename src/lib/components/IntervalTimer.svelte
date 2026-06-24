@@ -576,7 +576,6 @@
 {:else}
   <!-- ============ Konfig / Verlauf / Statistik / Einstellungen ============ -->
   <div class="subpage-head">
-    <button class="back-btn" onclick={() => onback?.()} aria-label="Zurück">‹</button>
     <h2>Intervall-Timer</h2>
   </div>
 

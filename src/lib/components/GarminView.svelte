@@ -242,7 +242,6 @@
 </script>
 
 <div class="subpage-head">
-  <button class="back-btn" onclick={() => onback?.()} aria-label="Zurück">‹</button>
   <h2>Uhr / Tracker verbinden</h2>
 </div>
 

@@ -54,7 +54,6 @@
 <div class="mb-[22px] flex flex-col gap-4">
   <div class="flex items-start justify-between gap-3">
     <div class="flex items-center gap-2">
-      <button class="back-btn" onclick={() => onback?.()} aria-label="Zurück">‹</button>
       <div>
         <h2 class="text-xl font-bold">Ernährungsplan</h2>
         <span class="mt-0.5 block text-xs text-ink-muted">Makro-Ziele &amp; Tagesplan</span>

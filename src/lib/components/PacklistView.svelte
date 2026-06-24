@@ -32,7 +32,6 @@
 
 <div class="mb-[22px] flex flex-col gap-3.5">
   <div class="subpage-head">
-    <button class="back-btn" onclick={() => onback?.()} aria-label="Zurück">‹</button>
     <h2>Packliste</h2>
   </div>
 
