@@ -6,7 +6,7 @@
   import Play from "@lucide/svelte/icons/play";
   import ArrowUp from "@lucide/svelte/icons/arrow-up";
   import ArrowDown from "@lucide/svelte/icons/arrow-down";
-  import { weekDates, todayKey, dayKeyOf, parseYmd, ymd } from "../dateutil.js";
+  import { weekDates, todayKey, dayKeyOf, parseYmd, ymd, lastNWeekMondays, weekDatesFrom } from "../dateutil.js";
   import {
     computeStats,
     weekOverview,
@@ -63,6 +63,40 @@
     weeks7.map((w) => (overview.planned ? Math.round(Math.min(w.count / overview.planned, 1) * 100) : 0)),
   );
 
+  // --- main volume chart: selectable period (like Statistik) ---
+  const periods = ["7 Tage", "4 Wochen", "3 Monate", "Gesamt"];
+  let period = $state("4 Wochen");
+  function countForDates(dates) {
+    const set = new Set(dates);
+    let n = 0;
+    for (const k of Object.keys(goal.log ?? {})) if (set.has(k.split("#")[0])) n++;
+    return n;
+  }
+  let buckets = $derived.by(() => {
+    if (period === "7 Tage") {
+      const base = parseYmd(today).getTime();
+      return Array.from({ length: 7 }, (_, i) => {
+        const d = ymd(new Date(base - (6 - i) * 86400000));
+        return { label: parseYmd(d).toLocaleDateString("de-DE", { weekday: "short" }), dates: [d], weekly: false };
+      });
+    }
+    const n = period === "4 Wochen" ? 4 : period === "3 Monate" ? 13 : Math.max(1, stats.weekly.length);
+    return lastNWeekMondays(n, parseYmd(today)).map((mon) => ({
+      label: "KW " + isoWeek(parseYmd(mon)),
+      dates: Object.values(weekDatesFrom(mon)),
+      weekly: true,
+    }));
+  });
+  let bucketLabels = $derived(buckets.map((b) => b.label));
+  let bucketCounts = $derived(buckets.map((b) => countForDates(b.dates)));
+  let targetSeries = $derived(buckets.map((b) => (b.weekly ? overview.planned || 0 : null)));
+  let periodFoot = $derived(
+    period === "Gesamt" ? "Gesamt · erledigte Einheiten"
+    : period === "7 Tage" ? "Letzte 7 Tage · erledigte Einheiten"
+    : period === "4 Wochen" ? "Letzte 4 Wochen · erledigte Einheiten"
+    : "Letzte 3 Monate · erledigte Einheiten",
+  );
+
   // today's distance + key stats + session steps
   let distance = $derived.by(() => {
     let km = 0;
@@ -114,10 +148,10 @@
   let loadCfg = $derived({
     type: "line",
     data: {
-      labels: weekLabels,
+      labels: bucketLabels,
       datasets: [
-        { label: "Erledigt", data: weekCounts, borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,0.08)", borderWidth: 2.5, pointBackgroundColor: "#3b82f6", pointRadius: 4, pointHoverRadius: 6, tension: 0.4, fill: true },
-        { label: "Ziel", data: target, borderColor: "rgba(6,182,212,0.5)", borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0.4, fill: false },
+        { label: "Erledigt", data: bucketCounts, borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,0.08)", borderWidth: 2.5, pointBackgroundColor: "#3b82f6", pointRadius: 4, pointHoverRadius: 6, tension: 0.4, fill: true },
+        { label: "Ziel", data: targetSeries, borderColor: "rgba(6,182,212,0.5)", borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0.4, fill: false, spanGaps: true },
       ],
     },
     options: {
@@ -131,7 +165,7 @@
   let loadMiniCfg = $derived({ type: "bar", data: { labels: weekLabels, datasets: [{ data: weekCounts, backgroundColor: weekCounts.map((_, i) => (i === weekCounts.length - 1 ? "#06b6d4" : "rgba(6,182,212,0.25)")), borderRadius: 3 }] }, options: miniOpts });
   let compCfg = $derived({ type: "line", data: { labels: weekLabels, datasets: [{ data: compSeries, borderColor: "#22c55e", backgroundColor: "rgba(34,197,94,0.1)", borderWidth: 2, pointRadius: 0, tension: 0.4, fill: true }] }, options: miniOpts });
 
-  let chartKey = $derived(weekCounts.join(",") + "|" + last7.join(","));
+  let chartKey = $derived(bucketCounts.join(",") + "|" + period + "|" + weekCounts.join(",") + "|" + last7.join(","));
 
   // --- recent activities feed (real, from synced intervals.icu data) ---
   function metricOf(e, re) {
@@ -205,13 +239,17 @@
           </div>
           <div class="card-sub">Trainingsvolumen diese Woche{#if load.estimated} · geschätzt{/if}</div>
         </div>
-        {#if onnav}<div class="card-action" onclick={() => onnav("stats")}>Trainingsreport →</div>{/if}
+        <div class="dash-periods">
+          {#each periods as p (p)}
+            <button class="dp" class:active={period === p} onclick={() => (period = p)}>{p}</button>
+          {/each}
+        </div>
       </div>
       <div class="chart-wrap">
         {#key chartKey}<canvas use:chartjs={loadCfg} height="110"></canvas>{/key}
       </div>
       <div class="card-foot">
-        <span class="foot-label">Letzte {weeks7.length} Wochen · erledigte Einheiten</span>
+        <span class="foot-label">{periodFoot}</span>
         {#if onnav}<span class="foot-link" onclick={() => onnav("stats")}>Alle Statistiken →</span>{/if}
       </div>
     </div>
@@ -393,6 +431,9 @@
   .card-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
   .card-action { font-size: 12px; color: var(--accent); font-weight: 600; cursor: pointer; white-space: nowrap; padding-top: 2px; }
   .card-action:hover { text-decoration: underline; }
+  .dash-periods { display: flex; gap: 2px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; flex: none; }
+  .dp { padding: 4px 9px; border: none; background: none; border-radius: 5px; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; font-family: var(--font); transition: all 0.12s; }
+  .dp.active { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); }
   .big-num { font-size: 32px; font-weight: 800; line-height: 1; font-feature-settings: "tnum"; color: var(--text); }
   .delta { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 700; }
   .delta.up { color: var(--green); }

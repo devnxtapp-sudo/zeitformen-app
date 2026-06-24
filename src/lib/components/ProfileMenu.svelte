@@ -17,6 +17,7 @@
   import LogOut from "@lucide/svelte/icons/log-out";
   import Moon from "@lucide/svelte/icons/moon";
   import Bell from "@lucide/svelte/icons/bell";
+  import User from "@lucide/svelte/icons/user";
   import { theme, toggleTheme } from "../theme.svelte.js";
   import { activityNotifications, dismissAll } from "../notifications.svelte.js";
   import { sportIcon } from "../icons.js";
@@ -41,6 +42,7 @@
     onracenutrition,
     onpacklist,
     onappsettings,
+    onaccount,
     editMode = false,
     // "drawer" = mobile off-canvas overlay; "sidebar" = desktop fixed rail.
     variant = "drawer",
@@ -239,6 +241,12 @@
   <div class="sb-user-wrap">
     {#if userMenuOpen}
       <div class="user-menu">
+        {#if onaccount}
+          <button class="um-item" onclick={() => userAction(onaccount)}>
+            <User class="ic" />
+            <span>Konto &amp; Profil</span>
+          </button>
+        {/if}
         <button class="um-item" onclick={() => userAction(onsync)} disabled={syncing}>
           <RefreshCw class="ic" />
           <span>Synchronisieren</span>

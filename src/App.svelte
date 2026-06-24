@@ -31,7 +31,6 @@
   import IntervalTimer from "./lib/components/IntervalTimer.svelte";
   import AuthScreen from "./lib/components/AuthScreen.svelte";
   import TopSearch from "./lib/components/TopSearch.svelte";
-  import User from "@lucide/svelte/icons/user";
   import { auth, checkSession } from "./lib/auth.svelte.js";
 
   // load local state first, then resolve session + sync. The .catch guard makes
@@ -125,6 +124,7 @@
       onracenutrition={() => setView("racenutrition")}
       onpacklist={() => setView("packlist")}
       onappsettings={() => (settingsOpen = true)}
+      onaccount={() => setView("account")}
     />
 
     <!-- Content column -->
@@ -179,15 +179,6 @@
           {/if}
         </span>
       {/if}
-
-      <button
-        class="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-[7px] border border-line bg-card text-ink-muted hover:border-line-strong hover:text-ink"
-        onclick={() => setView("account")}
-        aria-label="Konto & Einstellungen"
-        title="Konto & Einstellungen"
-      >
-        <User size={15} />
-      </button>
     </div>
   </header>
 
