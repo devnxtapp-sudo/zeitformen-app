@@ -113,10 +113,13 @@
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 7px;
-    padding: 2px 11px;
+    height: 36px;
+    box-sizing: border-box;
+    padding: 0 11px;
     width: 220px;
     max-width: 46vw;
     color: var(--text-muted);
+    align-self: center;
   }
   .search-box:focus-within { border-color: var(--border-md, rgba(255,255,255,0.18)); }
   .search-box input {
