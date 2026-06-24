@@ -413,8 +413,7 @@
   <div class="grid-main-side">
     <div class="card">
       <div class="card-head">
-        <div><div class="card-title">Trainingsvolumen</div><div class="card-sub">Erledigte Einheiten pro Woche + Ziel</div></div>
-        <div class="legend"><span class="lg"><i style="background:var(--accent)"></i>Erledigt</span><span class="lg"><i style="background:var(--c-cyan);opacity:.6"></i>Ziel</span></div>
+        <div><div class="card-title">Trainingsvolumen</div></div>
       </div>
       <div class="chart-wrap">{#key chartKey}<canvas use:chartjs={volCfg} height="130"></canvas>{/key}</div>
     </div>

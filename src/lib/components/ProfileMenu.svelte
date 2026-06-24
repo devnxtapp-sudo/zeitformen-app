@@ -125,8 +125,7 @@
 
 {#snippet sidebarContent()}
   <div class="sb-logo">
-    <img class="logo-img" src="/logo.png" alt="" />
-    <span class="logo-text">rxZone</span>
+    <img class="logo-img" src="/logo.png" alt="rxZone" />
   </div>
 
   <nav class="sb-nav">
@@ -337,7 +336,6 @@
 
   .sb-logo { display: flex; align-items: center; gap: 10px; padding: 18px 16px 16px; border-bottom: 1px solid var(--border); }
   .logo-img { width: 32px; height: 32px; flex: none; border-radius: 8px; object-fit: cover; }
-  .logo-text { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.01em; }
 
   .sb-nav { display: flex; flex-direction: column; }
   .sb-section { padding: 12px 10px 4px; }
