@@ -94,7 +94,6 @@
   });
   let bucketLabels = $derived(buckets.map((b) => b.label));
   let bucketCounts = $derived(buckets.map((b) => countForDates(b.dates)));
-  let targetSeries = $derived(buckets.map((b) => (b.weekly ? overview.planned || 0 : null)));
 
   // today's distance + key stats + session steps
   let distance = $derived.by(() => {
@@ -150,7 +149,6 @@
       labels: bucketLabels,
       datasets: [
         { label: "Erledigt", data: bucketCounts, borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,0.08)", borderWidth: 2.5, pointBackgroundColor: "#3b82f6", pointRadius: 4, pointHoverRadius: 6, tension: 0.4, fill: true },
-        { label: "Ziel", data: targetSeries, borderColor: "rgba(6,182,212,0.5)", borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, tension: 0.4, fill: false, spanGaps: true },
       ],
     },
     options: {
