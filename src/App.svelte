@@ -17,6 +17,7 @@
   import GoalEditor from "./lib/components/GoalEditor.svelte";
   import CalendarView from "./lib/components/CalendarView.svelte";
   import StatsView from "./lib/components/StatsView.svelte";
+  import { syncWeekActivities } from "./lib/intervalsSync.js";
   import BodyAnalysisView from "./lib/components/BodyAnalysisView.svelte";
   import NutritionView from "./lib/components/NutritionView.svelte";
   import RaceNutritionView from "./lib/components/RaceNutritionView.svelte";
@@ -53,6 +54,20 @@
   let profileOpen = $state(false);
   let settingsOpen = $state(false);
   let statsExercise = $state(null); // search-driven exercise preselect for StatsView
+  let ivSyncing = $state(false); // intervals.icu quick-sync (Statistik activities)
+
+  // Sync this week's intervals.icu activities in place (no navigation).
+  async function statsSync() {
+    if (ivSyncing || !goal) return;
+    ivSyncing = true;
+    try {
+      await syncWeekActivities(goal);
+    } catch {
+      /* not connected / transient error — stay on the page */
+    } finally {
+      ivSyncing = false;
+    }
+  }
 
   // Wizard done -> jump to the week view in edit mode so the user fills the plan.
   function onWizardCreated() {
@@ -201,7 +216,7 @@
   {:else if app.view === "calendar" && goal}
     <CalendarView {goal} onopen={openLog} />
   {:else if app.view === "stats" && goal}
-    <StatsView {goal} initialExercise={statsExercise} onsync={() => setView("garmin")} />
+    <StatsView {goal} initialExercise={statsExercise} onsync={statsSync} syncing={ivSyncing} />
   {:else if app.view === "week" && goal}
     <WeekPlan
       {goal}
