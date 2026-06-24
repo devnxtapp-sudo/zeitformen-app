@@ -303,9 +303,9 @@
   const TIP = { backgroundColor: "#1c2333", borderColor: "rgba(255,255,255,0.1)", borderWidth: 1, padding: 10 };
 
   let volCfg = $derived({
-    type: "bar",
+    type: "line",
     data: { labels: bucketLabels, datasets: [
-      { label: "Einheiten", data: bucketCounts, backgroundColor: bucketCounts.map((_, i) => (i === bucketCounts.length - 1 ? "rgba(59,130,246,0.85)" : "rgba(59,130,246,0.35)")), borderRadius: 4, borderSkipped: false },
+      { label: "Einheiten", data: bucketCounts, borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,0.08)", borderWidth: 2.5, pointBackgroundColor: "#3b82f6", pointRadius: 4, pointHoverRadius: 6, tension: 0.4, fill: true },
     ] },
     options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: TIP }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, suggestedMax: 12, ticks: { precision: 0 } } } },
   });
