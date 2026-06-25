@@ -361,7 +361,7 @@
     data: { labels: bucketLabels, datasets: [
       { label: "Einheiten", data: bucketCounts, borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,0.08)", borderWidth: 2.5, pointBackgroundColor: "#3b82f6", pointRadius: 4, pointHoverRadius: 6, tension: 0.4, fill: true },
     ] },
-    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: TIP }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, suggestedMax: 12, ticks: { precision: 0 } } } },
+    options: { responsive: true, maintainAspectRatio: true, animation: { duration: 1200, easing: "easeOutElastic", delay: (ctx) => (ctx.type === "data" && ctx.mode === "default" ? ctx.dataIndex * 100 : 0) }, plugins: { legend: { display: false }, tooltip: TIP }, scales: { x: { grid: { color: GRID }, border: { display: false } }, y: { grid: { color: GRID }, border: { display: false }, beginAtZero: true, suggestedMax: 12, ticks: { precision: 0 } } } },
   });
   let progCfg = $derived({
     type: "line",
