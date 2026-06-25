@@ -370,6 +370,30 @@ main {
 
 .app-footer { text-align: center; color: var(--text-dim); font-size: 0.82rem; padding: 0 20px 32px; }
 
+/* Anleitung */
+.guide { line-height: 1.6; }
+.guide-lead { font-size: 1.05rem; margin: 0 0 4px; }
+.guide h3 {
+  font-size: 1rem; font-weight: 700; color: var(--text);
+  margin: 24px 0 8px;
+}
+.guide p { margin: 0 0 12px; }
+.guide ul { margin: 0 0 14px; padding-left: 20px; }
+.guide li { margin-bottom: 5px; }
+.guide em { font-style: italic; color: var(--accent); }
+.guide .table-wrap { margin: 8px 0 16px; }
+.guide-table { border-collapse: collapse; width: 100%; min-width: 560px; }
+.guide-table th, .guide-table td {
+  padding: 10px 12px; text-align: left;
+  border-bottom: 1px solid var(--border); font-size: 0.9rem;
+}
+.guide-table thead th { background: var(--bg-elev); color: var(--text-dim); font-weight: 600; }
+.guide-table tbody th { background: var(--bg-card); font-weight: 700; white-space: nowrap; }
+.guide-table td {
+  background: var(--bg-card);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
 @media (max-width: 560px) {
   .kit-grid { grid-template-columns: 1fr; gap: 16px; }
   .drill-form { font-size: 1.5rem; }

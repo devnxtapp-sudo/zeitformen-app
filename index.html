@@ -25,6 +25,10 @@
       <nav class="sb-nav">
         <div class="sb-section">
           <div class="sb-label">Lernen</div>
+          <button class="nav-item" data-tab="guide">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <span class="nav-label">Anleitung</span>
+          </button>
           <button class="nav-item active" data-tab="table">
             <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             <span class="nav-label">Tabelle</span>
@@ -90,6 +94,58 @@
         </section>
 
         <p class="voice-note" id="voice-note" hidden></p>
+
+        <!-- Anleitung -->
+        <section class="panel" id="panel-guide">
+          <article class="guide card">
+            <p class="guide-lead">Der Trick ist: Du lernst <strong>nicht</strong> 16 Einzelformen auswendig, sondern zwei kleine Bausätze und kombinierst sie. Dann kannst du jede Form selbst herleiten.</p>
+
+            <h3>Die zwei Dimensionen</h3>
+            <p>Jede englische Zeitform besteht aus <em>Zeit</em> (wann?) × <em>Aspekt</em> (wie verläuft die Handlung?):</p>
+            <ul>
+              <li>4 Zeiten: Present, Past, Future, Future-in-the-past (Conditional)</li>
+              <li>4 Aspekte: Simple, Progressive, Perfect, Perfect Progressive</li>
+            </ul>
+            <p>4 × 4 = 16.</p>
+
+            <h3>Die vier Aspekt-Formeln <span class="hint">die „Endung" ändert sich nie</span></h3>
+            <ul>
+              <li>Simple → Grundverb</li>
+              <li>Progressive → <em>be</em> + -ing</li>
+              <li>Perfect → <em>have</em> + 3. Verbform (Partizip)</li>
+              <li>Perfect Progressive → <em>have been</em> + -ing</li>
+            </ul>
+
+            <h3>Die vier Zeit-Marker <span class="hint">nur der Anfang ändert sich</span></h3>
+            <ul>
+              <li>Present: am/is/are · have/has</li>
+              <li>Past: was/were · had</li>
+              <li>Future: will be · will have</li>
+              <li>Conditional: would be · would have</li>
+            </ul>
+
+            <p>Mehr musst du dir nicht merken – 4 Endungen + 4 Anfänge = 8 Bausteine. Hier alles am Verb <em>to work</em>:</p>
+
+            <div class="table-wrap">
+              <table class="guide-table">
+                <thead>
+                  <tr><th></th><th>Simple</th><th>Progressive</th><th>Perfect</th><th>Perfect Progressive</th></tr>
+                </thead>
+                <tbody>
+                  <tr><th>Present</th><td>I work</td><td>I am working</td><td>I have worked</td><td>I have been working</td></tr>
+                  <tr><th>Past</th><td>I worked</td><td>I was working</td><td>I had worked</td><td>I had been working</td></tr>
+                  <tr><th>Future</th><td>I will work</td><td>I will be working</td><td>I will have worked</td><td>I will have been working</td></tr>
+                  <tr><th>Conditional</th><td>I would work</td><td>I would be working</td><td>I would have worked</td><td>I would have been working</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p>Siehst du das Muster? Geh die Tabelle mal <em>spaltenweise</em> durch: Die Endung (z. B. „have been working") bleibt gleich, vorne wechselt nur have → had → will have → would have.</p>
+
+            <h3>So lernst du es wirklich schnell</h3>
+            <p>Nimm ein einziges Verb und konjugiere es laut durch alle 16 Felder – erst spaltenweise (nach Aspekt), dann zeilenweise (nach Zeit). Nach ein paar Durchläufen kommt die Herleitung automatisch. Bedeutung und Anwendung kommen danach; die <em>Bildung</em> hast du mit dem System in 20 Minuten drin.</p>
+          </article>
+        </section>
 
         <!-- Tabelle -->
         <section class="panel active" id="panel-table">

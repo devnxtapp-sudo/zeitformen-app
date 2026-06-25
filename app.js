@@ -388,15 +388,28 @@ function updateScore() {
 /* ============================================================
    Verdrahtung
 ============================================================ */
+function activeTabKey() {
+  const el = document.querySelector(".nav-item.active");
+  return el ? el.dataset.tab : "table";
+}
+
+// Baukasten + Passiv-Hinweis nur außerhalb der Anleitungsseite zeigen
+function setKitVisibility(tabKey) {
+  const onGuide = tabKey === "guide";
+  $("#kit-card").hidden = onGuide;
+  $("#voice-note").hidden = onGuide || currentVoice !== "passive";
+}
+
 function refreshAll() {
   renderPresets();
   renderKit();
   renderTable();
   renderDrill(false);
   if (quizCurrent) newQuiz();
+  setKitVisibility(activeTabKey());
 }
 
-const TAB_TITLE = { table: "Tabelle", drill: "Drill", quiz: "Quiz" };
+const TAB_TITLE = { guide: "Anleitung", table: "Tabelle", drill: "Drill", quiz: "Quiz" };
 
 function closeDrawer() {
   $("#sidebar").classList.remove("open");
@@ -416,6 +429,7 @@ function setupTabs() {
       const key = tab.dataset.tab;
       $("#panel-" + key).classList.add("active");
       $("#content-title").textContent = TAB_TITLE[key] || "";
+      setKitVisibility(key);
       if (key === "quiz" && !quizCurrent) newQuiz();
       if (key === "drill") renderDrill(false);
       closeDrawer();
