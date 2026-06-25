@@ -12,6 +12,7 @@
   import { weekDates, todayKey, parseYmd, ymd, lastNWeekMondays, weekDatesFrom, dayKeyOf } from "../dateutil.js";
   import ActivityRow from "./ActivityRow.svelte";
   import { sportIcon } from "../icons.js";
+  import { updateLogEntry } from "../store.svelte.js";
   import Flame from "@lucide/svelte/icons/flame";
   import ArrowUp from "@lucide/svelte/icons/arrow-up";
   import ArrowDown from "@lucide/svelte/icons/arrow-down";
@@ -220,6 +221,44 @@
         };
       });
   });
+
+  // Open (not-yet-logged) planned training days across a few weeks, for manually
+  // assigning a recorded activity to a training day (e.g. a run done off-plan).
+  let openDays = $derived.by(() => {
+    if (!goal?.days) return [];
+    const out = [];
+    const base = parseYmd(today).getTime();
+    for (let i = -28; i <= 14; i++) {
+      const date = ymd(new Date(base + i * 86400000));
+      const dk = dayKeyOf(date);
+      const day = goal.days[dk];
+      if (!day || day.isRest) continue;
+      if (goal.log?.[date]) continue; // already logged/done
+      out.push({
+        date,
+        dayKey: dk,
+        title: day.title || "Training",
+        label: parseYmd(date).toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" }),
+      });
+    }
+    return out;
+  });
+
+  // Link a recorded activity to a planned training day (original stays in place).
+  function assignActivity(actKey, target) {
+    const e = goal.log?.[actKey];
+    if (!e || !target) return;
+    const patch = {};
+    if (e.metrics) patch.metrics = { ...e.metrics };
+    if (e.note != null) patch.note = e.note;
+    if (e.actId != null) patch.actId = e.actId;
+    if (e.actType) patch.actType = e.actType;
+    if (e.durationSec != null) patch.durationSec = e.durationSec;
+    if (e.hrZones) patch.hrZones = e.hrZones;
+    if (e.iv) patch.iv = { ...e.iv };
+    if (e.bestEfforts) patch.bestEfforts = { ...e.bestEfforts };
+    updateLogEntry(goal.id, target.date, patch, target.dayKey);
+  }
   // Ø pace (min/km) per bucket from synced runs
   let realPace = $derived(
     buckets.map((b) => {
@@ -565,7 +604,7 @@
     </div>
     {#if actList.length}
       {#each actList as act (act.key)}
-        <ActivityRow activity={act} />
+        <ActivityRow activity={act} {openDays} onassign={assignActivity} />
       {/each}
     {:else}
       <p class="empty">{focusDate ? "Keine Aktivitäten an diesem Tag." : "Noch keine Aktivitäten — verbinde intervals.icu und synchronisiere."}</p>

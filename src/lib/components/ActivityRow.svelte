@@ -3,10 +3,17 @@
 
   import { sportIcon } from "../icons.js";
 
-  let { activity: a } = $props();
+  let { activity: a, openDays = [], onassign = null } = $props();
   let Icon = $derived(sportIcon(a.actType || a.klasse));
 
   let open = $state(false);
+  let assignedLabel = $state("");
+  function doAssign(date) {
+    const d = openDays.find((x) => x.date === date);
+    if (!d) return;
+    onassign?.(a.key, d);
+    assignedLabel = `${d.label} · ${d.title}`;
+  }
   let tab = $state("pace");
   let splits = $state({ loading: false, data: null, error: null });
 
@@ -168,6 +175,17 @@
       {:else}
         <p class="hint" style="padding:14px 20px">Detaildaten (Splits, Charts) verfügbar nach erneutem Sync mit intervals.icu.</p>
       {/if}
+
+      {#if onassign && openDays.length}
+        <div class="assign">
+          <span class="assign-l">Trainingstag zuordnen</span>
+          <select class="assign-sel" onchange={(e) => { doAssign(e.target.value); e.target.value = ""; }}>
+            <option value="">— wählen —</option>
+            {#each openDays as d (d.date)}<option value={d.date}>{d.label} · {d.title}</option>{/each}
+          </select>
+          {#if assignedLabel}<span class="assign-ok">✓ {assignedLabel}</span>{/if}
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -213,6 +231,12 @@
   .ctab.on { color: var(--text); border-bottom-color: var(--accent); }
   .cpanel { padding: 14px 20px 16px; }
   .hint { font-size: 12px; color: var(--text-muted); padding: 8px 0; }
+
+  .assign { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--border); }
+  .assign-l { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
+  .assign-sel { background: var(--surface-2); border: 1px solid var(--border-strong); color: var(--text); border-radius: 6px; padding: 7px 10px; font-size: 12px; font-family: var(--font); cursor: pointer; }
+  .assign-sel:focus { outline: none; border-color: var(--accent); }
+  .assign-ok { font-size: 12px; font-weight: 600; color: var(--c-success); }
 
   .splits { padding: 14px 20px 18px; }
   .splits-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); margin-bottom: 10px; }
