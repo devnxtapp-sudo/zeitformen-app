@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tense Trainer — 16 Zeitformen aus 8 Bausteinen</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- Off-canvas Overlay (mobil) -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Menüleiste: Desktop-Sidebar / Mobile-Drawer -->
+    <aside class="rail" id="sidebar">
+      <div class="sb-brand">
+        <span class="sb-logo">TT</span>
+        <div class="sb-brand-text">
+          <span class="sb-brand-title">Tense Trainer</span>
+          <span class="sb-brand-sub">16 Formen · 8 Bausteine</span>
+        </div>
+      </div>
+
+      <nav class="sb-nav">
+        <div class="sb-section">
+          <div class="sb-label">Lernen</div>
+          <button class="nav-item active" data-tab="table">
+            <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            <span class="nav-label">Tabelle</span>
+          </button>
+          <button class="nav-item" data-tab="drill">
+            <svg class="ic" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            <span class="nav-label">Drill</span>
+          </button>
+          <button class="nav-item" data-tab="quiz">
+            <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span class="nav-label">Quiz</span>
+          </button>
+        </div>
+
+        <div class="sb-section">
+          <div class="sb-label">Verb</div>
+          <div class="sb-verb">
+            <input id="verb-input" type="text" value="work" autocomplete="off" spellcheck="false" aria-label="Verb">
+          </div>
+          <div class="verb-presets" id="verb-presets"></div>
+        </div>
+
+        <div class="sb-section">
+          <div class="sb-label">Form</div>
+          <div class="voice-toggle" id="voice-toggle">
+            <button class="voice-btn active" data-voice="active">Aktiv</button>
+            <button class="voice-btn" data-voice="passive">Passiv</button>
+          </div>
+        </div>
+      </nav>
+
+      <div class="sb-spacer"></div>
+
+      <div class="sb-foot">
+        <span>Zeit × Aspect = 16</span>
+        <span class="sb-foot-sub">Lern das System, nicht die Liste.</span>
+      </div>
+    </aside>
+
+    <!-- Inhalts-Spalte -->
+    <div class="content">
+      <header class="content-header">
+        <button class="hamburger-btn" id="hamburger" aria-label="Menü öffnen">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <h1 class="content-title" id="content-title">Tabelle</h1>
+      </header>
+
+      <main>
+        <!-- Baukasten -->
+        <section class="card" id="kit-card">
+          <h2>Der Baukasten <span class="hint">4 Endungen + 4 Anfänge = 8 Teile</span></h2>
+          <div class="kit-grid">
+            <div class="kit-col">
+              <h3>4 Aspekt-Endungen <span class="hint">ändern sich nie</span></h3>
+              <ul id="aspect-kit" class="kit-list"></ul>
+            </div>
+            <div class="kit-col">
+              <h3>4 Zeit-Anfänge <span class="hint">nur der Anfang wechselt</span></h3>
+              <ul id="time-kit" class="kit-list"></ul>
+            </div>
+          </div>
+        </section>
+
+        <p class="voice-note" id="voice-note" hidden></p>
+
+        <!-- Tabelle -->
+        <section class="panel active" id="panel-table">
+          <p class="panel-intro">Geh die Tabelle laut durch — erst <strong>spaltenweise</strong> (gleiche Endung), dann <strong>zeilenweise</strong> (gleicher Anfang). Fahr mit der Maus über eine Spalte oder Zeile, um das Muster zu sehen.</p>
+          <div class="table-wrap">
+            <table id="tense-table">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Drill -->
+        <section class="panel" id="panel-drill">
+          <p class="panel-intro">Geführter Durchlauf durch alle 16 Felder. Sag die Form <strong>laut</strong>, dann weiter.</p>
+          <div class="drill-controls">
+            <label class="order-toggle">
+              Reihenfolge:
+              <select id="drill-order">
+                <option value="column">spaltenweise (nach Aspekt)</option>
+                <option value="row">zeilenweise (nach Zeit)</option>
+              </select>
+            </label>
+            <label class="speak-toggle">
+              <input type="checkbox" id="drill-speak"> vorlesen
+            </label>
+          </div>
+          <div class="drill-stage">
+            <div class="drill-coords" id="drill-coords"></div>
+            <div class="drill-form" id="drill-form"></div>
+            <div class="drill-recipe" id="drill-recipe"></div>
+          </div>
+          <div class="drill-nav">
+            <button id="drill-prev" class="btn-secondary">Zurück</button>
+            <span class="drill-progress" id="drill-progress"></span>
+            <button id="drill-next" class="btn-primary">Weiter</button>
+          </div>
+        </section>
+
+        <!-- Quiz -->
+        <section class="panel" id="panel-quiz">
+          <p class="panel-intro">Bilde die Form selbst. Tippe deine Antwort (mit oder ohne „I").</p>
+          <div class="quiz-stage">
+            <div class="quiz-prompt" id="quiz-prompt"></div>
+            <form id="quiz-form" autocomplete="off">
+              <input id="quiz-input" type="text" placeholder="z. B. I had been working" spellcheck="false">
+              <button type="submit" class="btn-primary">Prüfen</button>
+            </form>
+            <div class="quiz-feedback" id="quiz-feedback"></div>
+            <button id="quiz-show" class="btn-link">Baukasten-Tipp zeigen</button>
+            <div class="quiz-recipe" id="quiz-recipe"></div>
+          </div>
+          <div class="quiz-score">
+            Richtig: <strong id="quiz-correct">0</strong> /
+            <strong id="quiz-total">0</strong>
+            <span class="streak" id="quiz-streak"></span>
+          </div>
+        </section>
+      </main>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
