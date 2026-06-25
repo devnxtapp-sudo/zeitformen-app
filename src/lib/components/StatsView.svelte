@@ -339,19 +339,47 @@
 
   // ---- Chart.js (lazy) ----
   let ChartLib = null;
+  async function ensureChartLib() {
+    if (!ChartLib) {
+      ChartLib = (await import("chart.js/auto")).default;
+      ChartLib.defaults.color = "#64748b";
+      ChartLib.defaults.font.family = "Inter";
+      ChartLib.defaults.font.size = 11;
+    }
+    return ChartLib;
+  }
   function chartjs(node, config) {
     let c = null, killed = false;
     (async () => {
-      if (!ChartLib) {
-        ChartLib = (await import("chart.js/auto")).default;
-        ChartLib.defaults.color = "#64748b";
-        ChartLib.defaults.font.family = "Inter";
-        ChartLib.defaults.font.size = 11;
-      }
+      await ensureChartLib();
       if (killed) return;
       c = new ChartLib(node, config);
     })();
     return { destroy() { killed = true; c?.destroy(); } };
+  }
+  // Wie chartjs, baut die Chart aber erst, wenn das Canvas ins Bild scrollt –
+  // und reißt sie beim Verlassen wieder ab, damit die Einlauf-Welle bei jedem
+  // erneuten Reinscrollen neu anläuft.
+  function chartjsInView(node, config) {
+    let c = null, killed = false, io = null, ready = false;
+    const build = () => { if (!c && ready && !killed) c = new ChartLib(node, config); };
+    const teardown = () => { c?.destroy(); c = null; };
+    (async () => {
+      await ensureChartLib();
+      if (killed) return;
+      ready = true;
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) build();
+            else teardown();
+          }
+        },
+        { threshold: 0.3 },
+      );
+      io.observe(node);
+    })();
+    return { destroy() { killed = true; io?.disconnect(); teardown(); } };
   }
   const GRID = "rgba(255,255,255,0.05)";
   const TIP = { backgroundColor: "#1c2333", borderColor: "rgba(255,255,255,0.1)", borderWidth: 1, padding: 10 };
@@ -469,7 +497,7 @@
       <div class="card-head">
         <div><div class="card-title">Trainingsvolumen</div></div>
       </div>
-      <div class="chart-wrap">{#key chartKey}<canvas use:chartjs={volCfg} height="130"></canvas>{/key}</div>
+      <div class="chart-wrap">{#key chartKey}<canvas use:chartjsInView={volCfg} height="130"></canvas>{/key}</div>
     </div>
 
     <div class="card">
