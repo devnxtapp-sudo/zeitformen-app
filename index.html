@@ -41,6 +41,10 @@
             <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <span class="nav-label">Quiz</span>
           </button>
+          <button class="nav-item" data-tab="usage">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span class="nav-label">Anwendung</span>
+          </button>
         </div>
 
         <div class="sb-section">
@@ -202,6 +206,26 @@
             Richtig: <strong id="quiz-correct">0</strong> /
             <strong id="quiz-total">0</strong>
             <span class="streak" id="quiz-streak"></span>
+          </div>
+        </section>
+
+        <!-- Anwendung (Lückentext: wann welche Form?) -->
+        <section class="panel" id="panel-usage">
+          <p class="panel-intro">Welche Zeitform passt zum Satz? Achte auf das <strong>Signalwort</strong>. Tippe nur die fehlende Verbform in die Lücke (z. B. „have worked"). <span class="hint">Aktiv-Formen.</span></p>
+          <div class="quiz-stage">
+            <div class="usage-sentence" id="usage-sentence"></div>
+            <div class="usage-meta" id="usage-meta"></div>
+            <form id="usage-form" autocomplete="off">
+              <input id="usage-input" type="text" placeholder="nur die Lücke, z. B. have worked" spellcheck="false">
+              <button type="submit" class="btn-primary" id="usage-submit">Prüfen</button>
+            </form>
+            <div class="quiz-feedback" id="usage-feedback"></div>
+            <div class="usage-why" id="usage-why"></div>
+          </div>
+          <div class="quiz-score">
+            Richtig: <strong id="usage-correct">0</strong> /
+            <strong id="usage-total">0</strong>
+            <span class="streak" id="usage-streak"></span>
           </div>
         </section>
       </main>

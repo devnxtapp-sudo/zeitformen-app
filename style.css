@@ -337,13 +337,13 @@ main {
 .quiz-prompt { font-size: 1.25rem; margin-bottom: 18px; }
 .quiz-prompt .verb-token { color: var(--accent); font-weight: 700; }
 .quiz-prompt .coord { color: var(--accent-2); font-weight: 700; }
-#quiz-form { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-#quiz-input {
+#quiz-form, #usage-form { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+#quiz-input, #usage-input {
   background: var(--bg-elev); border: 1px solid var(--border); color: var(--text);
   font-size: 1.05rem; padding: 10px 14px; border-radius: var(--radius);
   width: min(340px, 80vw); outline: none; font-family: ui-monospace, Menlo, monospace;
 }
-#quiz-input:focus { border-color: var(--accent); }
+#quiz-input:focus, #usage-input:focus { border-color: var(--accent); }
 .quiz-feedback { min-height: 1.6em; margin-top: 16px; font-size: 1rem; font-weight: 600; }
 .quiz-feedback.good { color: var(--good); }
 .quiz-feedback.bad { color: var(--bad); }
@@ -351,6 +351,22 @@ main {
 .quiz-recipe { color: var(--accent); font-size: 0.9rem; margin-top: 10px; font-family: ui-monospace, Menlo, monospace; min-height: 1.2em; }
 .quiz-score { text-align: center; margin-top: 16px; color: var(--text-dim); }
 .quiz-score .streak { margin-left: 10px; color: var(--accent); }
+
+/* Anwendung (Lückentext) */
+.usage-sentence { font-size: 1.3rem; line-height: 1.55; margin-bottom: 10px; }
+.usage-sentence .blank { color: var(--accent); font-weight: 700; letter-spacing: 1px; }
+.usage-sentence .filled {
+  color: var(--accent); font-weight: 700;
+  font-family: ui-monospace, Menlo, monospace;
+}
+.usage-meta { color: var(--text-dim); font-size: 0.92rem; margin-bottom: 18px; }
+.usage-meta .verb-token { color: var(--accent); font-weight: 700; }
+.usage-meta .sig { color: var(--accent-2); font-weight: 700; }
+.usage-why {
+  color: var(--text-dim); font-size: 0.92rem; line-height: 1.5;
+  margin-top: 12px; min-height: 1.2em;
+}
+.usage-why strong { color: var(--text); }
 
 /* Buttons */
 .btn-primary, .btn-secondary {

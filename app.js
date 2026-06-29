@@ -385,6 +385,83 @@ function updateScore() {
   $("#quiz-streak").textContent = quizStreak >= 3 ? `Serie: ${quizStreak}` : "";
 }
 
+/* ---- Anwendung (Lückentext: wann welche Form?) ----
+   Pro Zeit×Aspekt ein Kontextsatz mit Lücke ({}), ein Signalwort und
+   eine kurze Begründung. Die Sätze stehen in der 1. Person "I" und im
+   Aktiv, damit sie zur Engine passen und mit jedem Verb funktionieren. */
+const USAGE = {
+  "present.simple":                 { s: "I {} here every day.",                  sig: "every day",           why: "Present Simple — Gewohnheit, Wiederholung, Fakten. Signal: every day, usually, often, always." },
+  "present.progressive":            { s: "Look — I {} right now.",                sig: "right now",           why: "Present Progressive — läuft genau jetzt. Signal: right now, at the moment, currently." },
+  "present.perfect":                { s: "I {} here since May.",                  sig: "since May",           why: "Present Perfect — in der Vergangenheit begonnen, mit Ergebnis/Bezug bis jetzt. Signal: since, for, already, just, yet, ever." },
+  "present.perfectProgressive":     { s: "I {} all morning.",                     sig: "all morning",         why: "Present Perfect Progressive — begann früher und dauert an (oder wirkt sichtbar nach). Signal: all morning, for hours, lately." },
+  "past.simple":                    { s: "I {} yesterday.",                       sig: "yesterday",           why: "Past Simple — abgeschlossen zu einem festen Zeitpunkt in der Vergangenheit. Signal: yesterday, ago, last week, in 2010." },
+  "past.progressive":               { s: "I {} when you called.",                 sig: "when you called",     why: "Past Progressive — lief gerade, als etwas anderes geschah. Signal: while, as, when (Unterbrechung)." },
+  "past.perfect":                   { s: "I {} before they arrived.",             sig: "before they arrived", why: "Past Perfect — war schon vor einem anderen Vergangenheitspunkt fertig. Signal: before, after, already, by the time." },
+  "past.perfectProgressive":        { s: "I {} for hours before the break.",      sig: "for hours before",    why: "Past Perfect Progressive — dauerte über einen Zeitraum bis zu einem Punkt in der Vergangenheit. Signal: for/since … before." },
+  "future.simple":                  { s: "I {} tomorrow.",                        sig: "tomorrow",            why: "Future Simple — Vorhersage oder spontaner Entschluss. Signal: tomorrow, next week, soon, probably." },
+  "future.progressive":             { s: "This time tomorrow I {} again.",        sig: "this time tomorrow",  why: "Future Progressive — wird zu einem Zeitpunkt in der Zukunft gerade laufen. Signal: this time tomorrow, at 5 pm." },
+  "future.perfect":                 { s: "By next year I {} here for a decade.",  sig: "by next year",        why: "Future Perfect — bis zu einem Zukunftspunkt abgeschlossen. Signal: by + Zeitpunkt, by then, by the time." },
+  "future.perfectProgressive":      { s: "By 5 pm I {} for eight hours.",         sig: "by 5 pm … for",       why: "Future Perfect Progressive — Dauer, die bis zu einem Zukunftspunkt anhält. Signal: by … for." },
+  "conditional.simple":             { s: "I {} if I had the time.",               sig: "if",                  why: "Conditional — hypothetisch / Folge einer Bedingung. Signal: if, would." },
+  "conditional.progressive":        { s: "I {} now if you hadn't called.",        sig: "if … now",            why: "Conditional Progressive — liefe gerade, wäre eine Bedingung erfüllt." },
+  "conditional.perfect":            { s: "I {} if you had asked.",                sig: "if you had asked",    why: "Conditional Perfect — wäre passiert, wenn (unerfüllte Bedingung in der Vergangenheit). Signal: if + Past Perfect." },
+  "conditional.perfectProgressive": { s: "I {} all day if I hadn't stopped.",     sig: "if I hadn't …",       why: "Conditional Perfect Progressive — hätte über einen Zeitraum angedauert." },
+};
+
+let usageCurrent = null;
+let usageAnswered = false;
+let usageCorrect = 0;
+let usageTotal = 0;
+let usageStreak = 0;
+
+function newUsage() {
+  const t = TIMES[Math.floor(Math.random() * TIMES.length)];
+  const a = ASPECTS[Math.floor(Math.random() * ASPECTS.length)];
+  usageCurrent = { t, a };
+  usageAnswered = false;
+  const data = USAGE[t.key + "." + a.key];
+  const f = forms();
+  $("#usage-sentence").innerHTML = data.s.replace("{}", '<span class="blank">____</span>');
+  $("#usage-meta").innerHTML =
+    `Verb: <span class="verb-token">to ${f.base}</span> · Signal: <span class="sig">${data.sig}</span>`;
+  $("#usage-input").value = "";
+  $("#usage-feedback").textContent = "";
+  $("#usage-feedback").className = "quiz-feedback";
+  $("#usage-why").textContent = "";
+  $("#usage-submit").textContent = "Prüfen";
+  $("#usage-input").focus();
+}
+
+function handleUsageSubmit(e) {
+  e.preventDefault();
+  if (usageAnswered) { newUsage(); return; }   // zweiter Druck = nächster Satz
+  if (!usageCurrent) return;
+
+  const f = forms();
+  const { t, a } = usageCurrent;
+  const data = USAGE[t.key + "." + a.key];
+  const expected = buildForm(t.key, a.key, f, "active");   // "I have worked"
+  const blank = expected.replace(/^I\s+/, "");             // "have worked"
+  const correct = normalize($("#usage-input").value) === normalize(expected);
+
+  usageTotal++;
+  if (correct) { usageCorrect++; usageStreak++; } else { usageStreak = 0; }
+
+  $("#usage-sentence").innerHTML = data.s.replace("{}", `<span class="filled">${blank}</span>`);
+  const fb = $("#usage-feedback");
+  fb.textContent = correct ? "Richtig!" : `Nicht ganz — richtig ist: ${blank}`;
+  fb.className = "quiz-feedback " + (correct ? "good" : "bad");
+  $("#usage-why").innerHTML = `<strong>${t.label} ${a.label}.</strong> ${data.why}`;
+  $("#usage-submit").textContent = "Weiter";
+  updateUsageScore();
+}
+
+function updateUsageScore() {
+  $("#usage-correct").textContent = usageCorrect;
+  $("#usage-total").textContent = usageTotal;
+  $("#usage-streak").textContent = usageStreak >= 3 ? `Serie: ${usageStreak}` : "";
+}
+
 /* ============================================================
    Verdrahtung
 ============================================================ */
@@ -393,11 +470,13 @@ function activeTabKey() {
   return el ? el.dataset.tab : "table";
 }
 
-// Baukasten + Passiv-Hinweis nur außerhalb der Anleitungsseite zeigen
+// Baukasten + Passiv-Hinweis nur dort zeigen, wo er beim Lernen hilft —
+// nicht bei Quiz/Anwendung (sonst liest man nur ab) und nicht in der Anleitung.
+const KIT_TABS = new Set(["table", "drill"]);
 function setKitVisibility(tabKey) {
-  const onGuide = tabKey === "guide";
-  $("#kit-card").hidden = onGuide;
-  $("#voice-note").hidden = onGuide || currentVoice !== "passive";
+  const show = KIT_TABS.has(tabKey);
+  $("#kit-card").hidden = !show;
+  $("#voice-note").hidden = !show || currentVoice !== "passive";
 }
 
 function refreshAll() {
@@ -406,10 +485,11 @@ function refreshAll() {
   renderTable();
   renderDrill(false);
   if (quizCurrent) newQuiz();
+  if (usageCurrent) newUsage();
   setKitVisibility(activeTabKey());
 }
 
-const TAB_TITLE = { guide: "Anleitung", table: "Tabelle", drill: "Drill", quiz: "Quiz" };
+const TAB_TITLE = { guide: "Anleitung", table: "Tabelle", drill: "Drill", quiz: "Quiz", usage: "Anwendung" };
 
 function closeDrawer() {
   $("#sidebar").classList.remove("open");
@@ -431,6 +511,7 @@ function setupTabs() {
       $("#content-title").textContent = TAB_TITLE[key] || "";
       setKitVisibility(key);
       if (key === "quiz" && !quizCurrent) newQuiz();
+      if (key === "usage" && !usageCurrent) newUsage();
       if (key === "drill") renderDrill(false);
       closeDrawer();
     });
@@ -479,6 +560,8 @@ function init() {
     if (!quizCurrent) return;
     $("#quiz-recipe").textContent = buildRecipe(quizCurrent.t.key, quizCurrent.a.key, forms());
   });
+
+  $("#usage-form").addEventListener("submit", handleUsageSubmit);
 
   setupTabs();
   setupVoice();
